@@ -23,7 +23,17 @@ jobs:
           pyinstaller --noconfirm --onedir --windowed --name Capture-ecran-PLAI
           --icon capture_ecran/assets/icon.ico
           --add-data "capture_ecran/assets;capture_ecran/assets"
-          capture_ecran/__main__.py
+          lanceur.py
+      - name: Test de démarrage de l'exécutable construit
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP "selftest.txt"
+          $p = Start-Process -FilePath "dist/Capture-ecran-PLAI/Capture-ecran-PLAI.exe" -ArgumentList "--selftest", $out -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or -not (Test-Path $out)) {
+            if (Test-Path "$env:LOCALAPPDATA/CaptureEcranPLAI/erreur.log") { Get-Content "$env:LOCALAPPDATA/CaptureEcranPLAI/erreur.log" }
+            throw "L'exécutable ne démarre pas (code $($p.ExitCode))"
+          }
+          Get-Content $out
       - name: Préparer l'archive
         shell: pwsh
         run: |

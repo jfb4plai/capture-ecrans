@@ -1,0 +1,56 @@
+"""Point d'entrée de l'exécutable (import absolu : un import relatif échoue quand PyInstaller
+lance un script seul). Écrit les erreurs dans un fichier journal lisible par l'utilisateur."""
+import os
+import sys
+import traceback
+from pathlib import Path
+
+
+def _log_path() -> Path:
+    root = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "CaptureEcranPLAI"
+    root.mkdir(parents=True, exist_ok=True)
+    return root / "erreur.log"
+
+
+def _selftest(out: Path) -> int:
+    """Vérifie que l'exécutable démarre : crée la fenêtre, la détruit, écrit OK."""
+    from capture_ecran import __version__
+    from capture_ecran.app import App
+    from capture_ecran.resources import resource_path
+    for name in ("icon.ico", "logo-small.png"):
+        assert resource_path(name).is_file(), f"ressource manquante : {name}"
+    app = App()
+    app.update()
+    app._quit()
+    out.write_text(f"OK {__version__}", "utf-8")
+    return 0
+
+
+def run() -> int:
+    try:
+        if "--selftest" in sys.argv:
+            return _selftest(Path(sys.argv[sys.argv.index("--selftest") + 1]))
+        from capture_ecran.app import main
+        main()
+        return 0
+    except Exception:
+        text = traceback.format_exc()
+        try:
+            _log_path().write_text(text, "utf-8")
+        except OSError:
+            pass
+        try:
+            import tkinter
+            from tkinter import messagebox
+            root = tkinter.Tk()
+            root.withdraw()
+            messagebox.showerror("Capture d'écran PLAI",
+                                 "Le programme a rencontré une erreur.\n\nDétail enregistré dans :\n"
+                                 f"{_log_path()}\n\n{text[-600:]}")
+        except Exception:
+            pass
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(run())

@@ -219,3 +219,17 @@ def test_logo_assets_and_exports(session, tmp_path):
     d = docx.Document(str(p))
     assert len(d.inline_shapes) == 3  # logo + 2 captures
     assert [q.text for q in d.paragraphs if q.style.name.startswith("Heading")] == ["Étape 1", "Étape 2"]
+
+
+# ------------------------------------------------------------------ lanceur (exécutable)
+def test_launcher_is_absolute_import_and_selftest(tmp_path):
+    """Régression : le script d'entrée de PyInstaller ne doit contenir aucun import relatif."""
+    root = Path(__file__).resolve().parent.parent
+    src = (root / "lanceur.py").read_text("utf-8")
+    assert "from ." not in src and "import ." not in src
+    r = subprocess.run([sys.executable, str(root / "lanceur.py"), "--selftest", str(tmp_path / "o.txt")],
+                       capture_output=True, text=True, timeout=60, env={**__import__("os").environ})
+    if "TclError" in r.stderr or "no display" in r.stderr:
+        pytest.skip("pas d'écran disponible")
+    assert r.returncode == 0, r.stderr
+    assert (tmp_path / "o.txt").read_text().startswith("OK")
