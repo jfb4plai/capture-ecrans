@@ -43,15 +43,102 @@ jobs:
           $h = (Get-FileHash Capture-ecran-PLAI-windows.zip -Algorithm SHA256).Hash.ToLower()
           "$h  Capture-ecran-PLAI-windows.zip" | Out-File -Encoding ascii Capture-ecran-PLAI-windows.zip.sha256
           Get-Content Capture-ecran-PLAI-windows.zip.sha256
+      # Analyse par le vrai Microsoft Defender du serveur Windows. Le texte de sortie décide du statut
+      # (« found no threats » / « found N threats ») plutôt que le code de sortie, ambigu selon les versions.
+      - name: Analyse Microsoft Defender
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $status = "NON_CONCLUANT"; $detail = ""
+          try {
+            $folder = (Resolve-Path "dist/Capture-ecran-PLAI").Path
+            $mp = Join-Path $env:ProgramFiles "Windows Defender\MpCmdRun.exe"
+            if (-not (Test-Path $mp)) { throw "MpCmdRun.exe introuvable sur ce serveur" }
+            try { & $mp -SignatureUpdate 2>&1 | Out-Null } catch { }
+            try {
+              $st = Get-MpComputerStatus
+              $detail = "Moteur Defender $($st.AMProductVersion), signatures $($st.AntivirusSignatureVersion) (mises à jour le $($st.AntivirusSignatureLastUpdated.ToUniversalTime().ToString('yyyy-MM-dd HH:mm')) UTC)`n"
+            } catch { $detail = "Version des signatures indisponible`n" }
+            $out = (& $mp -Scan -ScanType 3 -File $folder -DisableRemediation 2>&1 | Out-String).Trim()
+            $detail += "Dossier analysé : Capture-ecran-PLAI (programme et bibliothèques)`n$out"
+            if ($out -match "found no threats") { $status = "PROPRE" }
+            elseif ($out -match "found \d+ threat") { $status = "MENACE" }
+          } catch { $detail = "Analyse impossible : $($_.Exception.Message)" }
+          "STATUT: $status`n$detail" | Out-File -Encoding utf8 scan-defender.txt
+          Get-Content scan-defender.txt
       - uses: actions/upload-artifact@v4
         with:
           name: Capture-ecran-PLAI-windows
           path: |
             Capture-ecran-PLAI-windows.zip
             Capture-ecran-PLAI-windows.zip.sha256
+            scan-defender.txt
+
+  scan-linux:
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      VT_API_KEY: ${{ secrets.VT_API_KEY }}   # facultatif : sans clé, VirusTotal est simplement ignoré
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Capture-ecran-PLAI-windows
+          path: pkg
+      - name: Analyse ClamAV
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clamav unzip > /dev/null
+          sudo systemctl stop clamav-freshclam 2> /dev/null || true
+          sudo freshclam --quiet || echo "Mise à jour des signatures impossible : signatures installées utilisées"
+          mkdir x && unzip -q pkg/Capture-ecran-PLAI-windows.zip -d x
+          ver="$(clamscan --version)"
+          set +e
+          out="$(clamscan -r --infected x 2>&1)"
+          code=$?
+          set -e
+          case $code in 0) st=PROPRE;; 1) st=MENACE;; *) st=NON_CONCLUANT;; esac
+          { echo "STATUT: $st"; echo "$ver"; echo "$out"; } > scan-clamav.txt
+          cat scan-clamav.txt
+      - name: Analyse VirusTotal (si une clé est configurée)
+        if: ${{ env.VT_API_KEY != '' }}
+        continue-on-error: true
+        run: python3 tools/virustotal.py pkg/Capture-ecran-PLAI-windows.zip scan-virustotal.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: analyses-linux
+          path: |
+            scan-clamav.txt
+            scan-virustotal.txt
+          if-no-files-found: ignore
+
+  rapport:
+    runs-on: ubuntu-latest
+    needs: [build, scan-linux]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: art
+      - name: Rapport d'analyse de sécurité
+        run: |
+          vt=""; [ -f art/analyses-linux/scan-virustotal.txt ] && vt="--vt art/analyses-linux/scan-virustotal.txt"
+          python3 tools/scan_report.py --version "${{ github.ref_name }}" \
+            --sha art/Capture-ecran-PLAI-windows/Capture-ecran-PLAI-windows.zip.sha256 \
+            --defender art/Capture-ecran-PLAI-windows/scan-defender.txt \
+            --clamav art/analyses-linux/scan-clamav.txt $vt --out SECURITY-REPORT.md
+          cat SECURITY-REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rapport-securite
+          path: SECURITY-REPORT.md
+      # Publication seulement si le rapport ne signale aucune menace (le script échoue sinon)
       - uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
+          body_path: SECURITY-REPORT.md
           files: |
-            Capture-ecran-PLAI-windows.zip
-            Capture-ecran-PLAI-windows.zip.sha256
+            art/Capture-ecran-PLAI-windows/Capture-ecran-PLAI-windows.zip
+            art/Capture-ecran-PLAI-windows/Capture-ecran-PLAI-windows.zip.sha256
+            SECURITY-REPORT.md

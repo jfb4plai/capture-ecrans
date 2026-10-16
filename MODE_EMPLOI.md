@@ -3,7 +3,13 @@
 Pour photographier un **menu déroulant** (qui se ferme dès qu'on clique ailleurs), l'ajouter des **flèches, textes, numéros**, puis en faire une **fiche** ou une **vidéo sous-titrée**.
 
 ## 1. Installer (une seule fois)
-**Option A — le dossier zippé** téléchargé sur jfb4plai.com : faites un clic droit › *Extraire tout…*, puis double-cliquez sur `Capture-ecran-PLAI.exe` dans le dossier extrait (ne le lancez pas depuis le zip). Windows peut afficher « Windows a protégé votre ordinateur » (le programme n'est pas signé) : cliquez sur *Informations complémentaires* puis *Exécuter quand même*.
+**Option A — le dossier zippé** téléchargé sur jfb4plai.com :
+1. **Avant d'extraire** : clic droit sur le fichier `.zip` › *Propriétés* › en bas de l'onglet *Général*, cochez **« Débloquer »** › *OK*. (La case n'apparaît que si Windows a marqué le fichier comme venant d'Internet.) Cela évite en général l'avertissement décrit plus bas.
+2. Clic droit sur le zip › *Extraire tout…*
+3. Dans le dossier extrait, double-cliquez sur `Capture-ecran-PLAI.exe` (ne le lancez pas depuis l'intérieur du zip).
+4. Si Windows affiche quand même « Windows a protégé votre ordinateur » (le programme n'est pas signé numériquement) : cliquez sur *Informations complémentaires* puis *Exécuter quand même*.
+
+**Est-il sûr ?** Chaque version est analysée par Microsoft Defender et par ClamAV pendant sa fabrication ; le rapport d'analyse et l'empreinte du fichier (SHA-256) sont publiés avec la version, sur la page des versions du dépôt. Attention : un résultat propre ne fait **pas** disparaître l'avertissement ci-dessus, qui dépend de la signature numérique du programme et de sa notoriété, pas de la présence d'un virus. Si votre école bloque les programmes inconnus, remettez le rapport à votre service informatique.
 
 **Option B — avec Python** (si votre école l'autorise) : installez Python 3 depuis python.org (cochez « Add to PATH »), puis double-cliquez sur `Lancer.bat`.
 
