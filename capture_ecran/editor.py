@@ -10,7 +10,8 @@ from tkinter import messagebox, ttk
 
 from PIL import Image, ImageTk
 
-from . import annotate, audio, winapi
+from . import annotate, audio, theme, winapi
+from .theme import C, font
 from .session import Capture, Session
 
 TOOLS = [  # clé, pictogramme, libellé, aide
@@ -31,11 +32,16 @@ WIDTHS = {"Fin": (3, 22, 14), "Moyen": (6, 32, 20), "Épais": (10, 46, 28)}  # t
 def ask_text(parent: tk.Misc, title: str, initial: str = "") -> str | None:
     dlg = tk.Toplevel(parent)
     dlg.title(title)
+    theme.style_dialog(dlg)
     dlg.transient(parent)
     dlg.resizable(False, False)
-    ttk.Label(dlg, text="Écrivez votre texte (Entrée = valider, Maj+Entrée = nouvelle ligne) :").pack(padx=12, pady=(12, 4))
-    box = tk.Text(dlg, width=44, height=4, font=("Segoe UI", 12), wrap="word")
-    box.pack(padx=12)
+    tk.Label(dlg, text="Votre texte", bg=C["bg"], fg=C["text"], font=font("serif", 15)).pack(anchor="w", padx=16, pady=(14, 0))
+    tk.Label(dlg, text="Entrée = valider · Maj+Entrée = nouvelle ligne", bg=C["bg"], fg=C["text3"],
+             font=font("body", 9)).pack(anchor="w", padx=16, pady=(0, 6))
+    box = tk.Text(dlg, width=46, height=4, font=font("body", 12), wrap="word", bg=C["surface"], fg=C["text"],
+                  relief="flat", highlightthickness=1, highlightbackground=C["border2"], highlightcolor=C["teal_mid"],
+                  padx=8, pady=6, insertbackground=C["text"])
+    box.pack(padx=16)
     box.insert("1.0", initial)
     out: dict[str, str | None] = {"v": None}
 
@@ -53,10 +59,10 @@ def ask_text(parent: tk.Misc, title: str, initial: str = "") -> str | None:
     box.bind("<Shift-KP_Enter>", newline)
     box.bind("<Return>", ok)
     box.bind("<KP_Enter>", ok)
-    row = ttk.Frame(dlg)
-    row.pack(pady=10)
-    ttk.Button(row, text="OK", command=ok).pack(side="left", padx=6)
-    ttk.Button(row, text="Annuler", command=dlg.destroy).pack(side="left", padx=6)
+    row = tk.Frame(dlg, bg=C["bg"])
+    row.pack(fill="x", padx=16, pady=12)
+    ttk.Button(row, text="OK", style="Primary.TButton", command=ok).pack(side="right")
+    ttk.Button(row, text="Annuler", command=dlg.destroy).pack(side="right", padx=8)
     box.focus_set()
     dlg.grab_set()
     parent.wait_window(dlg)
@@ -66,6 +72,7 @@ def ask_text(parent: tk.Misc, title: str, initial: str = "") -> str | None:
 class Editor(tk.Toplevel):
     def __init__(self, master, session: Session, cap: Capture, on_close=None, recorder=None):
         super().__init__(master)
+        theme.style_dialog(self)
         self.recorder = recorder if recorder is not None else audio.make_recorder()
         self.recording = False
         self.session, self.cap, self.on_close = session, cap, on_close
@@ -102,47 +109,60 @@ class Editor(tk.Toplevel):
         self.after(80, self.focus_force)
 
     # ------------------------------------------------------------------ interface
+    def _toggle_button(self, parent, text, variable, value, command, compact=False):
+        """Bouton à bascule : sélectionné = fond vert d'eau (comme les pastilles actives du guide)."""
+        return tk.Radiobutton(parent, text=text, variable=variable, value=value, indicatoron=False, command=command,
+                              bg=C["surface"], fg=C["text"], selectcolor=C["teal_bg"], activebackground=C["surface2"],
+                              activeforeground=C["text"], relief="flat", bd=0, highlightthickness=1,
+                              highlightbackground=C["border"], highlightcolor=C["teal_mid"],
+                              font=font("medium", 9 if not compact else 10), padx=8 if compact else 4,
+                              pady=5 if compact else 4, width=0 if compact else 9, cursor="hand2")
+
     def _build_ui(self):
-        top = ttk.Frame(self, padding=4)
-        top.pack(fill="x")
+        bar = tk.Frame(self, bg=C["surface"])
+        bar.pack(fill="x")
+        top = tk.Frame(bar, bg=C["surface"])
+        top.pack(fill="x", padx=8, pady=(8, 4))
         for key, glyph, label, tip in TOOLS:
-            b = tk.Radiobutton(top, text=f"{glyph}\n{label}", variable=self.tool, value=key, indicatoron=False,
-                               width=8, font=("Segoe UI", 10), selectcolor="#BBDEFB", pady=3,
-                               command=self._tool_changed)
-            b.pack(side="left", padx=1)
+            b = self._toggle_button(top, f"{glyph}\n{label}", self.tool, key, self._tool_changed)
+            b.pack(side="left", padx=2)
             _Tip(b, tip)
-        row2 = ttk.Frame(self, padding=(4, 0, 4, 4))
-        row2.pack(fill="x")
-        ttk.Label(row2, text="Couleur :").pack(side="left")
+        row2 = tk.Frame(bar, bg=C["surface"])
+        row2.pack(fill="x", padx=8, pady=(0, 8))
+        ttk.Label(row2, text="Couleur", style="CardMuted.TLabel").pack(side="left", padx=(0, 6))
         self.swatches = {}
         for name, hexv in annotate.PALETTE.items():
-            sw = tk.Button(row2, bg=hexv, activebackground=hexv, width=3, relief="raised",
+            sw = tk.Button(row2, bg=hexv, activebackground=hexv, width=3, relief="raised", cursor="hand2",
                            command=lambda h=hexv: self._set_color(h))
             sw.pack(side="left", padx=2)
             _Tip(sw, name)
             self.swatches[hexv] = sw
         self._set_color(self.color)
-        ttk.Label(row2, text="   Taille :").pack(side="left")
+        ttk.Label(row2, text="Taille", style="CardMuted.TLabel").pack(side="left", padx=(16, 6))
         for name in WIDTHS:
-            tk.Radiobutton(row2, text=name, variable=self.width_name, value=name, indicatoron=False,
-                           padx=8, command=lambda: self._restyle_selected(size=True)).pack(side="left", padx=1)
-        ttk.Separator(row2, orient="vertical").pack(side="left", fill="y", padx=10)
-        ttk.Button(row2, text="↶ Annuler", command=self.undo).pack(side="left", padx=2)
-        ttk.Button(row2, text="↷ Rétablir", command=self.redo).pack(side="left", padx=2)
-        ttk.Button(row2, text="✎ Modifier le texte", command=self.edit_text).pack(side="left", padx=2)
-        ttk.Button(row2, text="🗑 Supprimer l'objet", command=self.delete_selected).pack(side="left", padx=2)
+            self._toggle_button(row2, name, self.width_name, name,
+                                lambda: self._restyle_selected(size=True), compact=True).pack(side="left", padx=1)
+        tk.Frame(row2, bg=C["border"], width=1).pack(side="left", fill="y", padx=12)
+        for text, cmd in (("✎ Modifier le texte", self.edit_text), ("🗑 Supprimer l'objet", self.delete_selected)):
+            ttk.Button(row2, text=text, style="Small.TButton", command=cmd).pack(side="left", padx=2)
+        # annuler / rétablir : en haut à droite, en icônes (la barre d'outils est déjà large)
+        for text, cmd, tip in (("↷", self.redo, "Rétablir (Ctrl+Y)"), ("↶", self.undo, "Annuler (Ctrl+Z)")):
+            b = ttk.Button(top, text=text, style="Small.TButton", width=3, command=cmd)
+            b.pack(side="right", padx=2)
+            _Tip(b, tip)
+        tk.Frame(self, bg=C["border"], height=1).pack(fill="x")
 
-        bottom = ttk.Frame(self, padding=(6, 4))
+        bottom = ttk.Frame(self, padding=(12, 8))
         bottom.pack(side="bottom", fill="x")
         voice_row = ttk.Frame(bottom)
         voice_row.pack(fill="x", pady=(0, 4))
-        self.rec_btn = ttk.Button(voice_row, text="🎙 Enregistrer ma voix", command=self.toggle_record)
+        self.rec_btn = ttk.Button(voice_row, text="🎙 Enregistrer ma voix", style="Small.TButton", command=self.toggle_record)
         self.rec_btn.pack(side="left", padx=2)
-        self.play_btn = ttk.Button(voice_row, text="▶ Écouter", command=self.play_voice)
+        self.play_btn = ttk.Button(voice_row, text="▶ Écouter", style="Small.TButton", command=self.play_voice)
         self.play_btn.pack(side="left", padx=2)
-        self.del_btn = ttk.Button(voice_row, text="✖ Effacer la voix", command=self.delete_voice)
+        self.del_btn = ttk.Button(voice_row, text="✖ Effacer la voix", style="Small.TButton", command=self.delete_voice)
         self.del_btn.pack(side="left", padx=2)
-        self.voice_lbl = ttk.Label(voice_row, text="", foreground="#555")
+        self.voice_lbl = ttk.Label(voice_row, text="", style="Muted.TLabel")
         self.voice_lbl.pack(side="left", padx=8)
         if self.recorder is None:
             for b in (self.rec_btn, self.play_btn, self.del_btn):
@@ -152,18 +172,20 @@ class Editor(tk.Toplevel):
             self._update_voice_label()
         cap_row = ttk.Frame(bottom)
         cap_row.pack(fill="x")
-        ttk.Label(cap_row, text="Légende (sous-titre de la vidéo, facultatif) :").pack(side="left")
+        ttk.Label(cap_row, text="Légende (sous-titre de la vidéo, facultatif)", style="Muted.TLabel").pack(side="left")
         ttk.Entry(cap_row, textvariable=self.caption).pack(side="left", padx=6, fill="x", expand=True)
         btn_row = ttk.Frame(bottom)
         btn_row.pack(fill="x", pady=(4, 0))
-        ttk.Button(btn_row, text="✔ Enregistrer et fermer", command=self.save_and_close).pack(side="right", padx=2)
+        ttk.Button(btn_row, text="✔  Enregistrer et fermer", style="Primary.TButton",
+                   command=self.save_and_close).pack(side="right", padx=2)
         ttk.Button(btn_row, text="Fermer sans enregistrer", command=self._cancel).pack(side="right", padx=2)
         ttk.Button(btn_row, text="Ouvrir dans Paint", command=self.open_in_paint).pack(side="right", padx=2)
         ttk.Button(btn_row, text="Copier l'image", command=self.copy_clip).pack(side="right", padx=2)
 
-        self.status = ttk.Label(self, text=TOOLS[1][3], anchor="w", padding=(6, 0), wraplength=1000)
+        self.status = ttk.Label(self, text=TOOLS[1][3], anchor="w", padding=(12, 4), wraplength=1100, style="Muted.TLabel")
         self.status.pack(side="bottom", fill="x")
-        self.canvas = tk.Canvas(self, bg="#3a3a3a", highlightthickness=0, cursor="crosshair")
+        tk.Frame(self, bg=C["border"], height=1).pack(side="bottom", fill="x")
+        self.canvas = tk.Canvas(self, bg="#2b2823", highlightthickness=0, cursor="crosshair")
         self.canvas.pack(fill="both", expand=True)
         self.img_id = self.canvas.create_image(0, 0, anchor="nw")
         self.canvas.bind("<Configure>", self._on_configure)
@@ -541,7 +563,8 @@ class _Tip:
         self.tip = tk.Toplevel(self.w)
         self.tip.overrideredirect(True)
         self.tip.geometry(f"+{x}+{y}")
-        tk.Label(self.tip, text=self.text, bg="#FFFFE0", relief="solid", bd=1, padx=4).pack()
+        tk.Label(self.tip, text=self.text, bg=C["dark"], fg="#ffffff", font=font("body", 9), padx=8, pady=3,
+                 wraplength=360, justify="left").pack()
 
     def _hide(self, _):
         if self.tip:

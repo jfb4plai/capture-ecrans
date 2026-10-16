@@ -13,8 +13,9 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from PIL import Image, ImageTk
 
-from . import APP_NAME, __version__, config, exporter, firstrun, grabber, steps, storage, winapi
+from . import APP_NAME, __version__, config, exporter, firstrun, grabber, steps, storage, theme, winapi
 from .resources import resource_path
+from .theme import C, font
 from .editor import Editor, launch_paint
 from .hotkeys import HotkeyListener, parse_hotkey, pretty
 from .selector import select_region
@@ -28,9 +29,8 @@ class App(tk.Tk):
         winapi.set_dpi_aware()
         winapi.set_app_id()
         super().__init__()
+        theme.apply(self)
         self.title(f"{APP_NAME} {__version__}")
-        self.geometry("740x780")
-        self.minsize(700, 700)
         self.cfg = config.load()
         self._set_icon()
         self.session: Session | None = None
@@ -42,14 +42,31 @@ class App(tk.Tk):
         self.hook: winapi.MouseHook | None = None
         self.clicks: queue.Queue = queue.Queue()
         self._thumb = None
+        self.v_cursor = tk.BooleanVar(value=self.cfg["draw_cursor"])
+        self.v_halo = tk.BooleanVar(value=self.cfg["click_halo"])
+        self.v_clip = tk.BooleanVar(value=self.cfg["copy_clipboard"])
+        self.v_after = tk.StringVar(value=self.cfg["after_capture"])
         self._build_ui()
         self._start_hotkeys()
         self._update_folder_label()
+        self._fit_window()
+        self.after(150, self._fit_window)  # 2e passe : les polices et retours à la ligne ont alors leur taille réelle
         self.after(100, self._poll)
         self.after(400, self._first_run)
         self.protocol("WM_DELETE_WINDOW", self._quit)
 
     # ------------------------------------------------------------------ interface
+    def _fit_window(self):
+        """Taille = contenu (jamais plus que l'écran). Au 2e passage on ne fait que grandir : l'utilisateur
+        garde ainsi la main s'il a déjà redimensionné la fenêtre."""
+        self.update_idletasks()
+        w, h = self.winfo_reqwidth(), min(self.winfo_reqheight(), self.winfo_screenheight() - 90)
+        if getattr(self, "_fit_done", False):
+            w, h = max(w, self.winfo_width()), max(h, self.winfo_height())
+        self._fit_done = True
+        self.geometry(f"{w}x{h}+{max(0, (self.winfo_screenwidth() - w) // 2)}+20")
+        self.minsize(min(w, 900), min(h, 560))
+
     def _base(self) -> Path:
         """Dossier de base des séries ; recréé (avec son icône) s'il a été supprimé."""
         return storage.ensure_capture_folder(Path(self.cfg["base_dir"]))
@@ -71,9 +88,11 @@ class App(tk.Tk):
 
     def _update_folder_label(self):
         p = self.cfg["base_dir"]
-        cloud = storage.is_cloud_synced(p)
-        self.folder_lbl.config(text=f"📁 Mes captures : {p}" + ("   ☁ synchronisé (cloud)" if cloud else ""),
-                               foreground="#B26A00" if cloud else "#1565C0")
+        self.folder_lbl.config(text=p)
+        if storage.is_cloud_synced(p):
+            self.cloud_pill.pack(side="left")
+        else:
+            self.cloud_pill.pack_forget()
 
     def open_manual(self, anchor: str = ""):
         """Mode d'emploi installé avec le programme (aucune connexion Internet nécessaire)."""
@@ -94,101 +113,139 @@ class App(tk.Tk):
             pass  # l'icône est un confort : jamais bloquant
 
     def _build_ui(self):
-        pad = {"padx": 10, "pady": 4}
-        head = ttk.Frame(self)
-        head.pack(fill="x", **pad)
+        # ---- en-tête (comme la barre de navigation du guide)
+        head = tk.Frame(self, bg=C["bg"], highlightthickness=0)
+        head.pack(fill="x")
+        inner = tk.Frame(head, bg=C["bg"])
+        inner.pack(fill="x", padx=16, pady=6)
         try:
-            self._logo = ImageTk.PhotoImage(Image.open(resource_path("logo-small.png")).resize((64, 64), Image.LANCZOS))
-            ttk.Label(head, image=self._logo).pack(side="left", padx=(0, 10))
+            self._logo = ImageTk.PhotoImage(Image.open(resource_path("logo-small.png")).resize((44, 44), Image.LANCZOS))
+            tk.Label(inner, image=self._logo, bg=C["bg"]).pack(side="left", padx=(0, 12))
         except Exception:
             pass
-        right = ttk.Frame(head)
-        right.pack(side="left", fill="x", expand=True)
-        ttk.Label(right, text=f"{APP_NAME}", font=("Segoe UI", 13, "bold")).pack(anchor="w")
-        ttk.Label(right, text=f"jfb4plai.com  ·  version {__version__}", foreground="#666").pack(anchor="w")
-        ttk.Button(head, text="❓ Mode d'emploi", command=self.open_manual).pack(side="right", padx=4)
-        self.folder_lbl = ttk.Label(self, text="", cursor="hand2", wraplength=700)
-        self.folder_lbl.pack(fill="x", padx=10)
+        titles = tk.Frame(inner, bg=C["bg"])
+        titles.pack(side="left")
+        tk.Label(titles, text=APP_NAME, bg=C["bg"], fg=C["text"], font=font("serif", 19)).pack(anchor="w")
+        tk.Label(titles, text=f"Outil pour les enseignants · jfb4plai.com · version {__version__}", bg=C["bg"],
+                 fg=C["text3"], font=font("body", 9)).pack(anchor="w")
+        ttk.Button(inner, text="⚙ Réglages", style="Small.TButton", command=self.settings).pack(side="right", padx=(6, 0))
+        ttk.Button(inner, text="❓ Mode d'emploi", style="Small.TButton", command=self.open_manual).pack(side="right")
+        tk.Frame(self, bg=C["border"], height=1).pack(fill="x")
+
+        # ---- dossier des captures (lien) + pastille cloud
+        frow = tk.Frame(self, bg=C["bg"])
+        frow.pack(fill="x", padx=16, pady=(6, 0))
+        tk.Label(frow, text="📁 Mes captures :", bg=C["bg"], fg=C["text3"], font=font("body", 9)).pack(side="left")
+        self.folder_lbl = ttk.Label(frow, text="", style="Link.TLabel", cursor="hand2")
+        self.folder_lbl.pack(side="left", padx=(6, 8))
         self.folder_lbl.bind("<Button-1>", lambda e: self.open_folder())
-        hint_row = ttk.Frame(self)
-        hint_row.pack(fill="x", padx=10)
-        self.hint = ttk.Label(hint_row, justify="left", font=("Segoe UI", 10), wraplength=700)
-        self.hint.pack(anchor="w")
+        self.cloud_pill = theme.pill(frow, "☁ dossier synchronisé (cloud)", "warn")
 
-        btns = ttk.LabelFrame(self, text=" Prendre une capture ")
-        btns.pack(fill="x", **pad)
-        for col, (text, cmd) in enumerate([("📷  Écran entier", lambda: self.request("full")),
-                                           ("✂  Zone", lambda: self.request("region")),
-                                           ("🪟  Fenêtre active", lambda: self.request("window")),
-                                           ("⏱  Dans 3 secondes", lambda: self.request("full", delay=3))]):
-            ttk.Button(btns, text=text, command=cmd).grid(row=0, column=col, padx=4, pady=6, sticky="ew")
-            btns.columnconfigure(col, weight=1)
-        self.steps_btn = ttk.Button(btns, text="●  Enregistrer mes clics (une capture numérotée par clic)",
+        # ---- bandeau sombre : les raccourcis (comme .leitmotiv du guide)
+        dark = tk.Frame(self, bg=C["dark"])
+        dark.pack(fill="x", padx=16, pady=(8, 0))
+        tk.Label(dark, text="« Ouvrez votre menu déroulant, puis appuyez sur le raccourci. »", bg=C["dark"],
+                 fg=C["dark_text"], font=font("serif_italic", 13), anchor="w").pack(fill="x", padx=16, pady=(9, 6))
+        keys = tk.Frame(dark, bg=C["dark"])
+        keys.pack(fill="x", padx=16, pady=(0, 10))
+        self._hint = {}
+        for col, (name, desc) in enumerate((("full", "écran entier"), ("region", "choisir une zone"),
+                                            ("window", "fenêtre active"), ("steps", "série de clics"))):
+            cell = tk.Frame(keys, bg=C["dark"])
+            cell.grid(row=0, column=col, sticky="w", padx=(0, 22))
+            cap = tk.Label(cell, text="", bg=C["dark2"], fg="#ffffff", font=font("medium", 9), padx=9, pady=3)
+            cap.pack(anchor="w")
+            tk.Label(cell, text=desc, bg=C["dark"], fg=C["dark_text"], font=font("italic", 9)).pack(anchor="w", pady=(3, 0))
+            self._hint[name] = cap
+        keys.columnconfigure(4, weight=1)
+        tk.Label(keys, text="Portable : + touche Fn", bg=C["dark"], fg=C["text3"], font=font("body", 9),
+                 anchor="e").grid(row=0, column=4, sticky="ne")
+
+        # ---- deux colonnes
+        body = tk.Frame(self, bg=C["bg"])
+        body.pack(fill="both", expand=True)
+        body.columnconfigure(0, weight=1)
+        body.columnconfigure(1, weight=1)
+        body.rowconfigure(0, weight=1)
+        left = tk.Frame(body, bg=C["bg"])
+        left.grid(row=0, column=0, sticky="nsew")
+        right = tk.Frame(body, bg=C["bg"])
+        right.grid(row=0, column=1, sticky="nsew")
+
+        # -- gauche : prendre une capture
+        btns = theme.section(left, "Prendre une capture")
+        grid = ttk.Frame(btns, style="Card.TFrame")
+        grid.pack(fill="x")
+        for i, (text, cmd) in enumerate([("📷  Écran entier", lambda: self.request("full")),
+                                         ("✂  Zone", lambda: self.request("region")),
+                                         ("🪟  Fenêtre active", lambda: self.request("window")),
+                                         ("⏱  Dans 3 secondes", lambda: self.request("full", delay=3))]):
+            ttk.Button(grid, text=text, style="Big.TButton", command=cmd).grid(
+                row=i // 2, column=i % 2, padx=3, pady=3, sticky="ew")
+        grid.columnconfigure(0, weight=1)
+        grid.columnconfigure(1, weight=1)
+        self.steps_btn = ttk.Button(btns, text="●  Enregistrer mes clics", style="Primary.TButton",
                                     command=lambda: self.request("steps"))
-        self.steps_btn.grid(row=1, column=0, columnspan=4, padx=4, pady=(0, 2), sticky="ew")
+        self.steps_btn.pack(fill="x", padx=3, pady=(6, 2))
+        ttk.Label(btns, text="Une capture numérotée à chaque clic.", style="CardMuted.TLabel").pack(anchor="w", padx=3)
         self.v_moment = tk.StringVar(value=self.cfg["steps_moment"])
-        mrow = ttk.Frame(btns)
-        mrow.grid(row=2, column=0, columnspan=4, pady=(0, 4))
-        ttk.Label(mrow, text="Image prise :").pack(side="left")
-        for val, txt in (("avant", "juste avant le clic (recommandé)"), ("apres", "0,5 s après le clic")):
-            ttk.Radiobutton(mrow, text=txt, value=val, variable=self.v_moment,
-                            command=self._save_opts).pack(side="left", padx=6)
+        mrow = ttk.Frame(btns, style="Card.TFrame")
+        mrow.pack(fill="x", padx=3, pady=(4, 0))
+        ttk.Label(mrow, text="Image prise :", style="CardMuted.TLabel").pack(side="left")
+        for val, txt in (("avant", "avant le clic (conseillé)"), ("apres", "0,5 s après")):
+            ttk.Radiobutton(mrow, text=txt, value=val, variable=self.v_moment, style="Card.TRadiobutton",
+                            command=self._save_opts).pack(side="left", padx=(8, 0))
 
-        opts = ttk.LabelFrame(self, text=" Options ")
-        opts.pack(fill="x", **pad)
-        self.v_cursor = tk.BooleanVar(value=self.cfg["draw_cursor"])
-        self.v_halo = tk.BooleanVar(value=self.cfg["click_halo"])
-        self.v_clip = tk.BooleanVar(value=self.cfg["copy_clipboard"])
-        self.v_after = tk.StringVar(value=self.cfg["after_capture"])
-        ttk.Checkbutton(opts, text="Montrer le pointeur de la souris", variable=self.v_cursor,
-                        command=self._save_opts).grid(row=0, column=0, sticky="w", padx=8)
-        ttk.Checkbutton(opts, text="Entourer le pointeur d'un halo jaune", variable=self.v_halo,
-                        command=self._save_opts).grid(row=0, column=1, sticky="w", padx=8)
-        ttk.Checkbutton(opts, text="Copier aussi dans le presse-papiers (Ctrl+V)", variable=self.v_clip,
-                        command=self._save_opts).grid(row=1, column=0, columnspan=2, sticky="w", padx=8)
-        ttk.Label(opts, text="Après la capture :").grid(row=2, column=0, sticky="w", padx=8, pady=(4, 0))
-        fr = ttk.Frame(opts)
-        fr.grid(row=3, column=0, columnspan=2, sticky="w", padx=8, pady=(0, 6))
-        for val, txt in (("editor", "Ouvrir l'éditeur"), ("paint", "Ouvrir Paint"), ("none", "Rien (juste enregistrer)")):
-            ttk.Radiobutton(fr, text=txt, value=val, variable=self.v_after, command=self._save_opts).pack(side="left", padx=6)
+        # -- gauche : exports
+        out = theme.section(left, "Créer à partir de la série")
+        orow = ttk.Frame(out, style="Card.TFrame")
+        orow.pack(fill="x")
+        for i, (text, cmd) in enumerate((("🎬  Vidéo", self.export_video), ("📝  Document Word", self.export_word),
+                                         ("📄  Fiche HTML/PDF", self.export_html))):
+            ttk.Button(orow, text=text, command=cmd).grid(row=0, column=i, padx=3, sticky="ew")
+            orow.columnconfigure(i, weight=1)
 
-        serie = ttk.LabelFrame(self, text=" Ma série de captures ")
-        serie.pack(fill="both", expand=True, **pad)
-        self.title_lbl = ttk.Label(serie, text="(aucune série pour l'instant)", font=("Segoe UI", 10, "bold"))
-        self.title_lbl.pack(anchor="w", padx=8, pady=(4, 0))
-        mid = ttk.Frame(serie)
-        mid.pack(fill="both", expand=True, padx=8, pady=4)
-        self.listbox = tk.Listbox(mid, height=5, activestyle="dotbox", font=("Segoe UI", 10), exportselection=False)
+        # -- droite : la série
+        serie = theme.section(right, "Ma série de captures", expand=True)
+        self.title_lbl = ttk.Label(serie, text="(aucune série pour l'instant)", style="Card.TLabel",
+                                   font=font("serif", 14))
+        self.title_lbl.pack(anchor="w")
+        mid = ttk.Frame(serie, style="Card.TFrame")
+        mid.pack(fill="both", expand=True, pady=6)
+        self.listbox = tk.Listbox(mid, height=7, width=26, exportselection=False)
+        theme.style_listbox(self.listbox)
         self.listbox.pack(side="left", fill="both", expand=True)
         self.listbox.bind("<Double-Button-1>", lambda e: self.edit_selected())
         self.listbox.bind("<<ListboxSelect>>", lambda e: self._show_thumb())
-        self.thumb_lbl = ttk.Label(mid, text="Aperçu", anchor="center", width=30)
-        self.thumb_lbl.pack(side="left", padx=(8, 0), fill="y")
-        row = ttk.Frame(serie)
-        row.pack(fill="x", padx=8, pady=(0, 6))
-        for text, cmd in [("✎ Modifier", self.edit_selected), ("▲", lambda: self.move(-1)), ("▼", lambda: self.move(1)),
-                          ("🗑 Supprimer", self.delete_selected), ("📁 Dossier", self.open_folder),
-                          ("Nouvelle série", self.new_session), ("Rouvrir…", self.open_session),
-                          ("↻ Renuméroter", self.renumber)]:
-            ttk.Button(row, text=text, command=cmd, width=3 if text in "▲▼" else None).pack(side="left", padx=2)
+        thumb_box = tk.Frame(mid, bg=C["surface2"], highlightthickness=1, highlightbackground=C["border"],
+                             width=212, height=118)
+        thumb_box.pack(side="left", padx=(8, 0))
+        thumb_box.pack_propagate(False)
+        self.thumb_lbl = tk.Label(thumb_box, text="Aperçu", bg=C["surface2"], fg=C["text3"], font=font("body", 9))
+        self.thumb_lbl.pack(fill="both", expand=True)
+        acts = ttk.Frame(serie, style="Card.TFrame")
+        acts.pack(fill="x")
+        rows = [[("✎ Modifier", self.edit_selected), ("▲", lambda: self.move(-1)), ("▼", lambda: self.move(1)),
+                 ("🗑 Supprimer", self.delete_selected), ("↻ Renuméroter", self.renumber)],
+                [("📁 Dossier", self.open_folder), ("Nouvelle série", self.new_session),
+                 ("Rouvrir…", self.open_session)]]
+        for r, row in enumerate(rows):
+            for c, (text, cmd) in enumerate(row):
+                ttk.Button(acts, text=text, style="Small.TButton", command=cmd).grid(
+                    row=r, column=c, padx=2, pady=2, sticky="w")
 
-        out = ttk.LabelFrame(self, text=" Créer à partir de la série ")
-        out.pack(fill="x", **pad)
-        ttk.Button(out, text="🎬 Vidéo", command=self.export_video).pack(side="left", padx=4, pady=6)
-        ttk.Button(out, text="📝 Document Word", command=self.export_word).pack(side="left", padx=4)
-        ttk.Button(out, text="📄 Fiche HTML/PDF", command=self.export_html).pack(side="left", padx=4)
-        ttk.Button(out, text="⚙ Réglages…", command=self.settings).pack(side="right", padx=4)
-
-        self.status = ttk.Label(self, text="Prêt.", anchor="w", relief="sunken", padding=(6, 2), wraplength=700)
-        self.status.pack(fill="x", side="bottom")
+        # ---- barre d'état
+        tk.Frame(self, bg=C["border"], height=1).pack(fill="x", side="bottom")
+        bar = tk.Frame(self, bg=C["surface2"])
+        bar.pack(fill="x", side="bottom")
+        self.status = tk.Label(bar, text="Prêt.", bg=C["surface2"], fg=C["text2"], font=font("body", 9), anchor="w",
+                               justify="left", wraplength=940)
+        self.status.pack(fill="x", padx=16, pady=4)
 
     def _refresh_hint(self):
         k = self.cfg
-        txt = (f"1. Ouvrez votre menu déroulant, puis 2. appuyez sur :\n"
-               f"   {pretty(k['hotkey_full'])} écran entier   •   {pretty(k['hotkey_region'])} zone   •   "
-               f"{pretty(k['hotkey_window'])} fenêtre\n"
-               f"   {pretty(k['hotkey_steps'])} démarrer / arrêter la série de clics   (portable : + touche Fn)")
-        self.hint.config(text=txt)
+        for name in ("full", "region", "window", "steps"):
+            self._hint[name].config(text=pretty(k[f"hotkey_{name}"]))
 
     def _save_opts(self):
         self.cfg.update(draw_cursor=self.v_cursor.get(), click_halo=self.v_halo.get(),
@@ -531,39 +588,62 @@ class App(tk.Tk):
     # ------------------------------------------------------------------ réglages
     def settings(self):
         dlg = tk.Toplevel(self)
-        dlg.title("Raccourcis clavier et dossier")
+        dlg.title("Réglages")
+        theme.style_dialog(dlg)
         dlg.transient(self)
-        dlg.grab_set()
+        dlg.resizable(False, False)
+        wrap = tk.Frame(dlg, bg=C["bg"])
+        wrap.pack(fill="both", expand=True, padx=0, pady=(0, 12))
+
+        # -- Capture
+        cap = theme.section(wrap, "Capture")
+        for text, var in (("Montrer le pointeur de la souris", self.v_cursor),
+                          ("Entourer le pointeur d'un halo jaune", self.v_halo),
+                          ("Copier aussi dans le presse-papiers (Ctrl+V)", self.v_clip)):
+            ttk.Checkbutton(cap, text=text, variable=var, style="Card.TCheckbutton",
+                            command=self._save_opts).pack(anchor="w", pady=1)
+        ttk.Label(cap, text="Après la capture :", style="CardMuted.TLabel").pack(anchor="w", pady=(8, 0))
+        fr = ttk.Frame(cap, style="Card.TFrame")
+        fr.pack(anchor="w")
+        for val, txt in (("editor", "Ouvrir l'éditeur"), ("paint", "Ouvrir Paint"), ("none", "Rien (juste enregistrer)")):
+            ttk.Radiobutton(fr, text=txt, value=val, variable=self.v_after, style="Card.TRadiobutton",
+                            command=self._save_opts).pack(side="left", padx=(0, 14), pady=2)
+
+        # -- Raccourcis
+        sc = theme.section(wrap, "Raccourcis clavier")
         fields = {}
         rows = [("hotkey_full", "Écran entier"), ("hotkey_region", "Zone"), ("hotkey_window", "Fenêtre active"),
-                ("hotkey_steps", "Série de clics (début/fin)")]
-        ttk.Label(dlg, text="Format : ctrl+maj+f9   (évitez Ctrl+Alt = AltGr du clavier belge)").grid(
-            row=0, column=0, columnspan=2, padx=10, pady=8)
-        for i, (key, label) in enumerate(rows, start=1):
-            ttk.Label(dlg, text=label + " :").grid(row=i, column=0, sticky="e", padx=8, pady=3)
+                ("hotkey_steps", "Série de clics (début / fin)")]
+        for i, (key, label) in enumerate(rows):
+            ttk.Label(sc, text=label, style="Card.TLabel").grid(row=i, column=0, sticky="w", padx=(0, 16), pady=3)
             v = tk.StringVar(value=self.cfg[key].replace("shift", "maj"))
-            ttk.Entry(dlg, textvariable=v, width=22).grid(row=i, column=1, padx=8)
+            ttk.Entry(sc, textvariable=v, width=22).grid(row=i, column=1, sticky="w")
             fields[key] = v
-        ttk.Label(dlg, text="Dossier des captures :").grid(row=5, column=0, sticky="e", padx=8, pady=8)
-        vdir = tk.StringVar(value=self.cfg["base_dir"])
-        ttk.Entry(dlg, textvariable=vdir, width=40).grid(row=5, column=1, padx=8)
-        ttk.Button(dlg, text="Parcourir…",
-                   command=lambda: vdir.set(filedialog.askdirectory(initialdir=vdir.get()) or vdir.get())
-                   ).grid(row=5, column=2, padx=4)
+        ttk.Label(sc, text="Format : ctrl+maj+f9. Évitez Ctrl+Alt : sur un clavier belge, c'est la touche AltGr.",
+                  style="CardMuted.TLabel").grid(row=len(rows), column=0, columnspan=2, sticky="w", pady=(6, 0))
 
-        ttk.Label(dlg, text="ffmpeg.exe (vidéo MP4, facultatif) :").grid(row=8, column=0, sticky="e", padx=8, pady=4)
+        # -- Dossier et exports
+        ex = theme.section(wrap, "Dossier et exports")
+        ex.columnconfigure(1, weight=1)
+        ttk.Label(ex, text="Dossier des captures", style="Card.TLabel").grid(row=0, column=0, sticky="w", padx=(0, 16), pady=3)
+        vdir = tk.StringVar(value=self.cfg["base_dir"])
+        ttk.Entry(ex, textvariable=vdir, width=46).grid(row=0, column=1, sticky="ew")
+        ttk.Button(ex, text="Parcourir…", style="Small.TButton",
+                   command=lambda: vdir.set(filedialog.askdirectory(initialdir=vdir.get()) or vdir.get())
+                   ).grid(row=0, column=2, padx=(6, 0))
+        ttk.Label(ex, text="ffmpeg.exe (vidéo MP4)", style="Card.TLabel").grid(row=1, column=0, sticky="w", padx=(0, 16), pady=3)
         vff = tk.StringVar(value=self.cfg["ffmpeg_path"])
-        ttk.Entry(dlg, textvariable=vff, width=40).grid(row=8, column=1, padx=8)
-        ttk.Button(dlg, text="Parcourir…", command=lambda: vff.set(
+        ttk.Entry(ex, textvariable=vff, width=46).grid(row=1, column=1, sticky="ew")
+        ttk.Button(ex, text="Parcourir…", style="Small.TButton", command=lambda: vff.set(
             filedialog.askopenfilename(parent=dlg, title="Choisir ffmpeg.exe", filetypes=[("ffmpeg", "ffmpeg.exe")])
-            or vff.get())).grid(row=8, column=2, padx=4)
+            or vff.get())).grid(row=1, column=2, padx=(6, 0))
         found = exporter.find_ffmpeg(self.cfg["ffmpeg_path"])
-        ttk.Label(dlg, text=("ffmpeg trouvé : " + found) if found else "ffmpeg : non trouvé automatiquement",
-                  foreground="#2E7D32" if found else "#B26A00", wraplength=560).grid(
-            row=9, column=0, columnspan=3, padx=10, sticky="w")
+        tk.Label(ex, text=("✓ ffmpeg trouvé : " + found) if found else "ffmpeg non trouvé automatiquement (facultatif)",
+                 bg=C["surface"], fg=C["green"] if found else C["amber"], font=font("body", 9), anchor="w",
+                 wraplength=560, justify="left").grid(row=2, column=0, columnspan=3, sticky="w", pady=(2, 6))
         vlogo = tk.BooleanVar(value=self.cfg["logo_in_exports"])
-        ttk.Checkbutton(dlg, text="Ajouter le logo jfb4plai en haut des fiches HTML et documents Word",
-                        variable=vlogo).grid(row=6, column=0, columnspan=3, padx=10, pady=(0, 4), sticky="w")
+        ttk.Checkbutton(ex, text="Ajouter le logo jfb4plai en haut des fiches HTML et documents Word",
+                        variable=vlogo, style="Card.TCheckbutton").grid(row=3, column=0, columnspan=3, sticky="w")
 
         def apply():
             self.cfg["logo_in_exports"] = vlogo.get()
@@ -580,6 +660,7 @@ class App(tk.Tk):
                 firstrun.warn_if_cloud(dlg, Path(vdir.get()))
             self.cfg["base_dir"] = vdir.get()
             self.cfg["storage_confirmed"] = True
+            self._save_opts()
             config.save(self.cfg)
             self._update_folder_label()
             dlg.destroy()
@@ -587,7 +668,12 @@ class App(tk.Tk):
             if not (self.listener and self.listener.errors):
                 self.say("Réglages enregistrés.")
 
-        ttk.Button(dlg, text="Enregistrer", command=apply).grid(row=10, column=0, columnspan=3, pady=10)
+        btns = tk.Frame(wrap, bg=C["bg"])
+        btns.pack(fill="x", padx=16, pady=(12, 0))
+        ttk.Button(btns, text="✔  Enregistrer", style="Primary.TButton", command=apply).pack(side="right")
+        ttk.Button(btns, text="Annuler", command=dlg.destroy).pack(side="right", padx=8)
+        dlg.update_idletasks()
+        dlg.grab_set()
 
     def _quit(self):
         if self.listener:

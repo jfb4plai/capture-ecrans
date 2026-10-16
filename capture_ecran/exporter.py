@@ -222,11 +222,27 @@ def _run_ffmpeg(ffmpeg: str, out_dir: Path, frames: list[Path], durs: list[float
 
 
 # ---------------------------------------------------------------- fiche HTML
-_CSS = """body{font-family:Verdana,Arial,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#1b1b1b;line-height:1.6}
-h1{font-size:1.7rem}.step{break-inside:avoid;margin:2rem 0;border-top:3px solid #1E88E5;padding-top:1rem}
-.num{display:inline-block;background:#1E88E5;color:#fff;border-radius:50%;width:2.2em;height:2.2em;line-height:2.2em;
-text-align:center;font-weight:bold;margin-right:.6em}.cap{font-size:1.2rem;font-weight:bold}
-img{max-width:100%;border:1px solid #bbb;margin-top:.8rem}@media print{body{margin:0}.step{page-break-inside:avoid}}"""
+def _font_face(family: str, file: str, style: str = "normal") -> str:
+    try:
+        from .resources import resource_path
+        data = base64.b64encode(resource_path("fonts/" + file).read_bytes()).decode()
+    except OSError:
+        return ""
+    return (f"@font-face{{font-family:'{family}';font-style:{style};"
+            f"src:url(data:font/ttf;base64,{data}) format('truetype')}}")
+
+
+# Même style que l'application et que le guide « Claude Code · PLAI » : fond crème, cartes blanches, titres serif
+_CSS = """body{font-family:'DM Sans 9pt','DM Sans',Verdana,Arial,sans-serif;max-width:860px;margin:0 auto;padding:2rem 1.2rem 3rem;
+background:#faf9f7;color:#1a1814;line-height:1.7;font-size:16px}
+h1{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:2rem;line-height:1.2;margin:.6rem 0 1.6rem}
+.step{break-inside:avoid;margin:1.2rem 0;background:#fff;border:1px solid #e8e4dd;border-radius:10px;padding:1rem 1.2rem}
+.num{display:inline-flex;align-items:center;justify-content:center;background:#1a1814;color:#fff;border-radius:50%;
+width:2rem;height:2rem;font-weight:700;margin-right:.7rem;flex-shrink:0}
+.head{display:flex;align-items:center}.cap{font-size:1.15rem;font-weight:700}
+img{max-width:100%;border:1px solid #e8e4dd;border-radius:6px;margin-top:.9rem}
+.logo{width:72px;border:0;margin:0;border-radius:0}
+@media print{body{background:#fff;padding:0}.step{page-break-inside:avoid}}"""
 
 
 def _logo_bytes() -> bytes | None:
@@ -239,11 +255,13 @@ def _logo_bytes() -> bytes | None:
 
 def export_html_guide(session: Session, path: Path, max_width: int = 1400, logo: bool = False) -> Path:
     """Fiche « pas à pas » autonome (images intégrées) : s'imprime ou s'enregistre en PDF."""
+    faces = (_font_face("DM Serif Display", "DMSerifDisplay-Regular.ttf") + _font_face("DM Sans 9pt", "DMSans-Regular.ttf")
+             + "@font-face{font-family:'DM Sans 9pt';font-weight:700;src:local('DM Sans Bold')}")
     parts = [f"<!doctype html><html lang='fr'><meta charset='utf-8'><title>{html.escape(session.title)}</title>"
-             f"<style>{_CSS}</style>"]
+             f"<style>{faces}{_CSS}</style>"]
     lb = _logo_bytes() if logo else None
     if lb:
-        parts.append("<img alt='Logo jfb4plai' style='width:72px;border:0;margin:0' src='data:image/png;base64,"
+        parts.append("<img class='logo' alt='Logo jfb4plai' src='data:image/png;base64,"
                      + base64.b64encode(lb).decode() + "'>")
     parts.append(f"<h1>{html.escape(session.title)}</h1>")
     for i, cap in enumerate(session.captures, start=1):
@@ -254,7 +272,7 @@ def export_html_guide(session: Session, path: Path, max_width: int = 1400, logo:
         img.save(buf, "PNG", optimize=True)
         b64 = base64.b64encode(buf.getvalue()).decode()
         text = html.escape(cap.caption) if cap.caption else ""
-        parts.append(f"<section class='step'><span class='num'>{i}</span><span class='cap'>{text}</span><br>"
+        parts.append(f"<section class='step'><div class='head'><span class='num'>{i}</span><span class='cap'>{text}</span></div>"
                      f"<img alt='Étape {i}' src='data:image/png;base64,{b64}'></section>")
     path = Path(path)
     path.write_text("".join(parts), "utf-8")

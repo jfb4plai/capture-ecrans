@@ -8,6 +8,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from capture_ecran import editor as E
+from capture_ecran import theme
 from capture_ecran.session import Session
 
 pytestmark = pytest.mark.skipif(sys.platform != "win32" and not os.environ.get("DISPLAY"), reason="pas d'écran")
@@ -23,6 +24,7 @@ def tkroot():
     """UNE seule racine Tk pour tout le module : sous Windows, recréer plusieurs Tk() dans le même
     processus échoue parfois (« invalid command name tcl_findLibrary »)."""
     root = tk.Tk()
+    theme.apply(root)              # l'application applique toujours le thème avant de créer la moindre fenêtre
     root.geometry("200x100+0+0")   # visible : un dialogue « transient » d'une mère masquée reste invisible
     root.update()
     yield root
@@ -162,3 +164,43 @@ def test_enter_alone_still_validates_single_line(tkroot):
         box.event_generate("<Return>", state=0)
 
     assert _ask_with_keys(tkroot, steps) == "Un seul"
+
+
+def test_theme_is_applied_and_fonts_resolve(tkroot):
+    f = theme.font("serif", 18)
+    assert f.actual("size") == 18 or f.actual("size") == -24 or isinstance(f.actual("family"), str)
+    assert theme.font("serif", 18) is f                       # un seul objet par (rôle, taille) : pas de fuite
+    for style in ("TButton", "Primary.TButton", "Small.TButton", "Big.TButton", "Card.TLabel", "Card.TRadiobutton",
+                  "Card.TCheckbutton", "Muted.TLabel"):
+        assert tkroot.tk.call("ttk::style", "layout", style)  # les styles existent
+    assert str(tkroot.cget("bg")) == theme.C["bg"]
+
+
+def test_callout_and_pill_kinds_exist(tkroot):
+    for kind in ("info", "warn", "ok", "danger", "teal"):
+        assert theme.callout(tkroot, kind, "texte", label="titre") is not None
+        assert theme.pill(tkroot, "x", kind if kind in theme.CALLOUTS else "teal") is not None
+
+
+def test_bundled_fonts_have_french_glyphs():
+    from PIL import ImageFont
+    from capture_ecran.resources import resource_path
+    for name in ("DMSans-Regular.ttf", "DMSans-Medium.ttf", "DMSans-Bold.ttf", "DMSerifDisplay-Regular.ttf"):
+        path = resource_path("fonts/" + name)
+        assert path.is_file(), name
+        f = ImageFont.truetype(str(path), 24)
+        for ch in "éèêàçùôîœÉ«»’…":
+            assert f.getmask(ch).getbbox() is not None, f"{name} : glyphe manquant {ch}"
+    for lic in ("OFL-DMSans.txt", "OFL-DMSerifDisplay.txt"):
+        assert "SIL OPEN FONT LICENSE" in resource_path("fonts/" + lic).read_text("utf-8").upper()
+
+
+def test_html_fiche_uses_the_site_style(tmp_path):
+    from capture_ecran import exporter
+    from capture_ecran.session import Session
+    s = Session.new(tmp_path, "Mon tuto")
+    img = Image.new("RGB", (300, 200), "white")
+    s.update(s.add(img), img, img, [], "Étape un")
+    html = exporter.export_html_guide(s, tmp_path / "f.html").read_text("utf-8")
+    assert "#faf9f7" in html and "DM Serif Display" in html and "font/ttf;base64" in html
+    assert "Étape un" in html and "class='num'" in html

@@ -24,3 +24,9 @@ Licence : PolyForm Noncommercial 1.0.0 (voir `LICENSE`) : usage non commercial.
 ## Non vérifié sous Windows (écrit selon la documentation, testé seulement par simulation)
 Raccourcis globaux, hook souris `WH_MOUSE_LL`, enregistrement MCI du micro, presse-papiers, Paint, DPI.
 La logique (rendu, sessions, clics → captures, voix → piste audio, MP4, .docx) est couverte par `pytest` (30 tests).
+
+## Style et polices
+L'interface reprend le style du guide « Claude Code · PLAI » (fond crème, cartes blanches, titres en serif). Les polices
+**DM Sans** et **DM Serif Display** (© The DM Project Authors, licence SIL Open Font License 1.1) sont embarquées dans
+`capture_ecran/assets/fonts/` avec leurs licences ; elles ne sont chargées que pour ce programme. Sans elles, l'application
+retombe sur Georgia / Segoe UI. Le thème est dans `capture_ecran/theme.py`.
