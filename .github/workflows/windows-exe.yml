@@ -2,6 +2,11 @@ name: Capture d'écran PLAI - version Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Publier une version (ex. v1.1.0). Laisser vide pour une simple construction de test."
+        required: false
+        default: ""
   push:
     tags: ["v*"]
 
@@ -117,13 +122,24 @@ jobs:
     needs: [build, scan-linux]
     steps:
       - uses: actions/checkout@v4
+      - name: Nom de la version
+        id: ver
+        run: |
+          v="${{ inputs.version || github.ref_name }}"
+          if [ -n "${{ inputs.version }}" ] || [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            [[ "$v" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Nom de version invalide : $v (attendu : v1.2.3)"; exit 1; }
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "name=$v" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@v4
         with:
           path: art
       - name: Rapport d'analyse de sécurité
         run: |
           vt=""; [ -f art/analyses-linux/scan-virustotal.txt ] && vt="--vt art/analyses-linux/scan-virustotal.txt"
-          python3 tools/scan_report.py --version "${{ github.ref_name }}" \
+          python3 tools/scan_report.py --version "${{ steps.ver.outputs.name }}" \
             --sha art/Capture-ecran-PLAI-windows/Capture-ecran-PLAI-windows.zip.sha256 \
             --defender art/Capture-ecran-PLAI-windows/scan-defender.txt \
             --clamav art/analyses-linux/scan-clamav.txt $vt --out SECURITY-REPORT.md
@@ -135,8 +151,13 @@ jobs:
           path: SECURITY-REPORT.md
       # Publication seulement si le rapport ne signale aucune menace (le script échoue sinon)
       - uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.ver.outputs.publish == 'true'
         with:
+          tag_name: ${{ steps.ver.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          name: Capture d'écran PLAI ${{ steps.ver.outputs.name }}
+          make_latest: true
+          prerelease: false
           body_path: SECURITY-REPORT.md
           files: |
             art/Capture-ecran-PLAI-windows/Capture-ecran-PLAI-windows.zip
