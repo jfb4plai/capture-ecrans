@@ -80,3 +80,32 @@ def test_second_instance_is_detected_on_windows():
     name = f"Local\\CEP-test-{uuid.uuid4().hex}"
     assert winapi.acquire_single_instance(name) is True
     assert winapi.acquire_single_instance(name) is False
+
+
+# ------------------------------------------------------------------ touche d'ouverture
+def test_default_hotkeys_are_valid_and_distinct():
+    from capture_ecran import config
+    from capture_ecran.hotkeys import parse_hotkey, pretty
+    keys = [config.DEFAULTS[k] for k in ("hotkey_full", "hotkey_region", "hotkey_window", "hotkey_steps", "hotkey_show")]
+    parsed = [parse_hotkey(k) for k in keys]
+    assert len(set(parsed)) == len(parsed)                   # aucune collision entre nos propres raccourcis
+    mods, vk = parse_hotkey(config.DEFAULTS["hotkey_show"])
+    assert mods == 0x8 | 0x4 and vk == ord("Q")              # Win + Maj + Q
+    assert pretty(config.DEFAULTS["hotkey_show"]) == "Win+Maj+Q"
+
+
+def test_lnk_hotkey_goes_into_env_and_default_is_off():
+    from capture_ecran import config
+    assert config.DEFAULTS["lnk_hotkey"] is False            # jamais activée sans que l'utilisateur la coche
+    env = shortcuts.build_env(Path("x.lnk"), "t", "", "w", None, False, shortcuts.LNK_HOTKEY)
+    assert env["CEP_HOTKEY"] == "CTRL+ALT+Q"
+    assert shortcuts.build_env(Path("x.lnk"), "t", "", "w", None, False)["CEP_HOTKEY"] == ""
+
+
+@pytest.mark.skipif(not WIN, reason="WScript.Shell Windows")
+def test_real_lnk_hotkey_roundtrip_on_windows(tmp_path):
+    lnk = tmp_path / shortcuts.LNK_NAME
+    shortcuts.create(lnk, hotkey=shortcuts.LNK_HOTKEY)
+    assert shortcuts.read(lnk)["hotkey"].upper().replace(" ", "") == "CTRL+ALT+Q"
+    shortcuts.create(lnk)                                    # recréé sans touche : elle doit disparaître
+    assert shortcuts.read(lnk)["hotkey"] == ""

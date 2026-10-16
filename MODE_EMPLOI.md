@@ -27,6 +27,8 @@ Contrairement à l'outil de capture de Windows (`Windows`+`Maj`+`S`), **mes racc
 - **Lancement automatique à l'ouverture de Windows** : même endroit. Le programme démarre alors **réduit dans la barre des tâches** : il est prêt quand vous en avez besoin.
 - **Épingler à la barre des tâches** : clic droit sur le raccourci › *Épingler à la barre des tâches*.
 - Si le programme est déjà ouvert, un second lancement ramène simplement la fenêtre au premier plan.
+- **`Windows`+`Maj`+`Q` rouvre la fenêtre** quand le programme tourne (par exemple lancé au démarrage de Windows). Si cette combinaison est déjà prise par un autre programme, le message d'état l'indique : changez-la dans *Réglages › Raccourcis clavier*.
+- **Et si le programme est fermé ?** Windows n'autorise pas la touche `Windows` pour *lancer* un programme. Alternative : *Réglages › Ouvrir facilement*, case « Les raccourcis s'ouvrent aussi avec **Ctrl+Alt+Q** ». Sur un clavier belge, `Ctrl`+`Alt` est la touche AltGr : à désactiver si vous tapez souvent `AltGr`+`Q`. (Je n'ai pas pu vérifier cette combinaison sur un vrai poste.)
 
 > ⚠ **Avant de créer un raccourci**, déplacez le dossier extrait du zip (`Capture-ecran-PLAI`) à un endroit **durable**, par exemple dans *Documents*. Le raccourci pointe vers ce dossier : si vous le videz (Téléchargements) ou le supprimez, il ne fonctionnera plus. Le programme vous prévient quand il tourne depuis « Téléchargements » ou un dossier temporaire. Pour réparer un raccourci après un déplacement : relancez le programme depuis son nouvel emplacement et revalidez *Réglages › Ouvrir facilement*.
 
@@ -41,6 +43,7 @@ Contrairement à l'outil de capture de Windows (`Windows`+`Maj`+`S`), **mes racc
 | **Ctrl + Maj + F10** | vous choisissez une zone (le menu est déjà « figé ») |
 | **Ctrl + Maj + F11** | la fenêtre active seulement |
 | **Ctrl + Maj + F12** | démarre / arrête la **série de clics** (voir ci-dessous) |
+| **Windows + Maj + Q** | **rouvre la fenêtre** du programme (réduite dans la barre des tâches) |
 
 Un bip confirme la capture. Sur certains portables, ajoutez la touche **Fn**.
 Les raccourcis se changent via le bouton *Raccourcis…* (évitez Ctrl+Alt : c'est la touche AltGr du clavier belge).

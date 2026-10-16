@@ -11,6 +11,8 @@ DEFAULTS = {
     "hotkey_region": "ctrl+shift+f10",
     "hotkey_window": "ctrl+shift+f11",
     "hotkey_steps": "ctrl+shift+f12",
+    "hotkey_show": "win+shift+q",   # rouvre la fenêtre du programme (s'il tourne déjà)
+    "lnk_hotkey": False,            # touche de raccourci Ctrl+Alt+Q sur les raccourcis Windows (lance le programme)
     "steps_moment": "avant",     # avant | apres
     "logo_in_exports": False,
     "ffmpeg_path": "",

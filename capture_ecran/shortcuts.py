@@ -25,11 +25,12 @@ $l.WorkingDirectory = $env:CEP_WD
 $l.Description = $env:CEP_DESC
 if ($env:CEP_ICON) { $l.IconLocation = $env:CEP_ICON }
 $l.WindowStyle = [int]$env:CEP_STYLE
+if ($env:CEP_HOTKEY) { $l.Hotkey = $env:CEP_HOTKEY }
 $l.Save()
 '''
 _PS_READ = r'''
 $l = (New-Object -ComObject WScript.Shell).CreateShortcut($env:CEP_LNK)
-"$($l.TargetPath)|$($l.Arguments)|$($l.WorkingDirectory)|$($l.IconLocation)|$($l.WindowStyle)"
+"$($l.TargetPath)|$($l.Arguments)|$($l.WorkingDirectory)|$($l.IconLocation)|$($l.WindowStyle)|$($l.Hotkey)"
 '''
 
 
@@ -71,11 +72,16 @@ def location_warning(exe: str | Path | None = None) -> str | None:
     return None
 
 
-def build_env(lnk: Path, target: str, args: str, workdir: str, icon: str | None, minimized: bool) -> dict:
+LNK_HOTKEY = "CTRL+ALT+Q"   # le shell n'accepte pas la touche Windows pour un raccourci : Ctrl+Alt+lettre
+
+
+def build_env(lnk: Path, target: str, args: str, workdir: str, icon: str | None, minimized: bool,
+              hotkey: str = "") -> dict:
     env = dict(os.environ)
     env.update({"CEP_LNK": str(lnk), "CEP_TARGET": target, "CEP_ARGS": args, "CEP_WD": workdir,
                 "CEP_DESC": "Capture d'écran PLAI : menus déroulants, annotations, vidéo sous-titrée",
-                "CEP_ICON": f"{icon},0" if icon else "", "CEP_STYLE": "7" if minimized else "1"})
+                "CEP_ICON": f"{icon},0" if icon else "", "CEP_STYLE": "7" if minimized else "1",
+                "CEP_HOTKEY": hotkey})
     return env
 
 
@@ -85,7 +91,7 @@ def _run_ps(script: str, env: dict) -> subprocess.CompletedProcess:
                           env=env, capture_output=True, text=True, timeout=60, creationflags=flags)
 
 
-def create(lnk: Path, minimized: bool = False) -> None:
+def create(lnk: Path, minimized: bool = False, hotkey: str = "") -> None:
     """Crée (ou remplace) le raccourci. Lève OSError avec un message utile si impossible."""
     if sys.platform != "win32":
         raise OSError("Les raccourcis ne sont disponibles que sous Windows.")
@@ -96,7 +102,7 @@ def create(lnk: Path, minimized: bool = False) -> None:
     lnk = Path(lnk)
     lnk.parent.mkdir(parents=True, exist_ok=True)
     try:
-        r = _run_ps(_PS_CREATE, build_env(lnk, target, args, workdir, icon, minimized))
+        r = _run_ps(_PS_CREATE, build_env(lnk, target, args, workdir, icon, minimized, hotkey))
     except (OSError, subprocess.TimeoutExpired) as e:
         raise OSError(f"PowerShell indisponible ({e}). {MANUAL_HELP}") from e
     if r.returncode != 0 or not lnk.is_file():
@@ -110,5 +116,5 @@ def remove(lnk: Path) -> None:
 def read(lnk: Path) -> dict:
     """Relit un raccourci (pour les tests et le diagnostic)."""
     r = _run_ps(_PS_READ, {**os.environ, "CEP_LNK": str(lnk)})
-    target, args, wd, icon, style = (r.stdout.strip().split("|") + [""] * 5)[:5]
-    return {"target": target, "args": args, "workdir": wd, "icon": icon, "style": style}
+    target, args, wd, icon, style, hotkey = (r.stdout.strip().split("|") + [""] * 6)[:6]
+    return {"target": target, "args": args, "workdir": wd, "icon": icon, "style": style, "hotkey": hotkey}

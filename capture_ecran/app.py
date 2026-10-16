@@ -21,7 +21,8 @@ from .hotkeys import HotkeyListener, parse_hotkey, pretty
 from .selector import select_region
 from .session import Session
 
-MODES = {"full": "Écran entier", "region": "Zone", "window": "Fenêtre active", "steps": "Série de clics"}
+MODES = {"full": "Écran entier", "region": "Zone", "window": "Fenêtre active", "steps": "Série de clics",
+         "show": "Rouvrir la fenêtre"}
 
 
 class App(tk.Tk):
@@ -79,7 +80,7 @@ class App(tk.Tk):
             return
         self._offer_shortcuts()
 
-    def _apply_shortcuts(self, parent, desktop: bool, menu: bool, startup: bool) -> bool:
+    def _apply_shortcuts(self, parent, desktop: bool, menu: bool, startup: bool, hotkey: bool = False) -> bool:
         """Crée / retire les raccourcis demandés. Affiche l'erreur (avec la marche à suivre manuelle) si besoin."""
         plan = ((shortcuts.desktop_lnk(), desktop, False), (shortcuts.start_menu_lnk(), menu, False),
                 (shortcuts.startup_lnk(), startup, True))
@@ -87,7 +88,9 @@ class App(tk.Tk):
         for lnk, want, minimized in plan:
             try:
                 if want:
-                    shortcuts.create(lnk, minimized=minimized)
+                    # la touche de raccourci n'a de sens que sur les raccourcis que le shell surveille (bureau, menu Démarrer)
+                    shortcuts.create(lnk, minimized=minimized,
+                                     hotkey=shortcuts.LNK_HOTKEY if (hotkey and not minimized) else "")
                 elif lnk.exists():
                     shortcuts.remove(lnk)
             except OSError as e:
@@ -221,9 +224,8 @@ class App(tk.Tk):
             cap.pack(anchor="w")
             tk.Label(cell, text=desc, bg=C["dark"], fg=C["dark_text"], font=font("italic", 9)).pack(anchor="w", pady=(3, 0))
             self._hint[name] = cap
-        tk.Label(dark, text="Laissez le programme ouvert (réduisez la fenêtre, ne la fermez pas) : les raccourcis ne "
-                            "fonctionnent que s'il tourne.", bg=C["dark"], fg=C["dark_text"], font=font("body", 9),
-                 anchor="w").pack(fill="x", padx=16, pady=(0, 10))
+        self._stay_lbl = tk.Label(dark, text="", bg=C["dark"], fg=C["dark_text"], font=font("body", 9), anchor="w")
+        self._stay_lbl.pack(fill="x", padx=16, pady=(0, 10))
         keys.columnconfigure(4, weight=1)
         tk.Label(keys, text="Portable : + touche Fn", bg=C["dark"], fg=C["text3"], font=font("body", 9),
                  anchor="e").grid(row=0, column=4, sticky="ne")
@@ -313,6 +315,8 @@ class App(tk.Tk):
         k = self.cfg
         for name in ("full", "region", "window", "steps"):
             self._hint[name].config(text=pretty(k[f"hotkey_{name}"]))
+        self._stay_lbl.config(text="Laissez le programme ouvert (réduisez la fenêtre, ne la fermez pas) : les raccourcis ne "
+                                   f"fonctionnent que s'il tourne.  {pretty(k['hotkey_show'])} rouvre cette fenêtre.")
 
     def _save_opts(self):
         self.cfg.update(draw_cursor=self.v_cursor.get(), click_halo=self.v_halo.get(),
@@ -329,7 +333,8 @@ class App(tk.Tk):
             self.listener.stop()
         self.listener = HotkeyListener(
             {"full": self.cfg["hotkey_full"], "region": self.cfg["hotkey_region"],
-             "window": self.cfg["hotkey_window"], "steps": self.cfg["hotkey_steps"]}, self.events.put)
+             "window": self.cfg["hotkey_window"], "steps": self.cfg["hotkey_steps"],
+             "show": self.cfg["hotkey_show"]}, self.events.put)
         self.listener.start()
         self.listener.ready.wait(2)
         self._refresh_hint()
@@ -437,7 +442,19 @@ class App(tk.Tk):
         self.say(f"{n} pastille(s) renumérotée(s)." if n else "Les numéros sont déjà dans le bon ordre.")
 
     # ------------------------------------------------------------------ capture
+    def _show_window(self):
+        """Rouvre la fenêtre (touche Win+Maj+Q par défaut) : fonctionne même réduite ou masquée, même pendant une action."""
+        self.deiconify()
+        self.state("normal")
+        self.lift()
+        self.attributes("-topmost", True)
+        self.after(250, lambda: self.attributes("-topmost", False))
+        self.focus_force()
+
     def request(self, mode: str, delay: int = 0):
+        if mode == "show":
+            self._show_window()
+            return
         if mode == "steps":
             self.toggle_steps()
             return
@@ -680,7 +697,7 @@ class App(tk.Tk):
         sc = theme.section(wrap, "Raccourcis clavier")
         fields = {}
         rows = [("hotkey_full", "Écran entier"), ("hotkey_region", "Zone"), ("hotkey_window", "Fenêtre active"),
-                ("hotkey_steps", "Série de clics (début / fin)")]
+                ("hotkey_steps", "Série de clics (début / fin)"), ("hotkey_show", "Rouvrir cette fenêtre")]
         for i, (key, label) in enumerate(rows):
             ttk.Label(sc, text=label, style="Card.TLabel").grid(row=i, column=0, sticky="w", padx=(0, 16), pady=3)
             v = tk.StringVar(value=self.cfg[key].replace("shift", "maj"))
@@ -698,13 +715,19 @@ class App(tk.Tk):
             for text, var in (("Raccourci sur le bureau", v_desk), ("Raccourci dans le menu Démarrer", v_menu),
                               ("Lancer automatiquement à l'ouverture de Windows (réduit dans la barre des tâches)", v_auto)):
                 ttk.Checkbutton(ow, text=text, variable=var, style="Card.TCheckbutton").pack(anchor="w", pady=1)
+            v_hk = tk.BooleanVar(value=self.cfg.get("lnk_hotkey", False))
+            ttk.Checkbutton(ow, text="Les raccourcis s'ouvrent aussi avec Ctrl+Alt+Q, même si le programme n'est pas lancé",
+                            variable=v_hk, style="Card.TCheckbutton").pack(anchor="w", pady=1)
+            ttk.Label(ow, text="Windows n'autorise pas la touche Windows pour lancer un programme fermé. Sur un clavier belge, "
+                               "Ctrl+Alt = AltGr : à désactiver si vous tapez souvent AltGr+Q.",
+                      style="CardMuted.TLabel", wraplength=520, justify="left").pack(anchor="w")
             warn = shortcuts.location_warning()
             if warn:
                 theme.callout(ow, "warn", warn, label="Attention", wrap=520).pack(fill="x", pady=(8, 0))
             ttk.Label(ow, text="Astuce : pour l'épingler à la barre des tâches, clic droit sur le raccourci › Épingler à la barre des tâches.",
                       style="CardMuted.TLabel").pack(anchor="w", pady=(6, 0))
         else:
-            v_desk = v_menu = v_auto = None
+            v_desk = v_menu = v_auto = v_hk = None
 
         # -- Dossier et exports
         ex = theme.section(wrap, "Dossier et exports")
@@ -747,7 +770,9 @@ class App(tk.Tk):
             self._save_opts()
             config.save(self.cfg)
             if v_desk is not None:
-                self._apply_shortcuts(dlg, v_desk.get(), v_menu.get(), v_auto.get())
+                self.cfg["lnk_hotkey"] = v_hk.get()
+                config.save(self.cfg)
+                self._apply_shortcuts(dlg, v_desk.get(), v_menu.get(), v_auto.get(), v_hk.get())
             self._update_folder_label()
             dlg.destroy()
             self._start_hotkeys()
