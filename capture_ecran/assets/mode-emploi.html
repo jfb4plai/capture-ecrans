@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mode d'emploi — Capture d'écran PLAI · jfb4plai</title>
+  <meta name="description" content="Mode d'emploi de Capture d'écran PLAI : photographier un menu déroulant, annoter, enregistrer les clics, créer une fiche, un document Word ou une vidéo sous-titrée." />
+  <style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--noir:#1a1a1a;--rose:#FF3399;--rose-dk:#CC0070;--beige:#F5F0E8;--blanc:#fff;--gris:#5a5a5a;--gris-clair:#909090;--bordure:#e8e8e8;--bg-subtil:#f9f9f7}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,sans-serif;color:var(--noir);background:var(--blanc);line-height:1.7;font-size:17px}
+a{color:var(--rose-dk)}a:hover{color:var(--rose)}
+nav{border-bottom:1px solid var(--bordure);padding:0 1.5rem}
+.nav-inner{max-width:860px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;gap:1rem}
+.nav-inner a{text-decoration:none;font-size:14px;font-weight:500;color:var(--gris)}
+.nav-inner img{height:48px;width:auto;display:block}
+main{max-width:860px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+h1{font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.2;margin-bottom:.8rem}
+h2{font-size:1.4rem;margin:2.4rem 0 .8rem;padding-top:1rem;border-top:1px solid var(--bordure)}
+h3{font-size:1.1rem;margin:1.4rem 0 .4rem}
+p,ul,ol{margin-bottom:1rem}ul,ol{padding-left:1.4rem}li{margin-bottom:.35rem}
+.lead{font-size:1.1rem;color:var(--gris)}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:2px;background:var(--bg-subtil);color:var(--gris);border:1px solid var(--bordure);margin-bottom:.8rem}
+.dl{background:var(--beige);border-radius:4px;padding:1.5rem;margin:1.5rem 0}
+.btn{display:inline-block;background:var(--noir);color:#fff!important;padding:12px 24px;border-radius:2px;font-weight:600;text-decoration:none}
+.btn:hover{background:var(--rose-dk)}
+.small{font-size:14px;color:var(--gris)}
+code,kbd{font-family:ui-monospace,Consolas,monospace;font-size:.92em;background:var(--bg-subtil);border:1px solid var(--bordure);border-radius:3px;padding:1px 6px}
+table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:15px}
+th,td{border:1px solid var(--bordure);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--bg-subtil)}
+.note{border-left:4px solid var(--rose);background:var(--bg-subtil);padding:.8rem 1rem;margin:1rem 0}
+.toc{background:var(--bg-subtil);padding:1rem 1.4rem;border-radius:4px;margin:1.5rem 0}.toc ul{margin:0}
+footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font-size:13px;color:var(--gris-clair)}
+@media(max-width:560px){body{font-size:16px}th,td{padding:6px}}
+</style>
+</head>
+<body>
+<nav><div class="nav-inner">
+  <a href="https://jfb4plai.com"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAiJUlEQVR42s2deZQc1X3vP/dW9Tbd07NpFo00QiuSkEASSEISi1kM2A5gA/FGbOyAl/g9v8QvjuN3ghM7dmLy4iWxHTvPdh45iTn2i218QmyIF1aDEDtCAoH2dSTNvvVeVfe+P6q6p3u6epsZIH3OHGl6uqvu/e2/7+93fyWU1po37aUB0cD7DV5TaxDiDdjG7O9jvrnEn7mJ/C9zIVrRd98I4hduqWuvx+cl54l8DX5TF11AFxFfzJH4ja5Mz7MgiRl7qL0XOdvliIaWqEsJX7AS3mJF44QXs/iLrpuQem6aN1PY6mWAmFdZ0wXil1xXiHkwM/NFIjEP4lVJeOq7hph/J6xr+Mc3yC7/l32VBhjyDSG+Lia+blhN3xjnpOd/LXUsrkEN8AkPda0oYIZK1hlhijrpWcxS0SgfGo126/68rtsMmcXfEcINSMq/6/OmBkQDodc8C5aYse6GGTjfxC/5ex0f1AUTpMtpJKo5GjeScYVeVNBi7W9hRGPST5UAr14GC5+fhoivG5AeXQ/XSxcnCysRRZFh1a+LUpNTEk7O+HThI7qKtlSnhR/Rhd8vDUizaDTIQVRdf9n9RT1JYk0fUMOO1cxc6xOzNysm0g36mvKEq7IvmiMUMR25i7Ib6Spr0A2TVswB9dFzvEbj9xQVbOrcXJyPBug6lplnknY1UzQW54sG9ERpXbQiVyRkBR+vdOknhZgbcytrtJ43HS5jQLH8V1pEKUnmx6iIGYTUCExRHd5QWiOEQFa5p9L5PTXGEN2wEZs3Dag3Hps/Kci7FI3GEKX6cWgyyytjGV4by3IkkWMka5OyHHJKo7w7BwREDEFr0GBxU5Dl8RBr2iKsbQvTGjTKtEQKUdeKdU0b3wgT/D/bAAPml+DFElpsVhK2w2/PJvnNyUn2jWTI2IrWsMGS5iBLmoP0RgN0hU1ipsSQrjZmbc1EzuZsyuJUIsexKYuTaZuMrVkSC3BpT4xrFjWzujVcuK+j3XuKBsim56QJ/ulinQzQczYv2lfiwfAuuXcszQ8PjvLomRRBA7Z1NXF1b4wLO5pYEAk0fE9bKQ5OZnl2MMUTZxLsn8jSGg5w07IW3r2shahpFBhhiNcJ3agjMixigPaBDPS82PeZL0drTM/U7BpK8q2XhzkykWFbV5T3rGhlW1cUKUojDGeGnIiZBlFP/yYEM0wZDGVy/MfxCX58ZJKkpXjv8jZuX9NO1JRe7qhL7lkjgZ2/jL6EAboo0aqI8Yg52Xk8c3M8keXPXxjk6YEk710e5xNrF7CwKTjNJDW9lJqBlS7PMHWRlglKGfLY6Um+s2+E/qTDx87r4LZVbW+CNvgyQPjEiHrOki9mbO57rw3z7ZeHuXxhjM9u6mRxU6hAgAJkIGa7ae27Aq2npTx/7V8cH+WLL47QFjb55vYeVrdESn1DBezxdWCALsTY834DwNZgCjibyfGpJ/o5m7a5a+tCtnfHph1iBUnX9ZrUov+LolC1zKwW5QuGFGQdiy+8MMDPjib4/EXd3LqiraBQ1aAZPU/gXgUnrOeYpxZJvtIYUrBzcIrbHz3NtYua+Oq2XkKGgaM1EoGokpnNNtDzS5uEZ+vzH8hrpRCCJwem+J87T3Plohb+5uKeAqOq+QU9vyZo/hggCpEImBLuPT7G/3jiLF+4cAEfW9tZt719fXEgXXAfjoaAFIxkLH7/0ROEzCD/emUvEcOoyoTXiQG6IVihstlxI50fHR7lc88M8I+X9XLt4hZsrV2pexNgOF2JdBocwBQCRytuffQkZ5OaX1y3iOZAAKUrwx/z64TLdHl20m8rjSkFPz06yp1PDfKDqxaztTtWeP/NfukK2I5S7palUHzw0ZP0JxUPvG0pISnL0fa6mFDbglTIA2aXeBVHOw/1T/CRR05xz9XncMnC/2rEL95lKQmVyjtozQceOQna4J6r+ipmznqOyasszQF8AukGFFt5xD8wmebDj5zkb7f3cMnCGNYbRHzdAPHz/4o8cponiEdlrSX/csUSJnM5Pv/sGQxRirbWzorqK//JwoeLm6O0briqnUfJs8rhtodOcPvqVt69ogNbaQJ1EF/j35egG/ihyvuVSSLKmCeFQKExhOTuK/r4xbEJ7j0yjiEEjmae8N8SBvhogWjQ2ilX+r/03Fk6AgZ/uaXXNUd1Sn5Z3bbC+7P5IR9+VkJhff4mEdhKsyAc5GuXLORPnzrD8akMUriaXr8Z0nUmYvmoR8+4bB2OWGkXRn52KMHtD57ggRuW0xcL14yji18pWzFpKVqCBtItVmNKwVDaIuBlr7VKIvn3bG87TaYsNC7HTOmakOKijRCIYsypKEcohkRMQ/DHO09wbMrmZ29b7hsVVS5xVvcFLgN0EQNEkWjUSTz364rrfn6Ydy+P8/H13Th6BrZfIcHS3ma+8coQKS0Zz9g4SrM4YvD+la3cfWiEpwazOEDMFBjeZZR2ATqFwBBubTUkAC2IBE2QBrsHMzQHBN+/opfm7CR79h0gYBqF2gMIQqEg7W2tLOpdSDAQKNOGPMiXsG2uuO8wX9iykBuXtpbvrypoVzmvMqv2c1T1Zi6DHM/B/vP+UVKW4iPndXoSIipez68NdizrEAxKRrMOo2kbU5tIASlLsTYeYMoRpG2NKSAoNBI3dnf0tEkIG24IvLm7iSkbfvLaJP94VTc90uLxPfuwcjkyQhTQT1chFGfPDnDs+Ak2rF9He3sbWk1rghCuFsSDQT63uYuvvTjAdX1xgob0DTJ1RdOtK/kArwA5M8bSNTjg/dkQgrTj8M2XBvnshZ0YUpY05OoavM3/PWFpDk9kiJgCwwBHSiylOT2RJee4GXVYaqIBCBqSWNBgQcikO2LQGZY0ByWGlERNQXdE8vTpBJ/c0MrNS5rY+dxurGwOQxou4ZVy1yjcqMcwDdKpNM++8CITk1MIKabNkeeUHa25eVk7zUHBjw6MFLSwflzA/2WW2j8xg8DVO3byuP5PDo/RHBDcsLS1TPprJy+uHBlCExLuOpTWONqNniIhA0crUAJLwaGRNCBchhjCjc29jr6ErWkPmTzYnyBgwJ9tbOfZ515kdHiYQCAAliv1jpdxaa0wDQNDSoSQZDMZ9r6yj0u2bfXQUJcmIh+CCskn1ndy1/MDvO/cdkKG0djhGB+VMUsbrIrzAF3a/+dz8sTwCvQ/PDDKx9YtQApZANhqraGsyqA1SnlOW7umRgM5W7n2P2gyks6xuSPMWxbGyClNUAoMOR3HOwgspbA1XNbTjKEUfX1LWLp0aYHoebvtKEUikeDQ4SNY2WxhT4ODQ4xPTtLW0oJWqkhAXK24tq+FLz8/wAPHJ7l5eVuZL/BHlCvjzGY59l+cF1ROZ9ykS/DMUJKxjM1Ny9oK6tpY9iyKwkSNo1xGhKVLYKkVSSUYmcxxeU+YpbEA1/W11CVuWpv0dHdiWRZ7X9mHo5RrIpWipbWFlcuXE402sXPnLgzDde9WzmJicsplQH59BfRUE5CSm5a38m+Hxrl5eVud0l85ojRnFsLKoYjqpegfHRxlW3eUaMCsHBlUtYheq0uRU5Rey0lAShwMziQs1reH+Nmhcd6/qo2co7G1whDT0Ux+7aZnv90cQAGS3Xv2crq/H2mYaNz7nLP0HBylaGtrRUoDy7KQ0sBRypN8yk4b5f/7nhWt3Ht4jP5ElkWxUElY2ihAJ0vvI3ycsE9u4KmkpRRPnU1w47L4rDvrdQGDwSOcIoBGaI2jFJM5h0VNBqcms7xtaZxoUBI0BE2mQcgwCBsmYcP9f8iQbkgqJQKBlAaHjx7jxMlTmIEA0pDkcjnOXb2KBe3tGFIyPjZONpvBUQrbsXGUQyQSKUsC88mZUpolzWGWNgf51cnJGYWfWi5XVzFBFZ2FLqsN5xOvvaNplFJs62l2664NJOXlPbWajO3Q02RyZtKhLxpAolnYZDCYtOlpDvP3zw9y45IoraZ0G7KEa7JspclYDpGAwe8saydsSKQUJJJJXtq7F601lm1jWRbd3d309fZy6PARUukMBw4cxHEcDMMgm8sRj8dZ0N5WRiwvxSi00VzS28zD/UluX9s5JyjCrI9U2pePuwYSrGoJETXNiph5vS9HgVaa356aYk1bmLNJG4REKod40ODZs0lWxgx2nhzjldEU7U1hIl7rXDprs6YthCkVOxbGWBgNAYIXd79EOpUiGAySzdqAZNOGC9i56ykOHz6CaQYwTQNDGijPP1y4aSOmaaK1KsqSvTbMolx1R0+UHx4cI207REyjRGaFP/sqmCBRIV/QldRmGjvcPZRic2e0pM462+pZRGou6mrCshx2n03QEwmgtCaRsZlKZbkwDn0xk8uWtnP5ojgr4kEihkGrIekKCI6cGSGVzCKFAULy6v4DHDh4ECkElmUxPjHJ+nXrOHXqNEcOHyXa1IRhSGzbIWfnSKVTdHV1ck7f4hnEL0Wl8m+vaQ0jEOwfzxRlzLMB44qLL14kUtm1u1mk4bHl2GSO9R1N9ddudOW3rGyOXUdHWNUcZHN3lPF0FiHAtizSqQxDKZuuaIhD41kmHIgHDLBshBZ0xSJEg0EODKeJR4IkEgme3PUUSiksyyKdStHT3U28OcaDDz+M4zgkEknSqTS2beHYDkJIDh06xGOPP44QcgYkMe3hhCdsTaZBd8Tg1bFMqR8ojup1XU64QqnHtylrutFmNGMzlXNYFg/Xdj66dnEoZ2t+9sog2rZZEDQ4JxbCVi4DTC0wIwmG7ClWNkVIJrPsPTPOVDpLIptlKJVj+9JOuuNhso7iyZ1Pkkwm0EqTyWZRjuKS7Rdz7NgxmpvjdHZ10dnVSZsHO9iWhXJcJjz3/Ivse/U1lwlKl+GzwoutAJY2BzniaYBvA4bwQUS1XyKW7wfKm6qSJKzUZea/fzZtIYWmu8ms6v8L9TYvzHSdZzk/pBRs7I4RAAamMhwLSASasBHgtbEMW9pa+OWBCS5bFOLPdiz2kE33eoYUmELz9pXt7Nv9Ivv27ycSDqOUQzKV5uItW1jQ0cGO7Rdz2aU7CrVHDZwdGOCXv/o1U1NTGIYJAna/tIe1a1ZPW4UKgtMXC3DA04DZVgXMsi+KWoUX9//DaZsmwyAaMEpMUFkBRExDv35BlihCRG85r4uxlMWx8TRDqQxKC05lJ9lxbowXj6a5qDPCsmaTdZ2xihvadWA/Sikc5WDbDu1tbWy+aCNaay/ZygffrkAs7Onh4i1beOCXvyQUkhhCMjY+TjKZIhaLeqGx8CVRZzjAU9lEmQnW1WzuDFDU9IUh6sCxJ3IO0YBRUMkyVNDr3b/7hVOcGkszlkiTsOHSFQv40MZeLOWGsraGoIShpMVwIkfQkASFJmfbWDnJCIdJthic37WDE+OjoIULRSvlFXtKE0fTNHGUQjmabDbHlVdsIhyO4Dg2Uhoz1qhQGjoWdGCaZuFcQjabI51OE4tFq0pvc9AgaemZla3ajlAInyiorDxXvSUsqzRBU1aJANzvT2UdAqEA970ygIXgkSOjpCybgHRNUVAKXh2eYvfJMbqiQYJSEHA7uog2KZbLdTy2cxGhkEXIML0ijwt5SM+cTf87DebZysFxHMJhN6kyDLNQgBHCBd8MaSKl5FR/P7mc7RHRJZAZMGqSMmS4iG1ZvtqYCdJlALGo1pQligspomqVTArBkniQrz92mCtXd9Pb2sRroxnu+Pf9/PH2XrqiIV4dTvGlhw6yoStGLmejlcByNFsWxklbNiJrsyrWxGTKcuueeZigUm3Xq3op7baoj42PMzk5iVLKhdyLIzqtOX7iJI89vgtpGG5SZ9ss6OykJR6v3Rol/M/915NLVfYBdfa1BKTAqlK1zDvaS5e28oPnTJSC8azDktYwu09O8MWHDjGcyDGcga19cZqDgrGpDLFIiP6JLG9b1Y1jK9I51yxkspZXKBFVux0cpdFKo5QiGAjy28d3snPXrkJbYn5HUrrynk5nENJASokCMtkc69auQXrJmZCyYpXXVtPYl55FElZBA2bS3r8SGwtI0pYqM1bFJ1cdpemMRrj1wkX84KVBok1hkuks71jbScQ02H1qAikF4YAgnc3RGja5b+9p/uK6VXTGQhwbSxEOmmTTDnbOJmdphJBVEzrlmSDhFZmUclCW8sZU6JICvZSSUDBYCPwmJ6fo61vMpg0XuD5MiqrNJklLETZEjQqurhOO9nUUukwT8vdoDxukbAfLcQgYhm++bEhwtOJ3z++jfyLD48cmaDIMXrUUUkpsxz1laUoTwzD5zf4hbt+8iDs2L0F7WtQckOBItLZpiwSRqOoVNuWCeHlTlN/HzGhSa7cJSzkWjuNgK8XyZUt55w2/Q8CrDYtqobWXC8UCBc9RxRHrBsLQMnkuxSbyf+2OBLAcxUjWoafJ8FUkke+x0Zo/unQVS+InePTwKCcnUmgZQCkHx7JoiwYwA0G+cv1arl/bie0oTEOQcxRd0QBLWoIgXMIGZHVrmXeyeXEUaLQWRQG0Kxwar+4QDtPT3cm689ayft06hFd4EXWk9qeSFp0RsxRWb8D8lGtAA/W17ohJUAhOTuXoaQpW9Bb546FKaW66YAlXrepi39kEx8czpC2H5qBgZUcTFyxuRwqJ0mAabl15cTzMR7aeQyRg0hwyGUpmCAdMQLsdbGV71dx04/XYtl3aYePnLLzOiEgkRLQpVhY+V3OH+eDjxFSWLV2RGj6gum81Kw6jKBkrpkuQaaUgICXdEZP9o2m2dMdm1JTLryW9DoqWSJjty8Js90VE3bMEeQsYDpgsbZ8mzjnBWE3cvaUlPhssNq+vngb4bEWUttEo4GQix23ntk0jN1VPF/l3vZVMSxGV8i9dHmICrGsP89JQqnYDl+e53GOlLqGLf4pPrEzfW5RAGMVnvirfJ19Zy/8o70f7/hTIryFl26Qdu9AtUanCpAvmJ8tk1ua8jkhBK3Tt/LWCD/DUVxd0U5Sz1IeBW7tjfP35syitMER9uaCgRrtiWf1f1O7wKD6eJIQP2FG6h3x8P5CxuOOxAQbTivMWBElYmpfOZnjvyjh/taXDFwbKe5LnB1N0hEx6o8GyuSWiYjKbp68ufND0S49rQZd5Um/piTKcsXhtNMV5HbHaRRmtPdxPlHWgiaLkqNgeaw2GIUveK2OMh9JqAXlcRIgKwFO+oQB4ejDLmrYwH1odQUm3F/SGRVEeH8gymlW0h2RFSvy2f4qLuyIIhHvoRIoaPkD41FkEZmn/j/ahvfbTdByl6QgHWN4a5D+PTXJeR3U/4Kr2dGBXKcoofl+IaQBQFE9wEaC0Qua1ThSFyDPnQPok9VK4V7ygK8pVfTFiM5aypdchaAhfS2wIQcZxeGYgyd9u7y2xvnU5YFFXHlC8as8caX9VfNeKNn746hifvqgyNOE4CsOQ/MlffYPmWIzPf+oObv1vd3Lo+GmCwQCTE+NcsH4Nf3PnH/KxT3+RZCrr3s7K8onb38v7b3q7l1xpLG3x1ec/zc3LP8Ka9o0k00keffRx0pksjlJEmyJsvnATPd3d7Nn7MolUih0Xby2JbvLWdXjPM5zKZtl+6WUoRyENyehEgoEXn2P5JTuAUAnz810fj52eQmvY2tNcEhXpqiCm9k1ZzTLCC78YdoYnF3kUT3PDsja+/eIwuweTbOiK+ram5KtFh44cp82LUn790OO895brufHay0ml03R2tJFOpXn4ief47lfuZOXSxTz6xDN84ON/ykUXrGbVimUIJP9y8C4ckqxp3+glXnCq/zRbt2wm3tzMyf5+fn7/A3zw1ltJJKYYHR0va38RQjAyOspLL7+CbdmsWLmSnoW9bhykbI6fPssWR81YvXCP0gI/PDDGtX3NBKT0zryJOrJe0UBXhH+OWZYo20rTEgrwlr4Y33t5mO9cFa3qPppCIUIhd+5DSMKl287nuiu2Ff5+5Pgp2uJRNqxdweqVy7Bsi57ODhxlIxA8M/wrnht6iL/e/P84mz5BV3iR20ckJeeuWkm0qYkVy5dx6NBhzpw5QygYwvRmQmhKzdlzzz7DiuXLaWlt5emnn+Vd73qnh5pKmpsi01Lt7TUPLh5PZHl5MM1fbuku8oea+kcWl3ZKy1Lylp9P0cWGfwYz85f56PmdPHRsnENjyUIjayFkVQrlKJRS2FYW27bceD0e5zN//nW2X//7nLvjZn5w7wPE4zGymSzvueMzXHL9bdxw66c4b91q1q46l4ncAN9/9a/5Xxu+y5Q1wfde+zxSGChHkc3kOH36DGNj4+x9ZR9TU0naFrSRyqRxHDUdkiq32D6ZmOL4iZNsv2gDmy5Yz8TkJKf6+6cDfZ9kLF/z+PaeYbb1RFkab8IpfG4242rcsNWsngMI72PCt64phduotKIlwmWLmrjrqTP837evLPmolJJg0OVzJNJEHsqxhMGHb72Ft1+5nUQqxfrVK0gmU2jtcM8/fYWNa1aQTmfZ/PbbuPtff4H5lmcYnRjgsaP3MWSfZDIzyL3Hv881be9DSsHjTzxJJBwGIbj2mqtpbW5BORoZcOsAhpjG9/fs2cvGdedx/1SQ1crmXTdezxNPP0/PQrdQpJSa9mcabNwjrAcmUvz88Dj33bCsxlQtXcF6lI49E1rU2xdU3b1rDXdu6+W6Hx/gxYEEm7pjWI4iYEh+cO8DTEwluGrHZn796LN8+hO/B8BkMs2GdSu5ZOuGwnVePeg2Sx09dpKmgMnw6DhnTw8wPD7EO9quomX1EhxbMWVNMJW2aAssQEqB49i89Zq3srC7k4A5vSVpSEbHxjlx8hS24xAKBWmOxTh46Ai33XIDX9s9wY+PpHnqxhWs72kjMzVKZzzigoQ+2ORf7DrNVYsjnNvqSr8UjQ53mBETCz8nXK87KJp84ijFspYof7Cpkzuf6OeBW84tRLQB0+Ab/+ce/vff382WC8/nox+4Ga01m85fTTgUwFGKnGURDgYJh4KsW7uSL//dP2GYJulUmve88618/MO/S0u8mfXxKwDYN/w8GSfHVb03kU6lWdDRQTQSJmC6/akohWEYRGNREokEDz/6W5RSNDfH6OtbTE9PN0a0hY0LMqzv7ERlUnzlkCD36kmCnT3cdM7KQoirEQSk4IET4zx7NsnO96wudMdVRZ1FFWkttuaFc8J1TSUoPn+jy/ihteZt9+7nxpVt/OGmHizvhKQGRscm6WiLl11mJpSczyW01hhSFiVPyvNJuqiRQ2BgFI8QLBnYobzqWQHfQaC024ZYfPP9Qwm++9ggzx1Ice3FC/nc1R04znQ9IGU7XP7Tg3x6Uzu/t6arcNq/3MSL0g7zSnlUEWpayoC6HXh5wqa8E5F7RxLccO9hfnT9Mrb3xsnaDkHT8Aji4iyigRZ2x1FIKRr6Ts2teLCLBhTTw6MK97QdkMIdHCgFH33kBI6juPutSz3HW2mycx0mqfgwpCirIdToca4yHVZ6Yen5HTE+s7WTD95/jMFUlpBhoDzJroeQ+TpKYaSZISvDw9WxP9+tafKN3y4LDE9TLMfBst1WFjxYwpSCf9g7yO7BFH93+eKC6ZkT8WfQT5atWtdR0akw3FkKsB3Ff9/Yw9XnRHj3fxzFRntIYZ3nhUXRTwMpfV2xRKUmQCEwpcQwJNKQ2EoTMg3uPTLCl585y91v7aMlaBbgFLSYMb+1CvFrDByTlTPhGruZeRpaTzdiOQq+c80yFjQZfOD+YwihvQPOb+IDmyqpyYz0xlEQMg1+c3KMP3jwJN+9ehHnd0SxvXYY8nOwRQP3KTEsohoDqoh3na98/Cwx+dH1y0nZNu+7/xiOpwm2enOZUKWFCVtrAobgkdNTfOjBfr515WJuWNqBpVSp0y2bXqxnraZydpvwcXOilAnuESODn964nKxjcc2/vcZwJofp2Vf9Jgt+cfaf74gLSMlPDo9xx4P9fPsti3nfqgVYRVBzrWix3IPW3uUsnqBRaQ2irEVO4eLuCsUdDxxiV3+ae25czuaeeMHJznWIymyfw5AXAXeYiAQUn3tmgJ8emOB7Vy3i8t5mt+9HVohiGp6jK+aDAbXUrXz0kFbTDvqrT5/gGy+M8Nnti/nkxq4CxCsQzPc0G7+8qFjvHE0h/Nw/keZjj5wia2vuuWYJK1vCVWL9WXB8Rpl1jgygrBLlD2EXf8RtFTSl5Okzk/zRw/0siJh8+fJFXLCg6XVhhK5gOPMzjYR30Pwf9gzxzT0jvGtZnLt2dBOUZjnx9YwwjUaNhq74rLQGRheL6sQvaaT0P5DgKI1pSHK2w13PnOaefcNcuzTOn2ztZVk8UsgDClPRRW2bW0s4pucGacxC3Vrz70cn+NbuYUwh+PzF3exYGCsIghRVTOucBKQeBtQ0qrqKOgp/3EPPyJi9IP/VkUm+tOs0LwxmuHZpK3ec38mGzmjJnZSX/eQbhsuSsqLsvGRIk8fE4uLQRM7mZ4fH+ed9o6Rs+OT5HXz4vHbw6rol4zJ0FUn3KZ8Lj1Hat55VOZGcBQPy0iXqxI4oG4emvRPxAc/D7RlK8L09Qzx5OkFv1OQdy1u5Zmkbq4qmnZdFG1qXPIJSVthownJ4eiDJfx6dYOeZFGFT8L5z2/jgmjaaTLNopP3Mm/iXYv0FWfiOT66qNtUHt9bheepsPPLzCcXaANNtKgPJLPcdGuH+oxOcTtp0RgJc0NnEhs4mzm0PsygWpDVkEjakD4ShmbJsBtM2Rydy7BlJ8+xgksPjFgEp2dYT4ZYVrVzSGyuIp61KRxlPt+PUUVVs2EHP+HL9DPBplNa6qOGg3imLlYczFp6YUSSGZ5IZnj6T5KkzU+wfyzCcccgpd4pWNGAQNiWmdPONrOMilllHoYHmgElfc4DzOyJsXxjjws4IIcMouGKnmPC6urxUHFjiO6ZXVwHM5vwAh1Lb7gJ61QrQlZO4Sl0vWrvoZP70S/ErbdsMpmwGUxYjGYekpch56whLQTxo0Bkx6YkG6IwEytZgKzUdZYnqsUU9DWBVlb6as5hxwVnnAdWDsTo0oeZbumCi/BhSS0Ccas+OEX6moUIEJ2aEkwj/r5X9Wt/o51kxoPpkaVGHGNV3B1EU7ZbA1RXQWaGnu7GrOURN/U8d1ro+n+p/w9rPXpilBlR/1lJtbdCNAQuzfkhXo3+oY465rqRBlRlQfrxl+mXO887qjKJEFdDAR4JEHYm4qEfyGjD6uobtF9W8drkxqrSJhtFQXThjUn6L+qSrmlqKhuVAFE6DVxv32ijUXru4Ur1Vvmisg66uxHL2sl/p+aZ6FkAeNfCGWT1fdZbrqOCotShtQRfV5vRSOnVSlx9e8jdBs31aVSOP0qpZZyztn69c8KiXmZUex1Zmv2YQvLYsiLL8RpTkSfWEteZszXuJ1S77xQe28B3XWmHz9WTUs/JburR9RBQzvMreaz6oebruWIZeiOrPa22sLaWK368/la5x5apaMvcnOvmef6h6LKuRB1DqBpiWN0EVTvPM0YJWkaAaPY61FqHrHyruax9FPei7KI1ytHjdHnxszuaJ1HNzCDXaH7Weo+7pGkAWlfGcYiaVWMk6zUPJfKE623D8H+Ij5km/NfV5owZ0rNhxat14hWpW25n9Y10aYEBjhK/46RmIae14u8EN1XKYc0oodZ2R2nyaoDkIhu9aRbH311W0wT+jrAlxCFGOqDYMBtZT43w9NKs89P3/IYK7WCgokuoAAAAASUVORK5CYII=" alt="jfb4plai" /></a>
+  <a href="https://jfb4plai.com/capture-ecran/">jfb4plai.com/capture-ecran</a>
+</div></nav>
+<main>
+  <h1>Mode d'emploi — Capture d'écran PLAI</h1>
+  <p class="lead">Pour photographier un <strong>menu déroulant</strong>, l'annoter, puis en faire une <strong>fiche</strong> ou une <strong>vidéo sous-titrée</strong>.</p>
+
+  <div class="toc"><strong>Sur cette page</strong>
+    <ul>
+      <li><a href="#installer">1. Installer</a></li>
+      <li><a href="#capturer">2. Photographier un menu déroulant</a></li>
+      <li><a href="#clics">3. La série de clics</a></li>
+      <li><a href="#annoter">4. Annoter, légender, enregistrer sa voix</a></li>
+      <li><a href="#exports">5. Fiche, Word ou vidéo</a></li>
+      <li><a href="#video">6. Détails de la vidéo</a></li>
+      <li><a href="#problemes">7. Problèmes fréquents</a></li>
+    </ul></div>
+
+  <h2 id="installer">1. Installer (une seule fois)</h2>
+  <ol>
+    <li>Téléchargez le <code>.zip</code> depuis la <a href="https://jfb4plai.com/capture-ecran/">page de téléchargement</a>.</li>
+    <li>Clic droit › <strong>Extraire tout…</strong> puis double-clic sur <code>Capture-ecran-PLAI.exe</code> dans le dossier extrait.</li>
+    <li>Si Windows affiche « Windows a protégé votre ordinateur » : <strong>Informations complémentaires</strong> › <strong>Exécuter quand même</strong> (le programme n'est pas signé).</li>
+  </ol>
+  <p>Rien n'est envoyé sur Internet.</p>
+  <p><strong>Où sont mes captures ?</strong> Au premier lancement, le programme crée sur votre <strong>bureau</strong> un dossier <strong>« Capture-ecran-jfb4plai »</strong> (avec le logo jfb4plai) et l'ouvre. Chaque série de captures y a son sous-dossier (date et heure). Le chemin est toujours affiché en haut de la fenêtre : cliquez dessus pour ouvrir le dossier. Dans chaque série : les images annotées, un dossier <code>originales</code> (sans annotation), <code>audio</code>, et vos exports (<code>document.docx</code>, <code>fiche_pas_a_pas.html</code>, <code>video</code>).</p>
+  <div class="note"><strong>⚠ Bureau synchronisé (OneDrive…)</strong> : sur beaucoup d'ordinateurs, le bureau est copié automatiquement dans le cloud de Microsoft. Si vos captures peuvent montrer des noms ou des écrans d'élèves, choisissez un autre dossier (<em>Réglages…</em>) ou le choix « Documents » proposé au premier lancement. Le programme vous avertit quand il détecte ce cas (détection indicative : en cas de doute, vérifiez vous-même).</div>
+
+  <h2 id="capturer">2. Photographier un menu déroulant</h2>
+  <ol>
+    <li>Lancez le programme (une petite fenêtre s'ouvre ; vous pouvez la réduire).</li>
+    <li>Ouvrez votre menu comme d'habitude (clic sur <em>Fichier</em>, clic droit…).</li>
+    <li><strong>Sans cliquer ailleurs</strong>, appuyez sur le raccourci :</li>
+  </ol>
+  <table>
+    <tr><th>Raccourci</th><th>Effet</th></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F9</kbd></td><td>tout l'écran</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F10</kbd></td><td>vous choisissez une zone (le menu est déjà « figé »)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F11</kbd></td><td>la fenêtre active seulement</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F12</kbd></td><td>démarre / arrête la série de clics</td></tr>
+  </table>
+  <p>Un bip confirme la capture. Sur un portable, ajoutez la touche <kbd>Fn</kbd> si besoin. Les raccourcis se changent via <em>Réglages…</em> (évitez Ctrl+Alt : c'est la touche AltGr du clavier belge).</p>
+  <p><strong>Si le raccourci ne marche pas</strong> : bouton <strong>« Dans 3 secondes »</strong>, puis ouvrez votre menu pendant le décompte. Le pointeur est dessiné avec un halo jaune pour montrer où vous avez cliqué (désactivable).</p>
+
+  <h2 id="clics">3. La série de clics (une capture numérotée par clic)</h2>
+  <p>Idéal pour expliquer une manipulation : faites-la <strong>une fois</strong>, le programme prend une image à chaque clic.</p>
+  <ol>
+    <li>Cliquez sur <strong>● Enregistrer mes clics</strong> (ou <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F12</kbd>). La fenêtre se réduit.</li>
+    <li>Faites votre manipulation normalement. <strong>Un bip = une étape enregistrée.</strong> Chaque image reçoit un cercle rouge autour du clic, une pastille numérotée et la légende « Cliquez ici ».</li>
+    <li>Arrêtez avec <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F12</kbd>. Évitez de cliquer sur la barre des tâches pour rouvrir la fenêtre : ce clic serait enregistré.</li>
+    <li>Améliorez chaque étape (double-clic sur la ligne) : légende, flèche, voix.</li>
+  </ol>
+  <p><strong>Moment de l'image</strong> : <em>juste avant le clic</em> (recommandé : on voit le menu ouvert et le pointeur sur l'élément à cliquer) ou <em>0,5 s après</em> (on voit le résultat). Un double-clic est fusionné en une seule étape. Seuls les clics gauche et droit sont enregistrés (ni glisser-déposer, ni clavier). Après avoir supprimé ou déplacé des étapes : bouton <strong>↻ Renuméroter</strong>.</p>
+
+  <h2 id="annoter">4. Annoter, légender, enregistrer sa voix</h2>
+  <p>L'éditeur s'ouvre tout seul après chaque capture. Choisissez un outil, une couleur, une taille, puis glissez sur l'image.</p>
+  <table>
+    <tr><th>Outil</th><th>Usage</th></tr>
+    <tr><td>➚ Flèche</td><td>montrer un bouton (<kbd>Maj</kbd> = flèche bien droite)</td></tr>
+    <tr><td>▭ Cadre · ◯ Ovale · ▮ Surligner</td><td>entourer, mettre en évidence</td></tr>
+    <tr><td>T Texte</td><td>cliquer puis écrire</td></tr>
+    <tr><td>① Numéro</td><td>poser 1, 2, 3… pour les étapes</td></tr>
+    <tr><td>✎ Crayon</td><td>dessin libre</td></tr>
+    <tr><td>▦ <strong>Masquer</strong></td><td>pixelliser un prénom, un nom d'élève, une adresse (<strong>RGPD</strong>)</td></tr>
+    <tr><td>✂ Recadrer</td><td>garder seulement une zone</td></tr>
+    <tr><td>☝ Déplacer</td><td>déplacer un objet (<kbd>Suppr</kbd> pour l'effacer)</td></tr>
+  </table>
+  <p><kbd>Ctrl</kbd>+<kbd>Z</kbd> annule, <kbd>Ctrl</kbd>+<kbd>Y</kbd> rétablit. <strong>Copier l'image</strong> puis <kbd>Ctrl</kbd>+<kbd>V</kbd> dans Word, Teams ou un courriel. <strong>Ouvrir dans Paint</strong> fixe les annotations dans l'image puis ouvre Paint (vous ne pourrez plus les déplacer dans notre éditeur).</p>
+  <div class="note"><strong>Masquer</strong> ne protège que l'image enregistrée : relisez toujours avant de partager.</div>
+  <p><strong>La légende</strong> (en bas de l'éditeur) devient le <strong>sous-titre</strong> de la vidéo : une phrase courte par étape, à l'impératif (« Cliquez sur <em>Fichier</em> »).</p>
+  <p><strong>Ma voix</strong> : <em>🎙 Enregistrer ma voix</em>, lisez la légende, <em>⏹ Arrêter</em>, <em>▶ Écouter</em> pour vérifier, <em>✖ Effacer</em> pour recommencer. Il faut un micro autorisé dans <em>Paramètres Windows › Confidentialité › Microphone</em>. Parlez dans une pièce calme, à 20 cm du micro.</p>
+
+  <h2 id="exports">5. Fabriquer une fiche, un document Word ou une vidéo</h2>
+  <p>Dans la fenêtre principale, réorganisez les captures avec ▲ ▼, puis :</p>
+  <ul>
+    <li><strong>📝 Document Word</strong> : <code>document.docx</code> (A4), un titre « Étape n », la légende et l'image. Police Verdana 12, vrais titres Word (navigation, lecteurs d'écran) et <strong>texte alternatif</strong> sur chaque image.</li>
+    <li><strong>📄 Fiche HTML/PDF</strong> : page web numérotée, imprimable ou « Enregistrer au format PDF ».</li>
+    <li><strong>🎬 Vidéo</strong> : crée le dossier <code>video</code> dans la série.</li>
+  </ul>
+  <p>Option : dans <em>Réglages…</em>, cochez l'ajout du logo jfb4plai en haut des fiches et documents.</p>
+
+  <h2 id="video">6. Créer la vidéo sous-titrée</h2>
+  <p class="small">Dernière vérification des informations sur Clipchamp : 16/10/2026, par recherche web (sources secondaires). À contrôler dans l'application, les menus évoluent.</p>
+  <h3>Voie 1 — directe, un seul clic</h3>
+  <p>Le dossier <code>video</code> contient : <code>image_001.png</code>… (1920×1080, <strong>sous-titre incrusté</strong>), <code>soustitres.srt</code>, <code>durees.txt</code>, <code>voixoff.wav</code> si vous avez enregistré votre voix, et <strong><code>video.mp4</code></strong> si le programme <code>ffmpeg</code> est présent. La durée de chaque image suit la longueur de la légende (3 à 15 s) ; avec une voix, l'image reste au moins aussi longtemps que la parole (+ 0,6 s) : elle n'est jamais coupée.</p>
+  <h3>Voie 2 — sans ffmpeg : assembler dans Clipchamp (Windows 11)</h3>
+  <ol>
+    <li>Ouvrez <strong>Clipchamp</strong> › <em>Créer une vidéo</em>.</li>
+    <li>Glissez les <code>image_001.png</code>… sur la ligne de temps, dans l'ordre, et réglez leur durée (voir <code>durees.txt</code>).</li>
+    <li>Glissez <code>voixoff.wav</code> sous les images : elle est déjà synchronisée si vous gardez les durées par défaut.</li>
+    <li><strong>Exporter › 1080p</strong> : fichier MP4 (l'export 1080p sans filigrane de la version gratuite est indiqué par des sources secondaires ; à vérifier).</li>
+  </ol>
+  <p>Les sous-titres sont <strong>déjà dans les images</strong> : inutile d'importer le <code>.srt</code> (je n'ai pas pu confirmer que Clipchamp accepte cet import).</p>
+  <h3>Voie 3 — obtenir le MP4 automatiquement</h3>
+  <p>Le programme cherche ffmpeg tout seul (PATH de Windows, installations winget, Chocolatey, Scoop, <code>C:\ffmpeg</code>). S'il ne le trouve pas alors qu'il est installé : <em>Réglages… › ffmpeg.exe › Parcourir…</em> ; pour savoir où il se trouve, tapez <code>where ffmpeg</code> dans une invite de commande. S'il n'est pas installé : <code>winget install Gyan.FFmpeg</code>, puis fermez et rouvrez le programme. Ou placez <code>ffmpeg.exe</code> à côté de <code>Capture-ecran-PLAI.exe</code>. Faites valider l'installation par votre service informatique.</p>
+  <h3>Conseils pour de bonnes vidéos</h3>
+  <ul>
+    <li>Une idée par écran, 6 à 12 mots de légende, verbes d'action.</li>
+    <li>8 à 10 écrans au plus ; plusieurs courtes vidéos plutôt qu'une longue.</li>
+    <li>Masquez (▦) toute donnée d'élève avant de partager.</li>
+    <li>Pour des élèves à besoins spécifiques : texte blanc sur bande noire (contraste élevé), phrases courtes, et proposez aussi la fiche imprimée. Votre voix double l'information écrite.</li>
+  </ul>
+
+  <h2 id="problemes">7. Problèmes fréquents</h2>
+  <table>
+    <tr><th>Problème</th><th>Solution</th></tr>
+    <tr><td>« Raccourci déjà utilisé »</td><td>changer le raccourci dans <em>Réglages…</em></td></tr>
+    <tr><td>Le menu se ferme avant la capture</td><td>utiliser « Dans 3 secondes »</td></tr>
+    <tr><td>« Impossible d'utiliser le micro »</td><td>autoriser le micro dans Windows et vérifier qu'il est le micro par défaut</td></tr>
+    <tr><td>Aucune étape enregistrée avec la série de clics</td><td>un antivirus ou une règle d'école peut bloquer l'écoute des clics : utilisez les captures par raccourci</td></tr>
+    <tr><td>Rien dans le presse-papiers</td><td>cocher « Copier aussi dans le presse-papiers »</td></tr>
+    <tr><td>Image décalée ou floue avec le zoom d'écran à 125 %</td><td>signalez-le avec votre version de Windows</td></tr>
+  </table>
+  <p class="small"><em>Limites connues</em> : écrit pour Windows ; non testé sur Mac ou Linux. Une fenêtre exécutée « en administrateur » peut ne pas laisser passer les raccourcis.</p>
+</main>
+<footer>Jean-François Beguin · <a href="https://jfb4plai.com">jfb4plai.com</a> · <a href="mailto:jf.beguin@outlook.com">Retours d'essai</a></footer>
+</body>
+</html>

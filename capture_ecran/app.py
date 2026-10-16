@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 import tkinter as tk
+import webbrowser
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -74,6 +75,14 @@ class App(tk.Tk):
         self.folder_lbl.config(text=f"📁 Mes captures : {p}" + ("   ☁ synchronisé (cloud)" if cloud else ""),
                                foreground="#B26A00" if cloud else "#1565C0")
 
+    def open_manual(self, anchor: str = ""):
+        """Mode d'emploi installé avec le programme (aucune connexion Internet nécessaire)."""
+        path = resource_path("mode-emploi.html")
+        if path.is_file():
+            webbrowser.open(path.as_uri() + anchor)
+        else:
+            webbrowser.open("https://jfb4plai.com/capture-ecran/mode-emploi.html" + anchor)
+
     def _set_icon(self):
         try:
             if sys.platform == "win32":
@@ -97,6 +106,7 @@ class App(tk.Tk):
         right.pack(side="left", fill="x", expand=True)
         ttk.Label(right, text=f"{APP_NAME}", font=("Segoe UI", 13, "bold")).pack(anchor="w")
         ttk.Label(right, text=f"jfb4plai.com  ·  version {__version__}", foreground="#666").pack(anchor="w")
+        ttk.Button(head, text="❓ Mode d'emploi", command=self.open_manual).pack(side="right", padx=4)
         self.folder_lbl = ttk.Label(self, text="", cursor="hand2", wraplength=700)
         self.folder_lbl.pack(fill="x", padx=10)
         self.folder_lbl.bind("<Button-1>", lambda e: self.open_folder())
@@ -475,15 +485,19 @@ class App(tk.Tk):
         self.say("Création de la vidéo en cours…")
         self.update_idletasks()
         try:
-            res = exporter.export_video_pack(self.session, out)
+            res = exporter.export_video_pack(self.session, out, ffmpeg_hint=self.cfg["ffmpeg_path"])
         except Exception as e:
             messagebox.showerror(APP_NAME, f"Échec de l'export : {e}")
             return
         self.say(res.message)
-        messagebox.showinfo(APP_NAME, f"{res.message}\n\nDossier : {out}\n"
-                                      f"• {len(res.frames)} images 1920×1080 avec sous-titres incrustés\n"
-                                      "• soustitres.srt\n" + ("• voixoff.wav (votre voix)\n" if res.voice else "")
-                                      + ("• video.mp4\n" if res.mp4 else ""))
+        detail = (f"Dossier : {out}\n• {len(res.frames)} images 1920×1080 avec sous-titres incrustés\n"
+                  "• soustitres.srt\n" + ("• voixoff.wav (votre voix)\n" if res.voice else "")
+                  + ("• video.mp4\n" if res.mp4 else ""))
+        if res.ffmpeg_missing:
+            if messagebox.askyesno(APP_NAME, f"{res.message}\n\n{detail}\nOuvrir le mode d'emploi vidéo maintenant ?"):
+                self.open_manual("#video")
+        else:
+            messagebox.showinfo(APP_NAME, f"{res.message}\n\n{detail}")
         self._open(out)
 
     def export_word(self):
@@ -537,12 +551,23 @@ class App(tk.Tk):
                    command=lambda: vdir.set(filedialog.askdirectory(initialdir=vdir.get()) or vdir.get())
                    ).grid(row=5, column=2, padx=4)
 
+        ttk.Label(dlg, text="ffmpeg.exe (vidéo MP4, facultatif) :").grid(row=8, column=0, sticky="e", padx=8, pady=4)
+        vff = tk.StringVar(value=self.cfg["ffmpeg_path"])
+        ttk.Entry(dlg, textvariable=vff, width=40).grid(row=8, column=1, padx=8)
+        ttk.Button(dlg, text="Parcourir…", command=lambda: vff.set(
+            filedialog.askopenfilename(parent=dlg, title="Choisir ffmpeg.exe", filetypes=[("ffmpeg", "ffmpeg.exe")])
+            or vff.get())).grid(row=8, column=2, padx=4)
+        found = exporter.find_ffmpeg(self.cfg["ffmpeg_path"])
+        ttk.Label(dlg, text=("ffmpeg trouvé : " + found) if found else "ffmpeg : non trouvé automatiquement",
+                  foreground="#2E7D32" if found else "#B26A00", wraplength=560).grid(
+            row=9, column=0, columnspan=3, padx=10, sticky="w")
         vlogo = tk.BooleanVar(value=self.cfg["logo_in_exports"])
         ttk.Checkbutton(dlg, text="Ajouter le logo jfb4plai en haut des fiches HTML et documents Word",
                         variable=vlogo).grid(row=6, column=0, columnspan=3, padx=10, pady=(0, 4), sticky="w")
 
         def apply():
             self.cfg["logo_in_exports"] = vlogo.get()
+            self.cfg["ffmpeg_path"] = vff.get().strip()
             for key, v in fields.items():
                 try:
                     parse_hotkey(v.get())
@@ -562,7 +587,7 @@ class App(tk.Tk):
             if not (self.listener and self.listener.errors):
                 self.say("Réglages enregistrés.")
 
-        ttk.Button(dlg, text="Enregistrer", command=apply).grid(row=7, column=0, columnspan=3, pady=10)
+        ttk.Button(dlg, text="Enregistrer", command=apply).grid(row=10, column=0, columnspan=3, pady=10)
 
     def _quit(self):
         if self.listener:

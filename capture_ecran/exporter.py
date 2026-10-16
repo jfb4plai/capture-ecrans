@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 import html
 import io
+import os
 import shutil
 import subprocess
 import sys
@@ -94,13 +95,39 @@ def compose_frame(img: Image.Image, caption: str = "", size=VIDEO_SIZE, burn: bo
 
 
 # ---------------------------------------------------------------- ffmpeg
-def find_ffmpeg() -> str | None:
-    """ffmpeg dans le PATH, ou à côté du programme (ffmpeg.exe / ffmpeg/ffmpeg.exe)."""
+def ffmpeg_candidates(env=None, home: Path | None = None) -> list[Path]:
+    """Emplacements habituels de ffmpeg sous Windows (au cas où il n'est pas dans le PATH :
+    PATH non rafraîchi après une installation, installation par winget, Chocolatey, Scoop…)."""
+    env = os.environ if env is None else env
+    home = Path.home() if home is None else Path(home)
+    out: list[Path] = []
+    local = Path(env["LOCALAPPDATA"]) if env.get("LOCALAPPDATA") else home / "AppData" / "Local"
+    out.append(local / "Microsoft" / "WinGet" / "Links" / "ffmpeg.exe")
+    pkgs = local / "Microsoft" / "WinGet" / "Packages"
+    if pkgs.is_dir():
+        out += sorted(pkgs.glob("*FFmpeg*/*/bin/ffmpeg.exe"), reverse=True)
+        out += sorted(pkgs.glob("*FFmpeg*/ffmpeg.exe"))
+    for var in ("ProgramFiles", "ProgramFiles(x86)", "SystemDrive"):
+        base = env.get(var)
+        if base:
+            base = base + ("\\" if var == "SystemDrive" else "")
+            out += [Path(base) / "ffmpeg" / "bin" / "ffmpeg.exe", Path(base) / "ffmpeg" / "ffmpeg.exe"]
+    out.append(Path(env.get("ProgramData", "C:/ProgramData")) / "chocolatey" / "bin" / "ffmpeg.exe")
+    out += [home / "scoop" / "shims" / "ffmpeg.exe", home / "scoop" / "apps" / "ffmpeg" / "current" / "bin" / "ffmpeg.exe"]
+    return out
+
+
+def find_ffmpeg(hint: str | None = None, env=None, home: Path | None = None) -> str | None:
+    """Cherche ffmpeg : chemin choisi par l'utilisateur, PATH, à côté du programme, puis
+    emplacements habituels (winget, Chocolatey, Scoop, C:\\ffmpeg…)."""
+    if hint and Path(hint).is_file():
+        return str(hint)
     found = shutil.which("ffmpeg")
     if found:
         return found
     here = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
-    for cand in (here / "ffmpeg.exe", here / "ffmpeg" / "ffmpeg.exe", here / "ffmpeg" / "bin" / "ffmpeg.exe"):
+    for cand in [here / "ffmpeg.exe", here / "ffmpeg" / "ffmpeg.exe", here / "ffmpeg" / "bin" / "ffmpeg.exe",
+                 *ffmpeg_candidates(env, home)]:
         if cand.is_file():
             return str(cand)
     return None
@@ -113,11 +140,12 @@ class VideoResult:
     srt: Path | None = None
     mp4: Path | None = None
     voice: Path | None = None
+    ffmpeg_missing: bool = False
     message: str = ""
 
 
 def export_video_pack(session: Session, out_dir: Path, burn: bool = True, fixed_seconds: float | None = None,
-                      make_mp4: bool = True, size=VIDEO_SIZE) -> VideoResult:
+                      make_mp4: bool = True, size=VIDEO_SIZE, ffmpeg_hint: str | None = None) -> VideoResult:
     """Écrit frames 1920×1080, soustitres.srt et, si ffmpeg est présent, video.mp4."""
     caps = session.captures
     if not caps:
@@ -141,12 +169,14 @@ def export_video_pack(session: Session, out_dir: Path, burn: bool = True, fixed_
         "\n".join(f"{p.name}\t{d:.1f} s\t{t}" for p, d, t in zip(res.frames, durs, texts)), "utf-8")
     voice, skipped = audio.build_voiceover(wavs, durs, out_dir / "voixoff.wav")
     res.voice = voice
-    ffmpeg = find_ffmpeg() if make_mp4 else None
+    ffmpeg = find_ffmpeg(ffmpeg_hint) if make_mp4 else None
     if not make_mp4:
         res.message = "Images et sous-titres prêts (vidéo non demandée)."
     elif not ffmpeg:
-        res.message = ("Images et sous-titres prêts. Pour obtenir directement un fichier MP4, installez ffmpeg "
-                       "(voir le mode d'emploi vidéo) ou assemblez les images dans Clipchamp.")
+        res.ffmpeg_missing = True
+        res.message = ("Images et sous-titres prêts. Pour obtenir directement un fichier MP4, le programme "
+                       "a besoin de ffmpeg, qu'il n'a pas trouvé sur cet ordinateur ; "
+                       "sinon, assemblez les images dans Clipchamp.")
     else:
         res.mp4 = _run_ffmpeg(ffmpeg, out_dir, res.frames, durs, res.srt, burn, res, voice)
     if skipped:

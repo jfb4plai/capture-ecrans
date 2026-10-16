@@ -37,7 +37,8 @@ jobs:
       - name: Préparer l'archive
         shell: pwsh
         run: |
-          Copy-Item MODE_EMPLOI.md, MODE_EMPLOI_VIDEO.md, LICENSE dist/Capture-ecran-PLAI/
+          Copy-Item capture_ecran/assets/mode-emploi.html dist/Capture-ecran-PLAI/Mode-emploi.html
+          Copy-Item LICENSE dist/Capture-ecran-PLAI/
           Compress-Archive -Path dist/Capture-ecran-PLAI -DestinationPath Capture-ecran-PLAI-windows.zip
           $h = (Get-FileHash Capture-ecran-PLAI-windows.zip -Algorithm SHA256).Hash.ToLower()
           "$h  Capture-ecran-PLAI-windows.zip" | Out-File -Encoding ascii Capture-ecran-PLAI-windows.zip.sha256

@@ -13,6 +13,7 @@ DEFAULTS = {
     "hotkey_steps": "ctrl+shift+f12",
     "steps_moment": "avant",     # avant | apres
     "logo_in_exports": False,
+    "ffmpeg_path": "",
     "draw_cursor": True,
     "click_halo": True,
     "copy_clipboard": True,

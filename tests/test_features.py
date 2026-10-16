@@ -233,3 +233,41 @@ def test_launcher_is_absolute_import_and_selftest(tmp_path):
                        capture_output=True, text=True, timeout=60, env={**__import__("os").environ})
     assert r.returncode == 0, r.stderr
     assert (tmp_path / "o.txt").read_text().startswith("OK")
+
+
+# ------------------------------------------------------------------ ffmpeg & mode d'emploi installé
+def test_ffmpeg_found_in_winget_folders_when_not_in_path(tmp_path, monkeypatch):
+    monkeypatch.setenv("PATH", str(tmp_path / "vide"))  # ffmpeg absent du PATH
+    local = tmp_path / "AppData" / "Local"
+    exe = local / "Microsoft" / "WinGet" / "Packages" / "Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe" / "ffmpeg-7.1-full_build" / "bin" / "ffmpeg.exe"
+    exe.parent.mkdir(parents=True)
+    exe.write_bytes(b"x")
+    assert exporter.find_ffmpeg(env={"LOCALAPPDATA": str(local)}, home=tmp_path) == str(exe)
+    link = local / "Microsoft" / "WinGet" / "Links" / "ffmpeg.exe"
+    link.parent.mkdir(parents=True)
+    link.write_bytes(b"x")
+    assert exporter.find_ffmpeg(env={"LOCALAPPDATA": str(local)}, home=tmp_path) == str(link)  # le lien winget prime
+
+
+def test_ffmpeg_user_hint_wins_and_missing_is_none(tmp_path, monkeypatch):
+    monkeypatch.setenv("PATH", str(tmp_path / "vide"))
+    mine = tmp_path / "mon-ffmpeg.exe"
+    mine.write_bytes(b"x")
+    assert exporter.find_ffmpeg(str(mine), env={}, home=tmp_path) == str(mine)
+    assert exporter.find_ffmpeg("n'existe-pas", env={}, home=tmp_path / "rien") is None
+
+
+def test_missing_ffmpeg_sets_flag_and_actionable_message(tmp_path, monkeypatch):
+    monkeypatch.setattr(exporter, "find_ffmpeg", lambda hint=None, env=None, home=None: None)
+    s = Session.new(tmp_path / "s", "t")
+    img = Image.new("RGB", (400, 300), "white")
+    s.update(s.add(img), img, img, [], "x")
+    res = exporter.export_video_pack(s, tmp_path / "o")
+    assert res.ffmpeg_missing and res.mp4 is None and "ffmpeg" in res.message
+
+
+def test_local_manual_is_bundled_and_offline():
+    from capture_ecran.resources import resource_path
+    html = resource_path("mode-emploi.html").read_text("utf-8")
+    assert 'id="video"' in html and "Clipchamp" in html
+    assert "fonts.googleapis" not in html and 'href="_style.css"' not in html  # autonome, hors connexion
