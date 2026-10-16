@@ -30,8 +30,17 @@ def run() -> int:
     try:
         if "--selftest" in sys.argv:
             return _selftest(Path(sys.argv[sys.argv.index("--selftest") + 1]))
+        from capture_ecran import APP_NAME, winapi
+        if not winapi.acquire_single_instance():
+            if not winapi.raise_existing_window(APP_NAME):
+                import tkinter
+                from tkinter import messagebox
+                r = tkinter.Tk()
+                r.withdraw()
+                messagebox.showinfo(APP_NAME, "Le programme est déjà ouvert : cherchez-le dans la barre des tâches.")
+            return 0
         from capture_ecran.app import main
-        main()
+        main(minimized="--reduit" in sys.argv)
         return 0
     except Exception:
         text = traceback.format_exc()

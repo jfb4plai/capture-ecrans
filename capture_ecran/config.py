@@ -14,6 +14,7 @@ DEFAULTS = {
     "steps_moment": "avant",     # avant | apres
     "logo_in_exports": False,
     "ffmpeg_path": "",
+    "shortcut_offered": False,   # la proposition de raccourci a déjà été faite
     "draw_cursor": True,
     "click_halo": True,
     "copy_clipboard": True,

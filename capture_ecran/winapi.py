@@ -199,3 +199,47 @@ def set_app_id(app_id: str = "jfb4plai.CaptureEcranPLAI") -> None:
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
         except Exception:
             pass
+
+
+_mutex = None
+
+
+def acquire_single_instance(name: str = "Local\\CaptureEcranPLAI") -> bool:
+    """Vrai si c'est la seule instance. Deux copies se disputeraient les raccourcis clavier
+    (le second « Ctrl+Maj+F9 » serait refusé), ce qui arrive vite avec lancement automatique + double-clic."""
+    global _mutex
+    if not IS_WIN:
+        return True
+    import ctypes
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    k32.CreateMutexW.restype = ctypes.c_void_p
+    k32.CreateMutexW.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_wchar_p]
+    _mutex = k32.CreateMutexW(None, 0, name)
+    return ctypes.get_last_error() != 183  # ERROR_ALREADY_EXISTS
+
+
+def raise_existing_window(title_prefix: str) -> bool:
+    """Ramène au premier plan la fenêtre de l'instance déjà ouverte (si on la retrouve)."""
+    if not IS_WIN:
+        return False
+    import ctypes
+    from ctypes import wintypes
+    u32 = ctypes.WinDLL("user32")
+    found = []
+    EnumProc = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+
+    def cb(hwnd, _):
+        n = u32.GetWindowTextLengthW(hwnd)
+        if n:
+            buf = ctypes.create_unicode_buffer(n + 1)
+            u32.GetWindowTextW(hwnd, buf, n + 1)
+            if buf.value.startswith(title_prefix):
+                found.append(hwnd)
+        return True
+
+    u32.EnumWindows(EnumProc(cb), 0)
+    if not found:
+        return False
+    u32.ShowWindow(found[0], 9)  # SW_RESTORE
+    u32.SetForegroundWindow(found[0])
+    return True

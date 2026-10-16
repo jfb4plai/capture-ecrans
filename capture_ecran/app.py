@@ -13,7 +13,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from PIL import Image, ImageTk
 
-from . import APP_NAME, __version__, config, exporter, firstrun, grabber, steps, storage, theme, winapi
+from . import APP_NAME, __version__, config, exporter, firstrun, grabber, shortcuts, steps, storage, theme, winapi
 from .resources import resource_path
 from .theme import C, font
 from .editor import Editor, launch_paint
@@ -25,7 +25,7 @@ MODES = {"full": "Écran entier", "region": "Zone", "window": "Fenêtre active",
 
 
 class App(tk.Tk):
-    def __init__(self):
+    def __init__(self, minimized: bool = False):
         winapi.set_dpi_aware()
         winapi.set_app_id()
         super().__init__()
@@ -52,7 +52,8 @@ class App(tk.Tk):
         self._fit_window()
         self.after(150, self._fit_window)  # 2e passe : les polices et retours à la ligne ont alors leur taille réelle
         self.after(100, self._poll)
-        self.after(400, self._first_run)
+        self._minimized = minimized
+        self.after(400, self._startup_flow)
         self.protocol("WM_DELETE_WINDOW", self._quit)
 
     # ------------------------------------------------------------------ interface
@@ -70,6 +71,69 @@ class App(tk.Tk):
     def _base(self) -> Path:
         """Dossier de base des séries ; recréé (avec son icône) s'il a été supprimé."""
         return storage.ensure_capture_folder(Path(self.cfg["base_dir"]))
+
+    def _startup_flow(self):
+        self._first_run()
+        if self._minimized and self.cfg.get("storage_confirmed"):
+            self.iconify()   # lancé au démarrage de Windows : discret, dans la barre des tâches
+            return
+        self._offer_shortcuts()
+
+    def _apply_shortcuts(self, parent, desktop: bool, menu: bool, startup: bool) -> bool:
+        """Crée / retire les raccourcis demandés. Affiche l'erreur (avec la marche à suivre manuelle) si besoin."""
+        plan = ((shortcuts.desktop_lnk(), desktop, False), (shortcuts.start_menu_lnk(), menu, False),
+                (shortcuts.startup_lnk(), startup, True))
+        ok = True
+        for lnk, want, minimized in plan:
+            try:
+                if want:
+                    shortcuts.create(lnk, minimized=minimized)
+                elif lnk.exists():
+                    shortcuts.remove(lnk)
+            except OSError as e:
+                ok = False
+                messagebox.showerror(APP_NAME, str(e), parent=parent)
+        return ok
+
+    def _offer_shortcuts(self):
+        """Une seule fois : proposer un raccourci sur le bureau (et le lancement automatique)."""
+        if sys.platform != "win32" or self.cfg.get("shortcut_offered"):
+            return
+        self.cfg["shortcut_offered"] = True
+        config.save(self.cfg)
+        dlg = tk.Toplevel(self)
+        dlg.title("Ouvrir facilement le programme")
+        theme.style_dialog(dlg)
+        if self.state() == "normal":
+            dlg.transient(self)
+        dlg.resizable(False, False)
+        body = tk.Frame(dlg, bg=C["bg"])
+        body.pack(padx=22, pady=18)
+        tk.Label(body, text="Toujours sous la main", bg=C["bg"], fg=C["text"], font=font("serif", 19)).pack(anchor="w")
+        tk.Label(body, text="Mes raccourcis clavier ne fonctionnent que si le programme est ouvert. "
+                            "Pour le retrouver en un clic, comme l'outil de capture de Windows :",
+                 bg=C["bg"], fg=C["text2"], font=font("body", 10), wraplength=480, justify="left").pack(anchor="w", pady=(4, 10))
+        warn = shortcuts.location_warning()
+        if warn:
+            theme.callout(body, "warn", warn, label="Attention", wrap=480).pack(fill="x", pady=(0, 10))
+        v_desk, v_auto = tk.BooleanVar(value=not warn), tk.BooleanVar(value=False)
+        card = theme.card(body)
+        ttk.Checkbutton(card, text="Un raccourci « Capture d'écran PLAI » sur le bureau", variable=v_desk,
+                        style="Card.TCheckbutton").pack(anchor="w", pady=2)
+        ttk.Checkbutton(card, text="Lancer automatiquement à l'ouverture de Windows (réduit dans la barre des tâches)",
+                        variable=v_auto, style="Card.TCheckbutton").pack(anchor="w", pady=2)
+        row = tk.Frame(body, bg=C["bg"])
+        row.pack(fill="x", pady=(14, 0))
+
+        def valider():
+            self._apply_shortcuts(dlg, v_desk.get(), False, v_auto.get())
+            dlg.destroy()
+
+        ttk.Button(row, text="✔  Valider", style="Primary.TButton", command=valider).pack(side="right")
+        ttk.Button(row, text="Plus tard", command=dlg.destroy).pack(side="right", padx=8)
+        dlg.update_idletasks()
+        dlg.grab_set()
+        self.wait_window(dlg)
 
     def _first_run(self):
         if self.cfg.get("storage_confirmed"):
@@ -157,6 +221,9 @@ class App(tk.Tk):
             cap.pack(anchor="w")
             tk.Label(cell, text=desc, bg=C["dark"], fg=C["dark_text"], font=font("italic", 9)).pack(anchor="w", pady=(3, 0))
             self._hint[name] = cap
+        tk.Label(dark, text="Laissez le programme ouvert (réduisez la fenêtre, ne la fermez pas) : les raccourcis ne "
+                            "fonctionnent que s'il tourne.", bg=C["dark"], fg=C["dark_text"], font=font("body", 9),
+                 anchor="w").pack(fill="x", padx=16, pady=(0, 10))
         keys.columnconfigure(4, weight=1)
         tk.Label(keys, text="Portable : + touche Fn", bg=C["dark"], fg=C["text3"], font=font("body", 9),
                  anchor="e").grid(row=0, column=4, sticky="ne")
@@ -622,6 +689,23 @@ class App(tk.Tk):
         ttk.Label(sc, text="Format : ctrl+maj+f9. Évitez Ctrl+Alt : sur un clavier belge, c'est la touche AltGr.",
                   style="CardMuted.TLabel").grid(row=len(rows), column=0, columnspan=2, sticky="w", pady=(6, 0))
 
+        # -- Ouvrir facilement (Windows)
+        if sys.platform == "win32":
+            ow = theme.section(wrap, "Ouvrir facilement")
+            v_desk = tk.BooleanVar(value=shortcuts.desktop_lnk().exists())
+            v_menu = tk.BooleanVar(value=shortcuts.start_menu_lnk().exists())
+            v_auto = tk.BooleanVar(value=shortcuts.startup_lnk().exists())
+            for text, var in (("Raccourci sur le bureau", v_desk), ("Raccourci dans le menu Démarrer", v_menu),
+                              ("Lancer automatiquement à l'ouverture de Windows (réduit dans la barre des tâches)", v_auto)):
+                ttk.Checkbutton(ow, text=text, variable=var, style="Card.TCheckbutton").pack(anchor="w", pady=1)
+            warn = shortcuts.location_warning()
+            if warn:
+                theme.callout(ow, "warn", warn, label="Attention", wrap=520).pack(fill="x", pady=(8, 0))
+            ttk.Label(ow, text="Astuce : pour l'épingler à la barre des tâches, clic droit sur le raccourci › Épingler à la barre des tâches.",
+                      style="CardMuted.TLabel").pack(anchor="w", pady=(6, 0))
+        else:
+            v_desk = v_menu = v_auto = None
+
         # -- Dossier et exports
         ex = theme.section(wrap, "Dossier et exports")
         ex.columnconfigure(1, weight=1)
@@ -662,6 +746,8 @@ class App(tk.Tk):
             self.cfg["storage_confirmed"] = True
             self._save_opts()
             config.save(self.cfg)
+            if v_desk is not None:
+                self._apply_shortcuts(dlg, v_desk.get(), v_menu.get(), v_auto.get())
             self._update_folder_label()
             dlg.destroy()
             self._start_hotkeys()
@@ -681,5 +767,5 @@ class App(tk.Tk):
         self.destroy()
 
 
-def main():
-    App().mainloop()
+def main(minimized: bool = False):
+    App(minimized).mainloop()

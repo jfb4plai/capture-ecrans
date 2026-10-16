@@ -21,6 +21,15 @@ Rien n'est envoyé sur Internet.
 
 Les versions précédentes (1.0 et 1.1 avant ce changement) rangeaient les captures dans `Images\Captures PLAI` : retrouvez-les avec le bouton **Rouvrir…**.
 
+## Ouvrir facilement le programme
+Contrairement à l'outil de capture de Windows (`Windows`+`Maj`+`S`), **mes raccourcis ne fonctionnent que si le programme est ouvert** (la touche `Windows`+`Maj`+`S` est réservée par Windows : j'utilise `Ctrl`+`Maj`+`F9` à `F12`). Pour l'avoir toujours sous la main :
+- **Raccourci sur le bureau** : le programme vous le propose au premier lancement. Vous pouvez aussi le créer ou le retirer dans *Réglages › Ouvrir facilement*, avec un raccourci dans le menu Démarrer.
+- **Lancement automatique à l'ouverture de Windows** : même endroit. Le programme démarre alors **réduit dans la barre des tâches** : il est prêt quand vous en avez besoin.
+- **Épingler à la barre des tâches** : clic droit sur le raccourci › *Épingler à la barre des tâches*.
+- Si le programme est déjà ouvert, un second lancement ramène simplement la fenêtre au premier plan.
+
+> ⚠ **Avant de créer un raccourci**, déplacez le dossier extrait du zip (`Capture-ecran-PLAI`) à un endroit **durable**, par exemple dans *Documents*. Le raccourci pointe vers ce dossier : si vous le videz (Téléchargements) ou le supprimez, il ne fonctionnera plus. Le programme vous prévient quand il tourne depuis « Téléchargements » ou un dossier temporaire. Pour réparer un raccourci après un déplacement : relancez le programme depuis son nouvel emplacement et revalidez *Réglages › Ouvrir facilement*.
+
 ## 2. Photographier un menu déroulant
 1. Lancez le programme (une petite fenêtre s'ouvre ; vous pouvez la réduire).
 2. Ouvrez votre menu comme d'habitude (clic sur *Fichier*, clic droit…).
