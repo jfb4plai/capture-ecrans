@@ -229,7 +229,7 @@ def test_launcher_is_absolute_import_and_selftest(tmp_path):
     assert "from ." not in src and "import ." not in src
     r = subprocess.run([sys.executable, str(root / "lanceur.py"), "--selftest", str(tmp_path / "o.txt")],
                        capture_output=True, text=True, timeout=60, env={**__import__("os").environ})
-    if "TclError" in r.stderr or "no display" in r.stderr:
+    if r.returncode != 0 and ("TclError" in r.stderr or "display" in r.stderr):
         pytest.skip("pas d'écran disponible")
     assert r.returncode == 0, r.stderr
     assert (tmp_path / "o.txt").read_text().startswith("OK")

@@ -12,7 +12,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from PIL import Image, ImageTk
 
-from . import APP_NAME, __version__, config, exporter, grabber, steps, winapi
+from . import APP_NAME, __version__, config, exporter, firstrun, grabber, steps, storage, winapi
 from .resources import resource_path
 from .editor import Editor, launch_paint
 from .hotkeys import HotkeyListener, parse_hotkey, pretty
@@ -43,10 +43,37 @@ class App(tk.Tk):
         self._thumb = None
         self._build_ui()
         self._start_hotkeys()
+        self._update_folder_label()
         self.after(100, self._poll)
+        self.after(400, self._first_run)
         self.protocol("WM_DELETE_WINDOW", self._quit)
 
     # ------------------------------------------------------------------ interface
+    def _base(self) -> Path:
+        """Dossier de base des séries ; recréé (avec son icône) s'il a été supprimé."""
+        return storage.ensure_capture_folder(Path(self.cfg["base_dir"]))
+
+    def _first_run(self):
+        if self.cfg.get("storage_confirmed"):
+            return
+        chosen = firstrun.ask_storage(self)
+        self.cfg["base_dir"] = str(chosen)
+        self.cfg["storage_confirmed"] = True
+        config.save(self.cfg)
+        try:
+            self._base()
+        except OSError as e:
+            messagebox.showerror(APP_NAME, f"Impossible de créer le dossier :\n{chosen}\n\n{e}")
+        self._update_folder_label()
+        self.say(f"Vos captures seront rangées dans : {chosen}")
+        self.open_folder()
+
+    def _update_folder_label(self):
+        p = self.cfg["base_dir"]
+        cloud = storage.is_cloud_synced(p)
+        self.folder_lbl.config(text=f"📁 Mes captures : {p}" + ("   ☁ synchronisé (cloud)" if cloud else ""),
+                               foreground="#B26A00" if cloud else "#1565C0")
+
     def _set_icon(self):
         try:
             if sys.platform == "win32":
@@ -70,6 +97,9 @@ class App(tk.Tk):
         right.pack(side="left", fill="x", expand=True)
         ttk.Label(right, text=f"{APP_NAME}", font=("Segoe UI", 13, "bold")).pack(anchor="w")
         ttk.Label(right, text=f"jfb4plai.com  ·  version {__version__}", foreground="#666").pack(anchor="w")
+        self.folder_lbl = ttk.Label(self, text="", cursor="hand2", wraplength=700)
+        self.folder_lbl.pack(fill="x", padx=10)
+        self.folder_lbl.bind("<Button-1>", lambda e: self.open_folder())
         hint_row = ttk.Frame(self)
         hint_row.pack(fill="x", padx=10)
         self.hint = ttk.Label(hint_row, justify="left", font=("Segoe UI", 10), wraplength=700)
@@ -197,7 +227,7 @@ class App(tk.Tk):
             if not ans:
                 self.session = None
         if self.session is None:
-            self.session = Session.new(Path(self.cfg["base_dir"]))
+            self.session = Session.new(self._base())
             self.title_lbl.config(text=self.session.title)
         self.hook = winapi.MouseHook(self._hook_click)
         if not self.hook.start():
@@ -316,7 +346,7 @@ class App(tk.Tk):
             if self.v_clip.get():
                 winapi.copy_image_to_clipboard(img)
             if self.session is None:
-                self.session = Session.new(Path(self.cfg["base_dir"]))
+                self.session = Session.new(self._base())
                 self.title_lbl.config(text=self.session.title)
             cap = self.session.add(img)
             self._fill_list(select=len(self.session.captures) - 1)
@@ -399,7 +429,7 @@ class App(tk.Tk):
         title = simpledialog.askstring(APP_NAME, "Titre de la nouvelle série (ex. : Créer un compte ENT) :", parent=self)
         if title is None:
             return
-        self.session = Session.new(Path(self.cfg["base_dir"]), title.strip())
+        self.session = Session.new(self._base(), title.strip())
         self.session.title = title.strip() or "Ma série de captures"
         self.session.save()
         self.title_lbl.config(text=self.session.title)
@@ -419,7 +449,7 @@ class App(tk.Tk):
         self._fill_list()
 
     def open_folder(self):
-        folder = self.session.folder if self.session else Path(self.cfg["base_dir"])
+        folder = self.session.folder if self.session else self._base()
         folder.mkdir(parents=True, exist_ok=True)
         if sys.platform == "win32":
             os.startfile(folder)  # type: ignore[attr-defined]
@@ -521,8 +551,12 @@ class App(tk.Tk):
                     return
             for key, v in fields.items():
                 self.cfg[key] = v.get().lower().replace(" ", "").replace("maj", "shift")
+            if vdir.get() != self.cfg["base_dir"]:
+                firstrun.warn_if_cloud(dlg, Path(vdir.get()))
             self.cfg["base_dir"] = vdir.get()
+            self.cfg["storage_confirmed"] = True
             config.save(self.cfg)
+            self._update_folder_label()
             dlg.destroy()
             self._start_hotkeys()
             if not (self.listener and self.listener.errors):

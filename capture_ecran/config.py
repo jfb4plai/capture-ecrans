@@ -18,6 +18,7 @@ DEFAULTS = {
     "copy_clipboard": True,
     "after_capture": "editor",   # editor | paint | none
     "base_dir": "",
+    "storage_confirmed": False,   # vrai une fois le choix du dossier fait au premier lancement
 }
 
 
@@ -30,8 +31,8 @@ def config_path() -> Path:
 
 
 def default_base_dir() -> Path:
-    pictures = Path.home() / "Pictures"
-    return (pictures if pictures.is_dir() else Path.home()) / "Captures PLAI"
+    from . import storage
+    return storage.default_base_dir()
 
 
 def load(path: Path | None = None) -> dict:

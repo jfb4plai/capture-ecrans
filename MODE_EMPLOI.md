@@ -7,7 +7,13 @@ Pour photographier un **menu déroulant** (qui se ferme dès qu'on clique ailleu
 
 **Option B — avec Python** (si votre école l'autorise) : installez Python 3 depuis python.org (cochez « Add to PATH »), puis double-cliquez sur `Lancer.bat`.
 
-Rien n'est envoyé sur Internet. Les captures restent dans `Images\Captures PLAI`.
+Rien n'est envoyé sur Internet.
+
+**Où sont mes captures ?** Au premier lancement, le programme crée sur votre **bureau** un dossier **« Capture-ecran-jfb4plai »** (avec le logo jfb4plai) et l'ouvre. Chaque série de captures y a son sous-dossier (date et heure). Le chemin est toujours affiché en haut de la fenêtre : cliquez dessus pour ouvrir le dossier. Dans chaque série : les images annotées, un dossier `originales` (sans annotation), `audio`, et vos exports (`document.docx`, `fiche_pas_a_pas.html`, `video`).
+
+> ⚠ **Bureau synchronisé (OneDrive…)** : sur beaucoup d'ordinateurs, le bureau est copié automatiquement dans le cloud de Microsoft. Si vos captures peuvent montrer des noms ou des écrans d'élèves, choisissez un autre dossier (*Réglages…*) ou le choix « Documents » proposé au premier lancement. Le programme vous avertit quand il détecte ce cas (détection indicative : en cas de doute, vérifiez vous-même).
+
+Les versions précédentes (1.0 et 1.1 avant ce changement) rangeaient les captures dans `Images\Captures PLAI` : retrouvez-les avec le bouton **Rouvrir…**.
 
 ## 2. Photographier un menu déroulant
 1. Lancez le programme (une petite fenêtre s'ouvre ; vous pouvez la réduire).
