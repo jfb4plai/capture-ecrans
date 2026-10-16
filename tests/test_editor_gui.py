@@ -98,3 +98,61 @@ def test_color_and_size_apply_to_selected_object(ed):
     ed.selected = None
     ed._set_color("#43A047")                           # rien de sélectionné : aucun objet modifié
     assert ed.items[0]["color"] == "#1E88E5"
+
+
+def _walk(w):
+    for c in w.winfo_children():
+        yield c
+        yield from _walk(c)
+
+
+def _ask_with_keys(steps_fn):
+    """Ouvre ask_text et pilote le clavier. La fenêtre mère doit être VISIBLE (sinon la boîte reste
+    démappée et ne reçoit aucune touche : un test vide). Toute erreur ferme la boîte (pas de blocage)."""
+    root = tk.Tk()
+    root.geometry("200x100+0+0")
+    root.update()
+    errors = []
+
+    def go():
+        dlg = [w for w in root.winfo_children() if isinstance(w, tk.Toplevel)][-1]
+        try:
+            box = next(w for w in _walk(dlg) if isinstance(w, tk.Text))
+            dlg.update()
+            box.focus_force()
+            dlg.update()
+            assert dlg.focus_get() is box, "la zone de texte n'a pas le focus"
+            steps_fn(dlg, box)
+        except Exception as e:  # noqa: BLE001
+            errors.append(e)
+            if dlg.winfo_exists():
+                dlg.destroy()
+
+    root.after(250, go)
+    try:
+        result = E.ask_text(root, "Texte", "")
+    finally:
+        root.destroy()
+    if errors:
+        raise errors[0]
+    return result
+
+
+def test_shift_enter_makes_a_new_line_and_enter_validates():
+    def steps(dlg, box):
+        box.insert("end", "Ligne 1")
+        box.event_generate("<Return>", state=1)       # Maj+Entrée : ne doit PAS fermer la boîte
+        dlg.update()
+        assert dlg.winfo_exists(), "Maj+Entrée a fermé la boîte"
+        box.insert("end", "Ligne 2")
+        box.event_generate("<Return>", state=0)       # Entrée seule : valide
+
+    assert _ask_with_keys(steps) == "Ligne 1\nLigne 2"
+
+
+def test_enter_alone_still_validates_single_line():
+    def steps(dlg, box):
+        box.insert("end", "Un seul")
+        box.event_generate("<Return>", state=0)
+
+    assert _ask_with_keys(steps) == "Un seul"

@@ -44,7 +44,15 @@ def ask_text(parent: tk.Misc, title: str, initial: str = "") -> str | None:
         dlg.destroy()
         return "break"
 
+    def newline(_=None):
+        box.insert("insert", "\n")
+        return "break"
+
+    # Tk : « <Return> » se déclenche AUSSI avec Maj enfoncée ; la liaison plus précise « Maj+Entrée » est prioritaire
+    box.bind("<Shift-Return>", newline)
+    box.bind("<Shift-KP_Enter>", newline)
     box.bind("<Return>", ok)
+    box.bind("<KP_Enter>", ok)
     row = ttk.Frame(dlg)
     row.pack(pady=10)
     ttk.Button(row, text="OK", command=ok).pack(side="left", padx=6)
