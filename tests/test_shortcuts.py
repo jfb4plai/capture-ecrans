@@ -106,6 +106,7 @@ def test_lnk_hotkey_goes_into_env_and_default_is_off():
 def test_real_lnk_hotkey_roundtrip_on_windows(tmp_path):
     lnk = tmp_path / shortcuts.LNK_NAME
     shortcuts.create(lnk, hotkey=shortcuts.LNK_HOTKEY)
-    assert shortcuts.read(lnk)["hotkey"].upper().replace(" ", "") == "CTRL+ALT+Q"
+    # Windows relit les modificateurs dans son propre ordre (« ALT+CTRL+Q ») : on compare sans tenir compte de l'ordre
+    assert set(shortcuts.read(lnk)["hotkey"].upper().replace(" ", "").split("+")) == {"CTRL", "ALT", "Q"}
     shortcuts.create(lnk)                                    # recréé sans touche : elle doit disparaître
     assert shortcuts.read(lnk)["hotkey"] == ""
