@@ -18,10 +18,23 @@ class Ev:
         self.x, self.y, self.state = x, y, state
 
 
-@pytest.fixture
-def ed(tmp_path):
+@pytest.fixture(scope="module")
+def tkroot():
+    """UNE seule racine Tk pour tout le module : sous Windows, recréer plusieurs Tk() dans le même
+    processus échoue parfois (« invalid command name tcl_findLibrary »)."""
     root = tk.Tk()
-    root.withdraw()
+    root.geometry("200x100+0+0")   # visible : un dialogue « transient » d'une mère masquée reste invisible
+    root.update()
+    yield root
+    try:
+        root.destroy()
+    except tk.TclError:
+        pass
+
+
+@pytest.fixture
+def ed(tmp_path, tkroot):
+    root = tkroot
     s = Session.new(tmp_path, "t")
     img = Image.new("RGB", (800, 500), "white")
     cap = s.add(img)
@@ -33,7 +46,6 @@ def ed(tmp_path):
     yield e
     try:
         e.destroy()
-        root.destroy()
     except tk.TclError:
         pass
 
@@ -106,12 +118,9 @@ def _walk(w):
         yield from _walk(c)
 
 
-def _ask_with_keys(steps_fn):
+def _ask_with_keys(root, steps_fn):
     """Ouvre ask_text et pilote le clavier. La fenêtre mère doit être VISIBLE (sinon la boîte reste
     démappée et ne reçoit aucune touche : un test vide). Toute erreur ferme la boîte (pas de blocage)."""
-    root = tk.Tk()
-    root.geometry("200x100+0+0")
-    root.update()
     errors = []
 
     def go():
@@ -129,16 +138,13 @@ def _ask_with_keys(steps_fn):
                 dlg.destroy()
 
     root.after(250, go)
-    try:
-        result = E.ask_text(root, "Texte", "")
-    finally:
-        root.destroy()
+    result = E.ask_text(root, "Texte", "")
     if errors:
         raise errors[0]
     return result
 
 
-def test_shift_enter_makes_a_new_line_and_enter_validates():
+def test_shift_enter_makes_a_new_line_and_enter_validates(tkroot):
     def steps(dlg, box):
         box.insert("end", "Ligne 1")
         box.event_generate("<Return>", state=1)       # Maj+Entrée : ne doit PAS fermer la boîte
@@ -147,12 +153,12 @@ def test_shift_enter_makes_a_new_line_and_enter_validates():
         box.insert("end", "Ligne 2")
         box.event_generate("<Return>", state=0)       # Entrée seule : valide
 
-    assert _ask_with_keys(steps) == "Ligne 1\nLigne 2"
+    assert _ask_with_keys(tkroot, steps) == "Ligne 1\nLigne 2"
 
 
-def test_enter_alone_still_validates_single_line():
+def test_enter_alone_still_validates_single_line(tkroot):
     def steps(dlg, box):
         box.insert("end", "Un seul")
         box.event_generate("<Return>", state=0)
 
-    assert _ask_with_keys(steps) == "Un seul"
+    assert _ask_with_keys(tkroot, steps) == "Un seul"
