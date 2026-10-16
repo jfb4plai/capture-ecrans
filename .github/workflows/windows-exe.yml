@@ -1,7 +1,12 @@
-name: Capture d'écran PLAI - exécutable Windows
+name: Capture d'écran PLAI - version Windows
 
 on:
   workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write   # nécessaire pour publier la release
 
 jobs:
   build:
@@ -11,10 +16,31 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -r requirements-dev.txt
+      - run: pip install -r requirements-dev.txt python-docx
       - run: python -m pytest -q tests
-      - run: pyinstaller --noconfirm --onefile --windowed --name Capture-ecran-PLAI capture_ecran/__main__.py
+      # --onedir (dossier) plutôt que --onefile : moins de faux positifs d'antivirus et démarrage plus rapide
+      - run: >
+          pyinstaller --noconfirm --onedir --windowed --name Capture-ecran-PLAI
+          --icon capture_ecran/assets/icon.ico
+          --add-data "capture_ecran/assets;capture_ecran/assets"
+          capture_ecran/__main__.py
+      - name: Préparer l'archive
+        shell: pwsh
+        run: |
+          Copy-Item MODE_EMPLOI.md, MODE_EMPLOI_VIDEO.md, LICENSE dist/Capture-ecran-PLAI/
+          Compress-Archive -Path dist/Capture-ecran-PLAI -DestinationPath Capture-ecran-PLAI-windows.zip
+          $h = (Get-FileHash Capture-ecran-PLAI-windows.zip -Algorithm SHA256).Hash.ToLower()
+          "$h  Capture-ecran-PLAI-windows.zip" | Out-File -Encoding ascii Capture-ecran-PLAI-windows.zip.sha256
+          Get-Content Capture-ecran-PLAI-windows.zip.sha256
       - uses: actions/upload-artifact@v4
         with:
           name: Capture-ecran-PLAI-windows
-          path: dist/Capture-ecran-PLAI.exe
+          path: |
+            Capture-ecran-PLAI-windows.zip
+            Capture-ecran-PLAI-windows.zip.sha256
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: |
+            Capture-ecran-PLAI-windows.zip
+            Capture-ecran-PLAI-windows.zip.sha256

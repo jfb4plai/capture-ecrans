@@ -201,3 +201,21 @@ def test_hotkey_steps_default_is_valid():
     from capture_ecran import config
     from capture_ecran.hotkeys import parse_hotkey
     assert parse_hotkey(config.DEFAULTS["hotkey_steps"])[1] == 0x7B  # F12
+
+
+# ------------------------------------------------------------------ logo
+def test_logo_assets_and_exports(session, tmp_path):
+    from capture_ecran.resources import resource_path
+    for name in ("logo-jfb4plai.png", "logo-small.png", "icon.ico"):
+        assert resource_path(name).is_file(), name
+    with Image.open(resource_path("icon.ico")) as ico:
+        assert 256 in {s[0] for s in ico.info.get("sizes", {(256, 256)})}
+    plain = exporter.export_html_guide(session, tmp_path / "a.html").read_text("utf-8")
+    branded = exporter.export_html_guide(session, tmp_path / "b.html", logo=True).read_text("utf-8")
+    assert "Logo jfb4plai" not in plain and "Logo jfb4plai" in branded
+    p = exporter.export_docx(session, tmp_path / "l.docx", logo=True)
+    assert "word/media/image0.png" in zipfile.ZipFile(p).namelist()
+    docx = pytest.importorskip("docx")
+    d = docx.Document(str(p))
+    assert len(d.inline_shapes) == 3  # logo + 2 captures
+    assert [q.text for q in d.paragraphs if q.style.name.startswith("Heading")] == ["Étape 1", "Étape 2"]

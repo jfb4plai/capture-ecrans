@@ -13,6 +13,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from PIL import Image, ImageTk
 
 from . import APP_NAME, __version__, config, exporter, grabber, steps, winapi
+from .resources import resource_path
 from .editor import Editor, launch_paint
 from .hotkeys import HotkeyListener, parse_hotkey, pretty
 from .selector import select_region
@@ -24,11 +25,13 @@ MODES = {"full": "Écran entier", "region": "Zone", "window": "Fenêtre active",
 class App(tk.Tk):
     def __init__(self):
         winapi.set_dpi_aware()
+        winapi.set_app_id()
         super().__init__()
         self.title(f"{APP_NAME} {__version__}")
         self.geometry("740x780")
         self.minsize(700, 700)
         self.cfg = config.load()
+        self._set_icon()
         self.session: Session | None = None
         self.busy = False
         self.events: queue.Queue[str] = queue.Queue()
@@ -44,11 +47,32 @@ class App(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self._quit)
 
     # ------------------------------------------------------------------ interface
+    def _set_icon(self):
+        try:
+            if sys.platform == "win32":
+                self.iconbitmap(str(resource_path("icon.ico")))
+            else:
+                self._icon = ImageTk.PhotoImage(Image.open(resource_path("logo-small.png")))
+                self.iconphoto(True, self._icon)
+        except Exception:
+            pass  # l'icône est un confort : jamais bloquant
+
     def _build_ui(self):
         pad = {"padx": 10, "pady": 4}
         head = ttk.Frame(self)
         head.pack(fill="x", **pad)
-        self.hint = ttk.Label(head, justify="left", font=("Segoe UI", 10), wraplength=700)
+        try:
+            self._logo = ImageTk.PhotoImage(Image.open(resource_path("logo-small.png")).resize((64, 64), Image.LANCZOS))
+            ttk.Label(head, image=self._logo).pack(side="left", padx=(0, 10))
+        except Exception:
+            pass
+        right = ttk.Frame(head)
+        right.pack(side="left", fill="x", expand=True)
+        ttk.Label(right, text=f"{APP_NAME}", font=("Segoe UI", 13, "bold")).pack(anchor="w")
+        ttk.Label(right, text=f"jfb4plai.com  ·  version {__version__}", foreground="#666").pack(anchor="w")
+        hint_row = ttk.Frame(self)
+        hint_row.pack(fill="x", padx=10)
+        self.hint = ttk.Label(hint_row, justify="left", font=("Segoe UI", 10), wraplength=700)
         self.hint.pack(anchor="w")
 
         btns = ttk.LabelFrame(self, text=" Prendre une capture ")
@@ -436,7 +460,7 @@ class App(tk.Tk):
         if not self._need_session():
             return
         try:
-            path = exporter.export_docx(self.session, self.session.folder / "document.docx")
+            path = exporter.export_docx(self.session, self.session.folder / "document.docx", logo=self.cfg["logo_in_exports"])
         except Exception as e:
             messagebox.showerror(APP_NAME, f"Échec de l'export Word : {e}")
             return
@@ -446,7 +470,7 @@ class App(tk.Tk):
     def export_html(self):
         if not self._need_session():
             return
-        path = exporter.export_html_guide(self.session, self.session.folder / "fiche_pas_a_pas.html")
+        path = exporter.export_html_guide(self.session, self.session.folder / "fiche_pas_a_pas.html", logo=self.cfg["logo_in_exports"])
         self.say(f"Fiche créée : {path}")
         self._open(path)
 
@@ -483,7 +507,12 @@ class App(tk.Tk):
                    command=lambda: vdir.set(filedialog.askdirectory(initialdir=vdir.get()) or vdir.get())
                    ).grid(row=5, column=2, padx=4)
 
+        vlogo = tk.BooleanVar(value=self.cfg["logo_in_exports"])
+        ttk.Checkbutton(dlg, text="Ajouter le logo jfb4plai en haut des fiches HTML et documents Word",
+                        variable=vlogo).grid(row=6, column=0, columnspan=3, padx=10, pady=(0, 4), sticky="w")
+
         def apply():
+            self.cfg["logo_in_exports"] = vlogo.get()
             for key, v in fields.items():
                 try:
                     parse_hotkey(v.get())
@@ -499,7 +528,7 @@ class App(tk.Tk):
             if not (self.listener and self.listener.errors):
                 self.say("Réglages enregistrés.")
 
-        ttk.Button(dlg, text="Enregistrer", command=apply).grid(row=6, column=0, columnspan=3, pady=10)
+        ttk.Button(dlg, text="Enregistrer", command=apply).grid(row=7, column=0, columnspan=3, pady=10)
 
     def _quit(self):
         if self.listener:

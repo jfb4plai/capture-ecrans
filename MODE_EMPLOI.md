@@ -3,7 +3,7 @@
 Pour photographier un **menu déroulant** (qui se ferme dès qu'on clique ailleurs), l'ajouter des **flèches, textes, numéros**, puis en faire une **fiche** ou une **vidéo sous-titrée**.
 
 ## 1. Installer (une seule fois)
-**Option A — le fichier `Capture-ecran-PLAI.exe`** : copiez-le où vous voulez, double-cliquez. Windows peut afficher « Windows a protégé votre ordinateur » (le programme n'est pas signé) : cliquez sur *Informations complémentaires* puis *Exécuter quand même*.
+**Option A — le dossier zippé** téléchargé sur jfb4plai.com : faites un clic droit › *Extraire tout…*, puis double-cliquez sur `Capture-ecran-PLAI.exe` dans le dossier extrait (ne le lancez pas depuis le zip). Windows peut afficher « Windows a protégé votre ordinateur » (le programme n'est pas signé) : cliquez sur *Informations complémentaires* puis *Exécuter quand même*.
 
 **Option B — avec Python** (si votre école l'autorise) : installez Python 3 depuis python.org (cochez « Add to PATH »), puis double-cliquez sur `Lancer.bat`.
 

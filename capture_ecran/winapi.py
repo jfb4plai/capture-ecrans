@@ -189,3 +189,13 @@ class MouseHook:
         if IS_WIN and self._tid:
             import ctypes
             ctypes.WinDLL("user32").PostThreadMessageW(self._tid, 0x0012, 0, 0)  # WM_QUIT
+
+
+def set_app_id(app_id: str = "jfb4plai.CaptureEcranPLAI") -> None:
+    """Identité propre dans la barre des tâches (icône du programme, pas celle de Python)."""
+    if IS_WIN:
+        import ctypes
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+        except Exception:
+            pass

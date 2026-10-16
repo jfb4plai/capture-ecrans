@@ -199,10 +199,23 @@ text-align:center;font-weight:bold;margin-right:.6em}.cap{font-size:1.2rem;font-
 img{max-width:100%;border:1px solid #bbb;margin-top:.8rem}@media print{body{margin:0}.step{page-break-inside:avoid}}"""
 
 
-def export_html_guide(session: Session, path: Path, max_width: int = 1400) -> Path:
+def _logo_bytes() -> bytes | None:
+    try:
+        from .resources import resource_path
+        return resource_path("logo-small.png").read_bytes()
+    except OSError:
+        return None
+
+
+def export_html_guide(session: Session, path: Path, max_width: int = 1400, logo: bool = False) -> Path:
     """Fiche « pas à pas » autonome (images intégrées) : s'imprime ou s'enregistre en PDF."""
     parts = [f"<!doctype html><html lang='fr'><meta charset='utf-8'><title>{html.escape(session.title)}</title>"
-             f"<style>{_CSS}</style><h1>{html.escape(session.title)}</h1>"]
+             f"<style>{_CSS}</style>"]
+    lb = _logo_bytes() if logo else None
+    if lb:
+        parts.append("<img alt='Logo jfb4plai' style='width:72px;border:0;margin:0' src='data:image/png;base64,"
+                     + base64.b64encode(lb).decode() + "'>")
+    parts.append(f"<h1>{html.escape(session.title)}</h1>")
     for i, cap in enumerate(session.captures, start=1):
         img = session.load_final(cap)
         if img.width > max_width:
@@ -284,15 +297,21 @@ def _image_para(rid: str, n: int, cx: int, cy: int, alt: str) -> str:
             f'</wp:inline></w:drawing></w:r></w:p>')
 
 
-def export_docx(session: Session, path: Path, max_px: int = 1600) -> Path:
+def export_docx(session: Session, path: Path, max_px: int = 1600, logo: bool = False) -> Path:
     """Document Word : titre, puis pour chaque capture « Étape n » + légende + image (A4, marges 2 cm)."""
     import zipfile
     from datetime import datetime, timezone
     if not session.captures:
         raise ValueError("Aucune capture dans cette série.")
-    body = [_para(session.title or "Ma série de captures", style="Title")]
+    body = []
     rels = ['<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>']
     media: list[tuple[str, bytes]] = []
+    lb = _logo_bytes() if logo else None
+    if lb:  # image n° 0 : petit logo d'en-tête (2 cm), avec texte alternatif
+        media.append(("word/media/image0.png", lb))
+        rels.append('<Relationship Id="rId900" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image0.png"/>')
+        body.append(_image_para("rId900", 900, 2 * _EMU_PER_CM, 2 * _EMU_PER_CM, "Logo jfb4plai"))
+    body.append(_para(session.title or "Ma série de captures", style="Title"))
     for n, cap in enumerate(session.captures, start=1):
         img = session.load_final(cap)
         if img.width > max_px:

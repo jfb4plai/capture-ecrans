@@ -12,7 +12,7 @@ Python ≥ 3.10, Tkinter + Pillow, aucune autre dépendance. Cible : Windows 10/
 pip install -r requirements-dev.txt
 python -m pytest tests          # logique testée sous Linux/Windows
 python -m capture_ecran         # lancer
-construire_exe.bat              # .exe autonome (PyInstaller) ; ou workflow GitHub « exécutable Windows »
+construire_exe.bat              # dossier autonome (PyInstaller) ; ou workflow GitHub « version Windows »
 ```
 
 Pourquoi le menu reste ouvert : le raccourci est enregistré avec `RegisterHotKey` (Windows), la fenêtre active ne perd donc pas le focus ; la capture est prise **avant** toute fenêtre de l'outil, et le mode « zone » se fait sur l'image figée.
