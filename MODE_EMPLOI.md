@@ -50,12 +50,12 @@ Choisissez un outil, une couleur, une taille, puis glissez sur l'image.
 |---|---|
 | ➚ Flèche | montrer un bouton (Maj = flèche bien droite) |
 | ▭ Cadre / ◯ Ovale / ▮ Surligner | entourer, mettre en évidence |
-| T Texte | cliquer puis écrire |
+| T Texte | cliquer puis écrire ; **double-clic sur un texte pour le corriger** |
 | ① Numéro | poser 1, 2, 3… pour les étapes |
 | ✎ Crayon | dessin libre |
 | ▦ **Masquer** | pixelliser un prénom, un nom d'élève, une adresse (**RGPD**) |
 | ✂ Recadrer | garder seulement une zone |
-| ☝ Déplacer | déplacer un objet (Suppr pour l'effacer) |
+| ☝ Déplacer | déplacer un objet (Suppr pour l'effacer) ; une **couleur** ou une **taille** choisie s'applique à l'objet sélectionné |
 
 `Ctrl+Z` annule, `Ctrl+Y` rétablit. **Copier l'image** → collez avec `Ctrl+V` dans Word, Teams, un courriel.
 **Ouvrir dans Paint** : les annotations sont fixées dans l'image, puis Paint s'ouvre (vous ne pourrez plus les déplacer dans notre éditeur).

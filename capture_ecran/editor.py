@@ -14,7 +14,7 @@ from . import annotate, audio, winapi
 from .session import Capture, Session
 
 TOOLS = [  # clé, pictogramme, libellé, aide
-    ("select", "☝", "Déplacer", "Cliquer sur un objet pour le déplacer (Suppr pour l'effacer)"),
+    ("select", "☝", "Déplacer", "Cliquer sur un objet pour le déplacer ; double-clic sur un texte pour le corriger ; Suppr pour l'effacer ; une couleur ou une taille choisie s'applique à l'objet sélectionné"),
     ("arrow", "➚", "Flèche", "Glisser de la queue vers la pointe"),
     ("rect", "▭", "Cadre", "Entourer une zone d'un cadre"),
     ("ellipse", "◯", "Ovale", "Entourer d'un ovale"),
@@ -117,10 +117,11 @@ class Editor(tk.Toplevel):
         ttk.Label(row2, text="   Taille :").pack(side="left")
         for name in WIDTHS:
             tk.Radiobutton(row2, text=name, variable=self.width_name, value=name, indicatoron=False,
-                           padx=8).pack(side="left", padx=1)
+                           padx=8, command=lambda: self._restyle_selected(size=True)).pack(side="left", padx=1)
         ttk.Separator(row2, orient="vertical").pack(side="left", fill="y", padx=10)
         ttk.Button(row2, text="↶ Annuler", command=self.undo).pack(side="left", padx=2)
         ttk.Button(row2, text="↷ Rétablir", command=self.redo).pack(side="left", padx=2)
+        ttk.Button(row2, text="✎ Modifier le texte", command=self.edit_text).pack(side="left", padx=2)
         ttk.Button(row2, text="🗑 Supprimer l'objet", command=self.delete_selected).pack(side="left", padx=2)
 
         bottom = ttk.Frame(self, padding=(6, 4))
@@ -159,6 +160,9 @@ class Editor(tk.Toplevel):
         self.img_id = self.canvas.create_image(0, 0, anchor="nw")
         self.canvas.bind("<Configure>", self._on_configure)
         self.canvas.bind("<ButtonPress-1>", self._press)
+        self.canvas.bind("<Double-Button-1>", self._double_click)
+        self.canvas.bind("<Return>", lambda e: self.edit_text())
+        self.canvas.bind("<F2>", lambda e: self.edit_text())
         self.canvas.bind("<B1-Motion>", self._drag)
         self.canvas.bind("<ButtonRelease-1>", self._release)
 
@@ -171,6 +175,7 @@ class Editor(tk.Toplevel):
 
     def _set_color(self, hexv: str):
         self.color = hexv
+        self._restyle_selected(color=hexv)
         for h, b in getattr(self, "swatches", {}).items():
             b.config(relief="sunken" if h == hexv else "raised", bd=4 if h == hexv else 2)
 
@@ -225,6 +230,54 @@ class Editor(tk.Toplevel):
         w, tsize, radius = WIDTHS[self.width_name.get()]
         return {"color": self.color, "width": w}, tsize, radius
 
+    def _item_at(self, pt, only_text: bool = False):
+        """Indice de l'objet le plus haut sous le point (ou None)."""
+        for i in range(len(self.items) - 1, -1, -1):
+            if only_text and self.items[i]["type"] != "text":
+                continue
+            if annotate.hit_test(self.items[i], pt, 8 / self.scale):
+                return i
+        return None
+
+    def edit_text(self, idx: int | None = None):
+        """Rouvre le texte d'un objet « Texte » pour le corriger."""
+        if idx is None:
+            idx = self.selected
+        if idx is None or idx >= len(self.items) or self.items[idx]["type"] != "text":
+            self.status.config(text="Pour corriger un texte : double-cliquez dessus, ou sélectionnez-le "
+                                    "(outil « Déplacer ») puis « Modifier le texte ».")
+            return
+        new = ask_text(self, "Modifier le texte", self.items[idx]["text"])
+        if new and new != self.items[idx]["text"]:
+            self._snapshot()
+            self.items[idx] = {**self.items[idx], "text": new}
+            self.selected = idx
+            self._invalidate()
+
+    def _double_click(self, e):
+        idx = self._item_at(self._to_img(e), only_text=True)
+        if idx is not None:
+            self.edit_text(idx)
+
+    def _restyle_selected(self, color: str | None = None, size: bool = False):
+        """Couleur / taille choisies pendant qu'un objet est sélectionné : elles s'appliquent à lui."""
+        if self.selected is None or self.selected >= len(self.items):
+            return
+        item, (w, tsize, radius) = self.items[self.selected], WIDTHS[self.width_name.get()]
+        new = dict(item)
+        if color:
+            new["color"] = color
+        if size:
+            key = {"text": ("size", tsize), "step": ("radius", radius)}.get(item["type"], ("width", w))
+            if item["type"] in ("blur", "highlight"):
+                key = None
+            if key:
+                new[key[0]] = key[1]
+        if new != item:
+            self._snapshot()
+            self.items[self.selected] = new
+            self._invalidate()
+
     def _press(self, e):
         self.canvas.focus_set()
         pt = self._to_img(e)
@@ -236,12 +289,20 @@ class Editor(tk.Toplevel):
             self.drag_last, self._moved = pt, False
             self._refresh()
         elif t == "text":
+            hit = self._item_at(pt, only_text=True)
+            if hit is not None:  # clic sur un texte existant : on le corrige au lieu d'en superposer un autre
+                self.edit_text(hit)
+                return
             txt = ask_text(self, "Texte")
             if txt:
                 self._add({"type": "text", "pos": pt, "text": txt, "size": tsize, "color": self.color})
+                self.selected = len(self.items) - 1  # reste sélectionné : on peut changer sa couleur / sa taille
+                self._refresh()
         elif t == "step":
             n = sum(1 for i in self.items if i["type"] == "step") + 1
             self._add({"type": "step", "pos": pt, "number": n, "radius": radius, "color": self.color})
+            self.selected = len(self.items) - 1
+            self._refresh()
         elif t == "pen":
             self.draft = {"type": "pen", "points": [pt], **style}
         else:
