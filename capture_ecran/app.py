@@ -25,6 +25,12 @@ MODES = {"full": "Écran entier", "region": "Zone", "window": "Fenêtre active",
          "show": "Rouvrir la fenêtre"}
 
 
+def copy_raw_capture(copy_option: bool, after_capture: str) -> bool:
+    """Copier la capture BRUTE dans le presse-papiers dès la prise de vue ? Pas avec l'éditeur : on y masque des
+    données, et c'est l'image finale qui est alors copiée à l'enregistrement."""
+    return bool(copy_option) and after_capture != "editor"
+
+
 class App(tk.Tk):
     def __init__(self, minimized: bool = False):
         winapi.set_dpi_aware()
@@ -297,7 +303,7 @@ class App(tk.Tk):
         rows = [[("✎ Modifier", self.edit_selected), ("▲", lambda: self.move(-1)), ("▼", lambda: self.move(1)),
                  ("🗑 Supprimer", self.delete_selected), ("↻ Renuméroter", self.renumber)],
                 [("📁 Dossier", self.open_folder), ("Nouvelle série", self.new_session),
-                 ("Rouvrir…", self.open_session)]]
+                 ("Rouvrir…", self.open_session), ("🔒 Masques définitifs", self.secure_masks)]]
         for r, row in enumerate(rows):
             for c, (text, cmd) in enumerate(row):
                 ttk.Button(acts, text=text, style="Small.TButton", command=cmd).grid(
@@ -434,6 +440,15 @@ class App(tk.Tk):
         self.say(f"{n} étape(s) enregistrée(s). Double-cliquez une ligne pour l'améliorer (légende, flèches, voix).")
         winapi.beep()
 
+    def secure_masks(self):
+        """Séries créées avant la v1.1.2 : détruire dans les originaux ce que les masques cachent."""
+        if not (self.session and self.session.captures):
+            self.say("Ouvrez d'abord une série (bouton « Rouvrir… »).")
+            return
+        n = self.session.secure_all()
+        self.say(f"{n} capture(s) sécurisée(s) : les masques sont maintenant définitifs, même dans « originales »."
+                 if n else "Rien à faire : aucun masque en attente dans cette série.")
+
     def renumber(self):
         if not (self.session and self.session.captures):
             return
@@ -494,7 +509,9 @@ class App(tk.Tk):
                 self._finish("Capture annulée.")
                 return
             winapi.beep()
-            if self.v_clip.get():
+            # Avec l'éditeur, le presse-papiers reçoit l'image APRÈS annotations et masques (à l'enregistrement) :
+            # copier ici la capture brute fuiterait ce qu'on s'apprête à masquer.
+            if copy_raw_capture(self.v_clip.get(), self.v_after.get()):
                 winapi.copy_image_to_clipboard(img)
             if self.session is None:
                 self.session = Session.new(self._base())
@@ -503,7 +520,8 @@ class App(tk.Tk):
             self._fill_list(select=len(self.session.captures) - 1)
             after = self.v_after.get()
             if after == "editor":
-                Editor(self, self.session, cap, on_close=lambda: self._finish(f"Capture {cap.id} enregistrée."))
+                Editor(self, self.session, cap, on_close=lambda: self._finish(f"Capture {cap.id} enregistrée."),
+                       copy_on_save=self.v_clip.get())
                 return
             if after == "paint":
                 launch_paint(str(self.session.final_path(cap)))

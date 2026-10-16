@@ -10,6 +10,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from . import annotate
+
 
 def slugify(text: str) -> str:
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
@@ -99,11 +101,28 @@ class Session:
         return cap
 
     def update(self, cap: Capture, base: Image.Image, final: Image.Image, items: list, caption: str) -> None:
-        base.convert("RGB").save(self.original_path(cap))
+        # Les masques sont appliqués AUSSI à l'image d'origine : sinon « originales/ » contiendrait la donnée en clair.
+        stored, kept = annotate.bake_masks(base, items)
+        stored.save(self.original_path(cap))
         final.convert("RGB").save(self.final_path(cap))
-        cap.items = items
+        cap.items = kept
         cap.caption = caption.strip()
         self.save()
+
+    def secure_all(self) -> int:
+        """Rend définitifs les masques de séries créées avant la v1.1.2 (originaux encore en clair). Retourne le nombre
+        de captures corrigées."""
+        n = 0
+        for cap in self.captures:
+            if any(i.get("type") in annotate.MASK_TYPES for i in cap.items):
+                base = self.load_original(cap)
+                stored, kept = annotate.bake_masks(base, cap.items)
+                stored.save(self.original_path(cap))
+                cap.items = kept
+                n += 1
+        if n:
+            self.save()
+        return n
 
     def remove(self, cap: Capture) -> None:
         for p in (self.final_path(cap), self.original_path(cap), self.audio_path(cap)):

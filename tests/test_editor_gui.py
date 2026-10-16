@@ -204,3 +204,27 @@ def test_html_fiche_uses_the_site_style(tmp_path):
     html = exporter.export_html_guide(s, tmp_path / "f.html").read_text("utf-8")
     assert "#faf9f7" in html and "DM Serif Display" in html and "font/ttf;base64" in html
     assert "Étape un" in html and "class='num'" in html
+
+
+# ------------------------------------------------------------------ masques et presse-papiers
+def test_mask_tools_are_offered_with_a_clear_warning():
+    labels = {key: (label, tip) for key, _g, label, tip in E.TOOLS}
+    assert labels["redact"][0] == "Masquer" and "DÉFINITIVEMENT" in labels["redact"][1]
+    assert labels["blur"][0] == "Pixelliser" and "déconseillé" in labels["blur"][1]
+
+
+def test_saving_with_a_mask_destroys_original_and_copies_final(ed, monkeypatch):
+    copied = []
+    monkeypatch.setattr(E.winapi, "copy_image_to_clipboard", lambda img: copied.append(img.copy()) or True)
+    ed.base = Image.effect_noise((800, 500), 90).convert("RGB")      # contenu « secret »
+    ed.copy_on_save = True
+    ed.tool.set("redact")
+    ed._press(at(ed, 100, 100))
+    ed._drag(at(ed, 300, 200))
+    ed._release(at(ed, 300, 200))
+    assert [i["type"] for i in ed.items] == ["redact"]
+    assert "DÉFINITIF" in ed.status.cget("text")
+    ed.save_and_close()
+    original = ed.session.load_original(ed.cap)
+    assert copied and set(copied[0].crop((120, 120, 280, 180)).getdata()) == {(0, 0, 0)}   # le presse-papiers n'a pas le secret
+    assert set(original.crop((120, 120, 280, 180)).getdata()) == {(0, 0, 0)}               # ni le fichier d'origine

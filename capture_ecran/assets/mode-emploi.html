@@ -33,6 +33,9 @@ th{background:var(--bg-subtil)}
 .toc{background:var(--bg-subtil);padding:1rem 1.4rem;border-radius:4px;margin:1.5rem 0}.toc ul{margin:0}
 footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font-size:13px;color:var(--gris-clair)}
 @media(max-width:560px){body{font-size:16px}th,td{padding:6px}}
+ .btn-sec{background:#fff;color:var(--noir)!important;border:1.5px solid var(--bordure);margin-left:8px}
+.btn-sec:hover{background:var(--beige);border-color:var(--rose)}
+@media(max-width:560px){.btn{display:block;margin:0 0 10px;text-align:center}.btn-sec{margin-left:0}}
 </style>
 </head>
 <body>
@@ -43,6 +46,8 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
 <main>
   <h1>Mode d'emploi — Capture d'écran PLAI</h1>
   <p class="lead">Pour photographier un <strong>menu déroulant</strong>, l'annoter, puis en faire une <strong>fiche</strong> ou une <strong>vidéo sous-titrée</strong>.</p>
+
+  <p class="small"><a href="Mode-emploi-Capture-ecran-PLAI.html" download="Mode-emploi-Capture-ecran-PLAI.html" data-umami-event="telecharger-mode-emploi-capture-ecran">⬇ Télécharger ce mode d'emploi</a> (un seul fichier .html, lisible sans connexion).</p>
 
   <div class="toc"><strong>Sur cette page</strong>
     <ul>
@@ -116,12 +121,13 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <tr><td>T Texte</td><td>cliquer puis écrire ; <strong>double-clic sur un texte pour le corriger</strong></td></tr>
     <tr><td>① Numéro</td><td>poser 1, 2, 3… pour les étapes</td></tr>
     <tr><td>✎ Crayon</td><td>dessin libre</td></tr>
-    <tr><td>▦ <strong>Masquer</strong></td><td>pixelliser un prénom, un nom d'élève, une adresse (<strong>RGPD</strong>)</td></tr>
+    <tr><td>■ <strong>Masquer</strong></td><td>aplat noir <strong>définitif</strong> sur un prénom, un nom d'élève, une adresse (<strong>RGPD</strong>)</td></tr>
+    <tr><td>▦ Pixelliser</td><td>effet de mosaïque, <strong>déconseillé</strong> pour les données personnelles : un flou léger peut parfois être partiellement reconstitué</td></tr>
     <tr><td>✂ Recadrer</td><td>garder seulement une zone</td></tr>
     <tr><td>☝ Déplacer</td><td>déplacer un objet (<kbd>Suppr</kbd> pour l'effacer) ; une <strong>couleur</strong> ou une <strong>taille</strong> choisie s'applique à l'objet sélectionné</td></tr>
   </table>
   <p><kbd>Ctrl</kbd>+<kbd>Z</kbd> annule, <kbd>Ctrl</kbd>+<kbd>Y</kbd> rétablit. <strong>Copier l'image</strong> puis <kbd>Ctrl</kbd>+<kbd>V</kbd> dans Word, Teams ou un courriel. <strong>Ouvrir dans Paint</strong> fixe les annotations dans l'image puis ouvre Paint (vous ne pourrez plus les déplacer dans notre éditeur).</p>
-  <div class="note"><strong>Masquer</strong> ne protège que l'image enregistrée : relisez toujours avant de partager.</div>
+  <div class="note"><strong>Masquer</strong> remplace la zone par un aplat noir, et ce masque est <strong>fixé dans l'image d'origine</strong> dès l'enregistrement (le dossier <code>originales</code> ne contient plus la donnée cachée). Sans retour possible : c'est voulu. Si une flèche ou un texte avait été posé <em>avant</em> le masque, supprimez-le plutôt que de le déplacer. Quand « Copier dans le presse-papiers » est coché, c'est l'image <strong>finale</strong> (masques compris) qui est copiée à l'enregistrement. Pour partager, utilisez les <strong>exports</strong> (Word, HTML, vidéo), pas le dossier de la série. Les séries d'avant la v1.1.2 : bouton « 🔒 Masques définitifs ».</div>
   <p><strong>La légende</strong> (en bas de l'éditeur) devient le <strong>sous-titre</strong> de la vidéo : une phrase courte par étape, à l'impératif (« Cliquez sur <em>Fichier</em> »).</p>
   <p><strong>Ma voix</strong> : <em>🎙 Enregistrer ma voix</em>, lisez la légende, <em>⏹ Arrêter</em>, <em>▶ Écouter</em> pour vérifier, <em>✖ Effacer</em> pour recommencer. Il faut un micro autorisé dans <em>Paramètres Windows › Confidentialité › Microphone</em>. Parlez dans une pièce calme, à 20 cm du micro.</p>
 
@@ -152,7 +158,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
   <ul>
     <li>Une idée par écran, 6 à 12 mots de légende, verbes d'action.</li>
     <li>8 à 10 écrans au plus ; plusieurs courtes vidéos plutôt qu'une longue.</li>
-    <li>Masquez (▦) toute donnée d'élève avant de partager.</li>
+    <li>Masquez (■) toute donnée d'élève avant de partager.</li>
     <li>Pour des élèves à besoins spécifiques : texte blanc sur bande noire (contraste élevé), phrases courtes, et proposez aussi la fiche imprimée. Votre voix double l'information écrite.</li>
   </ul>
 

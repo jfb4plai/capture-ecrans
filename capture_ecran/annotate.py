@@ -1,7 +1,9 @@
 """Modèle d'annotations et rendu (Pillow uniquement, aucune dépendance d'interface).
 
 Une annotation est un simple dict JSON-compatible, en coordonnées de l'image d'origine :
-  arrow/rect/ellipse/highlight/blur : p1, p2 (+ color, width)
+  arrow/rect/ellipse/highlight/blur/redact : p1, p2 (+ color, width)
+  redact = aplat noir opaque ; blur = pixellisation. Les deux sont des MASQUES : ils deviennent définitifs à
+  l'enregistrement (voir bake_masks) pour qu'aucune donnée masquée ne survive dans le fichier d'origine.
   text : pos, text, size, color        step : pos, number, radius, color
   pen  : points, width, color
 `render(base, items, scale)` dessine le tout ; scale < 1 sert à l'aperçu à l'écran.
@@ -16,6 +18,7 @@ from PIL import Image, ImageDraw, ImageFont
 PALETTE = {"Rouge": "#E53935", "Orange": "#FB8C00", "Jaune": "#FDD835", "Vert": "#43A047",
            "Bleu": "#1E88E5", "Noir": "#212121", "Blanc": "#FFFFFF"}
 SS = 3  # sur-échantillonnage : bords lisses
+MASK_TYPES = ("blur", "redact")
 
 _FONTS = ["segoeui.ttf", "arial.ttf", "DejaVuSans.ttf", "LiberationSans-Regular.ttf", "Arial.ttf"]
 _FONTS_BOLD = ["segoeuib.ttf", "arialbd.ttf", "DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf", "Arial Bold.ttf"]
@@ -55,7 +58,7 @@ def _text_size(text: str, size: int, stroke: int = 0) -> tuple[int, int]:
 def item_bbox(it: dict) -> tuple[float, float, float, float]:
     """Boîte englobante (coordonnées de l'image d'origine), marge de trait incluse."""
     t = it["type"]
-    if t in ("arrow", "rect", "ellipse", "highlight", "blur"):
+    if t in ("arrow", "rect", "ellipse", "highlight", "blur", "redact"):
         x0, y0, x1, y1 = norm_box(it["p1"], it["p2"])
         pad = it.get("width", 4) / 2 + 2
         if t == "arrow":
@@ -119,6 +122,13 @@ def _pixelate(img: Image.Image, it: dict, scale: float) -> None:
     img.paste(small.resize((w, h), Image.NEAREST), box)
 
 
+def _redact(img: Image.Image, it: dict, scale: float) -> None:
+    """Aplat noir OPAQUE (aucune transparence, aucun flou : rien à retrouver). Marge de 1 px pour qu'aucun bord n'échappe."""
+    x0, y0, x1, y1 = (v * scale for v in norm_box(it["p1"], it["p2"]))
+    ImageDraw.Draw(img).rectangle([math.floor(x0) - 1, math.floor(y0) - 1, math.ceil(x1) + 1, math.ceil(y1) + 1],
+                                  fill=(0, 0, 0))
+
+
 def _draw_arrow(d, tr, it, scale):
     a, b = tr(it["p1"]), tr(it["p2"])
     wpx = max(1, it.get("width", 6) * scale * SS)
@@ -138,6 +148,9 @@ def _apply(img: Image.Image, it: dict, scale: float) -> None:
     t = it["type"]
     if t == "blur":
         _pixelate(img, it, scale)
+        return
+    if t == "redact":
+        _redact(img, it, scale)
         return
     x0, y0, x1, y1 = (v * scale for v in item_bbox(it))
     ox, oy = max(0, int(math.floor(x0)) - 2), max(0, int(math.floor(y0)) - 2)
@@ -199,3 +212,16 @@ def render_over(img: Image.Image, items: list[dict], scale: float = 1.0) -> Imag
 def render(base: Image.Image, items: list[dict], scale: float = 1.0) -> Image.Image:
     """Copie de base (déjà à l'échelle `scale`) avec les annotations dessinées dessus."""
     return render_over(base.convert("RGB").copy(), items, scale)
+
+
+def bake_masks(base: Image.Image, items: list[dict]) -> tuple[Image.Image, list[dict]]:
+    """Applique DÉFINITIVEMENT les masques (aplat noir, pixellisation) à l'image de base et les retire de la liste.
+
+    Utilisé à l'enregistrement : l'image « d'origine » conservée pour retoucher plus tard ne contient alors plus
+    la donnée masquée. Les autres annotations (flèches, textes…) restent modifiables. Limite connue : une annotation
+    posée AVANT un masque redevient visible au-dessus du masque à la réouverture ; pour la cacher, la supprimer."""
+    out = base.convert("RGB").copy()
+    for it in items:
+        if it["type"] in MASK_TYPES:
+            _apply(out, it, 1.0)
+    return out, [it for it in items if it["type"] not in MASK_TYPES]

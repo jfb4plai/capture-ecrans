@@ -23,7 +23,8 @@ TOOLS = [  # clé, pictogramme, libellé, aide
     ("text", "T", "Texte", "Cliquer à l'endroit voulu, puis écrire"),
     ("step", "①", "Numéro", "Cliquer pour poser 1, 2, 3… (étapes)"),
     ("pen", "✎", "Crayon", "Dessiner à main levée"),
-    ("blur", "▦", "Masquer", "Pixelliser une zone (prénoms, données personnelles)"),
+    ("redact", "■", "Masquer", "Aplat noir : cache DÉFINITIVEMENT (le contenu dessous est détruit à l'enregistrement)"),
+    ("blur", "▦", "Pixelliser", "Pixelliser : déconseillé pour les noms et données personnelles (préférez « Masquer »)"),
     ("crop", "✂", "Recadrer", "Glisser pour garder seulement une zone"),
 ]
 WIDTHS = {"Fin": (3, 22, 14), "Moyen": (6, 32, 20), "Épais": (10, 46, 28)}  # trait, texte, rayon du numéro
@@ -70,8 +71,10 @@ def ask_text(parent: tk.Misc, title: str, initial: str = "") -> str | None:
 
 
 class Editor(tk.Toplevel):
-    def __init__(self, master, session: Session, cap: Capture, on_close=None, recorder=None):
+    def __init__(self, master, session: Session, cap: Capture, on_close=None, recorder=None,
+                 copy_on_save: bool = False):
         super().__init__(master)
+        self.copy_on_save = copy_on_save   # presse-papiers = image FINALE (après annotations et masques), jamais la capture brute
         theme.style_dialog(self)
         self.recorder = recorder if recorder is not None else audio.make_recorder()
         self.recording = False
@@ -116,7 +119,7 @@ class Editor(tk.Toplevel):
                               activeforeground=C["text"], relief="flat", bd=0, highlightthickness=1,
                               highlightbackground=C["border"], highlightcolor=C["teal_mid"],
                               font=font("medium", 9 if not compact else 10), padx=8 if compact else 4,
-                              pady=5 if compact else 4, width=0 if compact else 9, cursor="hand2")
+                              pady=5 if compact else 4, width=0 if compact else 8, cursor="hand2")
 
     def _build_ui(self):
         bar = tk.Frame(self, bg=C["surface"])
@@ -299,7 +302,7 @@ class Editor(tk.Toplevel):
             new["color"] = color
         if size:
             key = {"text": ("size", tsize), "step": ("radius", radius)}.get(item["type"], ("width", w))
-            if item["type"] in ("blur", "highlight"):
+            if item["type"] in ("blur", "highlight", "redact"):
                 key = None
             if key:
                 new[key[0]] = key[1]
@@ -356,7 +359,7 @@ class Editor(tk.Toplevel):
             self.draft["points"].append(pt)
         else:
             self.draft["p2"] = pt
-            if e.state & 0x1 and self.draft["type"] in ("arrow", "rect", "ellipse", "highlight", "blur"):
+            if e.state & 0x1 and self.draft["type"] in ("arrow", "rect", "ellipse", "highlight", "blur", "redact"):
                 self._constrain(self.draft)  # Maj : angle à 45° / carré parfait
         self._refresh()
 
@@ -405,6 +408,10 @@ class Editor(tk.Toplevel):
         self.items.append(item)
         self.selected = None
         self._invalidate()
+        if item["type"] in annotate.MASK_TYPES:
+            self.status.config(text="Masque posé : il devient DÉFINITIF à l'enregistrement (le contenu dessous est détruit)."
+                                    + (" Pour un nom ou une donnée personnelle, préférez « Masquer » (aplat noir)."
+                                       if item["type"] == "blur" else ""))
 
     def _crop(self, d):
         x0, y0, x1, y1 = (int(v) for v in annotate.norm_box(d["p1"], d["p2"]))
@@ -509,7 +516,9 @@ class Editor(tk.Toplevel):
             self.on_close()
 
     def save_and_close(self):
-        self._save()
+        final = self._save()
+        if self.copy_on_save:
+            winapi.copy_image_to_clipboard(final)
         self._close()
 
     def _cancel(self):

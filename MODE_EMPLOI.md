@@ -71,14 +71,15 @@ Choisissez un outil, une couleur, une taille, puis glissez sur l'image.
 | T Texte | cliquer puis écrire ; **double-clic sur un texte pour le corriger** |
 | ① Numéro | poser 1, 2, 3… pour les étapes |
 | ✎ Crayon | dessin libre |
-| ▦ **Masquer** | pixelliser un prénom, un nom d'élève, une adresse (**RGPD**) |
+| ■ **Masquer** | aplat noir **définitif** sur un prénom, un nom d'élève, une adresse (**RGPD**) |
+| ▦ Pixelliser | mosaïque, **déconseillée** pour les données personnelles (un flou léger peut être partiellement reconstitué) |
 | ✂ Recadrer | garder seulement une zone |
 | ☝ Déplacer | déplacer un objet (Suppr pour l'effacer) ; une **couleur** ou une **taille** choisie s'applique à l'objet sélectionné |
 
 `Ctrl+Z` annule, `Ctrl+Y` rétablit. **Copier l'image** → collez avec `Ctrl+V` dans Word, Teams, un courriel.
 **Ouvrir dans Paint** : les annotations sont fixées dans l'image, puis Paint s'ouvre (vous ne pourrez plus les déplacer dans notre éditeur).
 
-> ⚠ Masquer ne protège que **l'image enregistrée** : relisez toujours avant de partager.
+> ⚠ **Masquer** est fixé dans l'image d'origine dès l'enregistrement (le dossier `originales` ne contient plus la donnée cachée) : pas de retour possible. Une flèche ou un texte posé *avant* le masque : supprimez-le plutôt que de le déplacer. Avec « Copier dans le presse-papiers », l'image **finale** est copiée à l'enregistrement. Pour partager, utilisez les **exports** (Word, HTML, vidéo), pas le dossier de la série. Séries d'avant la v1.1.2 : bouton « 🔒 Masques définitifs ».
 
 **La légende** en bas de l'éditeur sera le **sous-titre** de la vidéo : une phrase courte par étape, à l'impératif (« Cliquez sur *Fichier* »).
 
