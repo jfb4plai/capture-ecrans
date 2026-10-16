@@ -25,7 +25,7 @@ $l.WorkingDirectory = $env:CEP_WD
 $l.Description = $env:CEP_DESC
 if ($env:CEP_ICON) { $l.IconLocation = $env:CEP_ICON }
 $l.WindowStyle = [int]$env:CEP_STYLE
-if ($env:CEP_HOTKEY) { $l.Hotkey = $env:CEP_HOTKEY }
+$l.Hotkey = $env:CEP_HOTKEY   # vide = aucune touche (efface une ancienne)
 $l.Save()
 '''
 _PS_READ = r'''
@@ -101,7 +101,8 @@ def create(lnk: Path, minimized: bool = False, hotkey: str = "") -> None:
     icon = target if getattr(sys, "frozen", False) else None
     lnk = Path(lnk)
     lnk.parent.mkdir(parents=True, exist_ok=True)
-    try:
+    lnk.unlink(missing_ok=True)   # CreateShortcut recharge un raccourci existant : on repart d'un fichier neuf (sinon une
+    try:                          # ancienne touche de raccourci ou une ancienne cible survivrait)
         r = _run_ps(_PS_CREATE, build_env(lnk, target, args, workdir, icon, minimized, hotkey))
     except (OSError, subprocess.TimeoutExpired) as e:
         raise OSError(f"PowerShell indisponible ({e}). {MANUAL_HELP}") from e
