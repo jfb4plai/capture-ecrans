@@ -241,14 +241,14 @@ h1{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:2rem;l
 width:2rem;height:2rem;font-weight:700;margin-right:.7rem;flex-shrink:0}
 .head{display:flex;align-items:center}.cap{font-size:1.15rem;font-weight:700}
 img{max-width:100%;border:1px solid #e8e4dd;border-radius:6px;margin-top:.9rem}
-.logo{width:72px;border:0;margin:0;border-radius:0}
+.logo{width:96px;border:0;margin:0;border-radius:0}
 @media print{body{background:#fff;padding:0}.step{page-break-inside:avoid}}"""
 
 
 def _logo_bytes() -> bytes | None:
     try:
         from .resources import resource_path
-        return resource_path("logo-small.png").read_bytes()
+        return resource_path("logo-ui.png").read_bytes()
     except OSError:
         return None
 

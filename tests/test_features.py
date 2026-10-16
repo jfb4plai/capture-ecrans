@@ -271,3 +271,14 @@ def test_local_manual_is_bundled_and_offline():
     html = resource_path("mode-emploi.html").read_text("utf-8")
     assert 'id="video"' in html and "Clipchamp" in html
     assert "fonts.googleapis" not in html and 'href="_style.css"' not in html  # autonome, hors connexion
+
+
+def test_local_manual_embeds_its_logo_and_ui_logo_is_cropped():
+    from capture_ecran.resources import resource_path
+    html = resource_path("mode-emploi.html").read_text("utf-8")
+    assert "data:image/png;base64" in html and "/capture-ecran/logo" not in html  # logo intégré, pas de lien cassé hors connexion
+    with Image.open(resource_path("logo-ui.png")) as im:
+        w, h = im.size
+        assert w == h >= 300
+        # recadré au cercle : le centre est coloré, les coins de l'image sont blancs et la marge est mince
+        assert im.convert("RGB").getpixel((w // 2, 6)) != (255, 255, 255) or im.convert("RGB").getpixel((6, h // 2)) != (255, 255, 255)

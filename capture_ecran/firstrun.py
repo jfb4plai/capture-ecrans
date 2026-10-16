@@ -45,7 +45,7 @@ class FirstRunDialog(tk.Toplevel):
         top = tk.Frame(body, bg=C["bg"])
         top.pack(fill="x")
         try:
-            self._logo = ImageTk.PhotoImage(Image.open(resource_path("logo-small.png")).resize((56, 56), Image.LANCZOS))
+            self._logo = ImageTk.PhotoImage(Image.open(resource_path("logo-ui.png")).resize((76, 76), Image.LANCZOS))
             tk.Label(top, image=self._logo, bg=C["bg"]).pack(side="left", padx=(0, 14))
         except Exception:
             pass

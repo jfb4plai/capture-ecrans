@@ -119,7 +119,7 @@ class App(tk.Tk):
         inner = tk.Frame(head, bg=C["bg"])
         inner.pack(fill="x", padx=16, pady=6)
         try:
-            self._logo = ImageTk.PhotoImage(Image.open(resource_path("logo-small.png")).resize((44, 44), Image.LANCZOS))
+            self._logo = ImageTk.PhotoImage(Image.open(resource_path("logo-ui.png")).resize((76, 76), Image.LANCZOS))
             tk.Label(inner, image=self._logo, bg=C["bg"]).pack(side="left", padx=(0, 12))
         except Exception:
             pass
