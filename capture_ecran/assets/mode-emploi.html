@@ -63,11 +63,16 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     </ul></div>
 
   <h2 id="installer">1. Installer (une seule fois)</h2>
+  <p><strong>Option A — l'installateur (conseillé)</strong></p>
   <ol>
-    <li>Téléchargez le <code>.zip</code> depuis la <a href="https://jfb4plai.com/capture-ecran/">page de téléchargement</a>.</li>
-    <li><strong>Avant d'extraire</strong> : clic droit sur le zip › <strong>Propriétés</strong> › en bas de l'onglet <em>Général</em>, cochez <strong>« Débloquer »</strong> › OK. (La case n'apparaît que si Windows a marqué le fichier comme venant d'Internet.) Cela évite en général l'avertissement ci-dessous.</li>
+    <li>Téléchargez <code>Capture-ecran-PLAI-installateur.exe</code> depuis la <a href="https://jfb4plai.com/capture-ecran/">page de téléchargement</a>, puis double-cliquez dessus. Aucun droit d'administrateur n'est nécessaire.</li>
+    <li>Si Windows affiche « Windows a protégé votre ordinateur » (le programme n'est pas signé) : <strong>Informations complémentaires</strong> › <strong>Exécuter quand même</strong>.</li>
+    <li>Dans l'assistant, choisissez si vous voulez un raccourci sur le bureau et le lancement automatique avec Windows, puis terminez. Le programme se retrouve aussi dans le menu Démarrer.</li>
+  </ol>
+  <p><strong>Option B — sans installation (zip)</strong></p>
+  <ol>
+    <li>Téléchargez le <code>.zip</code>. <strong>Avant d'extraire</strong> : clic droit sur le zip › <strong>Propriétés</strong> › cochez <strong>« Débloquer »</strong> › OK (la case n'apparaît que si Windows a marqué le fichier comme venant d'Internet).</li>
     <li>Clic droit › <strong>Extraire tout…</strong>, puis double-clic sur <code>Capture-ecran-PLAI.exe</code> dans le dossier extrait.</li>
-    <li>Si Windows affiche quand même « Windows a protégé votre ordinateur » (le programme n'est pas signé) : <strong>Informations complémentaires</strong> › <strong>Exécuter quand même</strong>.</li>
   </ol>
   <div class="note"><strong>Est-il sûr ?</strong> Chaque version est analysée par Microsoft Defender et par ClamAV pendant sa fabrication ; le rapport et l'empreinte du fichier (SHA-256) sont publiés avec la version sur la <a href="https://github.com/jfb4plai/capture-ecrans/releases">page des versions</a>. Un résultat propre ne fait <strong>pas</strong> disparaître l'avertissement ci-dessus, qui dépend de la signature numérique et de la notoriété du programme, pas de la présence d'un virus. Si votre école bloque les programmes inconnus, remettez le rapport à votre service informatique.</div>
   <p>Rien n'est envoyé sur Internet.</p>
@@ -87,14 +92,10 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
   <div class="note"><strong>Avant de créer un raccourci</strong>, déplacez le dossier extrait du zip (<code>Capture-ecran-PLAI</code>) à un endroit <strong>durable</strong>, par exemple dans <em>Documents</em> : le raccourci pointe vers ce dossier, et il ne fonctionnera plus si vous le videz (Téléchargements) ou le supprimez. Le programme vous prévient quand il tourne depuis « Téléchargements » ou un dossier temporaire. Pour réparer un raccourci après un déplacement : relancez le programme depuis son nouvel emplacement et revalidez <em>Réglages › Ouvrir facilement</em>.</div>
 
   <h2 id="maj">Mettre à jour le programme</h2>
-  <p>Il n'y a pas d'installation : <strong>une nouvelle version n'efface pas l'ancienne</strong>. Vos captures (dossier « Capture-ecran-jfb4plai » du bureau) et vos réglages (dans <code>%APPDATA%\CaptureEcranPLAI</code>) sont rangés en dehors du programme : ils sont conservés.</p>
-  <ol>
-    <li><strong>Fermez le programme</strong> : clic droit sur son icône dans la barre des tâches (ou près de l'horloge) › Fermer. Une seule copie peut tourner à la fois : si l'ancienne reste ouverte, elle répond à la place de la nouvelle.</li>
-    <li>Téléchargez le nouveau zip, puis <strong>« Débloquer »</strong> (clic droit › Propriétés › Débloquer) comme la première fois.</li>
-    <li><strong>Au même endroit que l'ancienne version</strong> : clic droit › Extraire tout…, choisissez le <strong>même dossier</strong> et acceptez de remplacer les fichiers. Vos raccourcis (bureau, menu Démarrer, démarrage de Windows) continuent de fonctionner, car ils pointent vers ce dossier.</li>
-    <li>Lancez le programme et vérifiez le numéro de version dans la barre de titre de la fenêtre.</li>
-  </ol>
-  <div class="note"><strong>Autre dossier ?</strong> Si vous extrayez la nouvelle version ailleurs, les raccourcis visent encore l'ancien dossier. Supprimez alors l'ancien dossier, lancez la nouvelle version, puis cochez de nouveau les raccourcis dans <em>Réglages</em> : le programme remplace les anciens.</div>
+  <p><strong>Avec l'installateur</strong> : téléchargez le nouvel installateur et lancez-le. Il ferme le programme s'il est ouvert, remplace l'ancienne version et garde vos raccourcis. Vos captures (dossier « Capture-ecran-jfb4plai » du bureau) et vos réglages sont rangés en dehors du programme : ils sont conservés. Le numéro de version s'affiche dans la barre de titre.</p>
+  <p><strong>Si vous aviez la version « zip »</strong> : l'installateur ne supprime pas l'ancien dossier ; après l'installation, vous pouvez le supprimer, ainsi que ses anciens raccourcis.</p>
+  <p><strong>Avec le zip</strong> : fermez le programme (clic droit sur son icône dans la barre des tâches › Fermer), téléchargez et <em>Débloquez</em> le nouveau zip, puis extrayez-le <strong>dans le même dossier</strong> que l'ancienne version en acceptant de remplacer les fichiers : vos raccourcis continuent de fonctionner. Extrait ailleurs, les raccourcis visent encore l'ancien dossier : supprimez-le, lancez la nouvelle version, puis recochez les raccourcis dans <em>Réglages</em>.</p>
+  <p><strong>Désinstaller</strong> (version installée) : Paramètres de Windows › Applications › Capture d'écran PLAI › Désinstaller. Vos captures et réglages ne sont pas supprimés.</p>
 
   <h2 id="capturer">2. Photographier un menu déroulant</h2>
   <ol>
