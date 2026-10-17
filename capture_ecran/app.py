@@ -1,6 +1,7 @@
 """Fenêtre principale : déclenche les captures, liste la série, lance les exports."""
 from __future__ import annotations
 
+import copy
 import os
 import queue
 import subprocess
@@ -45,6 +46,7 @@ class App(tk.Tk):
         self.events: queue.Queue[str] = queue.Queue()
         self.listener: HotkeyListener | None = None
         self.recorder: steps.StepRecorder | None = None
+        self._rec_start = 0
         self.frames: steps.FrameBuffer | None = None
         self.hook: winapi.MouseHook | None = None
         self.clicks: queue.Queue = queue.Queue()
@@ -287,17 +289,26 @@ class App(tk.Tk):
         self.title_lbl.pack(anchor="w")
         mid = ttk.Frame(serie, style="Card.TFrame")
         mid.pack(fill="both", expand=True, pady=6)
-        self.listbox = tk.Listbox(mid, height=7, width=26, exportselection=False)
+        self.listbox = tk.Listbox(mid, height=7, width=26, exportselection=False, selectmode="extended")
         theme.style_listbox(self.listbox)
         self.listbox.pack(side="left", fill="both", expand=True)
         self.listbox.bind("<Double-Button-1>", lambda e: self.edit_selected())
-        self.listbox.bind("<<ListboxSelect>>", lambda e: self._show_thumb())
+        self.listbox.bind("<<ListboxSelect>>", lambda e: self._on_select())
+        self.listbox.bind("<Control-a>", lambda e: (self._select_all(True), "break")[1])
         thumb_box = tk.Frame(mid, bg=C["surface2"], highlightthickness=1, highlightbackground=C["border"],
                              width=212, height=118)
         thumb_box.pack(side="left", padx=(8, 0))
         thumb_box.pack_propagate(False)
         self.thumb_lbl = tk.Label(thumb_box, text="Aperçu", bg=C["surface2"], fg=C["text3"], font=font("body", 9))
         self.thumb_lbl.pack(fill="both", expand=True)
+        selrow = ttk.Frame(serie, style="Card.TFrame")
+        selrow.pack(fill="x", pady=(0, 4))
+        self.v_all = tk.BooleanVar(value=False)
+        ttk.Checkbutton(selrow, text="Tout sélectionner", variable=self.v_all, style="Card.TCheckbutton",
+                        command=lambda: self._select_all(self.v_all.get())).pack(side="left")
+        self.sel_lbl = ttk.Label(selrow, text="", style="CardMuted.TLabel")
+        self.sel_lbl.pack(side="left", padx=(10, 0))
+        ttk.Label(selrow, text="Ctrl+clic ou Maj+clic : plusieurs", style="CardMuted.TLabel").pack(side="right")
         acts = ttk.Frame(serie, style="Card.TFrame")
         acts.pack(fill="x")
         rows = [[("✎ Modifier", self.edit_selected), ("▲", lambda: self.move(-1)), ("▼", lambda: self.move(1)),
@@ -385,9 +396,10 @@ class App(tk.Tk):
         if self.v_moment.get() == "avant":
             self.frames = steps.FrameBuffer()
             self.frames.start()
+        self._rec_start = len(self.session.captures)
         self._was_visible = self.state() == "normal"
+        self._recording_ui()
         self.iconify()
-        self.title(f"● Enregistrement des clics — {pretty(self.cfg['hotkey_steps'])} pour arrêter")
         winapi.beep()
 
     def _hook_click(self, button: str, x: int, y: int):
@@ -415,11 +427,24 @@ class App(tk.Tk):
             frame, _ = grabber.grab_screen(draw_cursor=False)
             self._record_click(button, pos, frame, t)
 
+    def _recorded(self) -> int:
+        """Captures ajoutées depuis le début de l'enregistrement (un double-clic n'en ajoute qu'une)."""
+        return len(self.session.captures) - self._rec_start if self.session else 0
+
+    def _recording_ui(self):
+        """Tout ce qui montre qu'un enregistrement est en cours : titre, bouton, barre du bas, liste."""
+        n = self._recorded()
+        key = pretty(self.cfg["hotkey_steps"])
+        self.title(f"● {n} clic(s) — {key} pour arrêter")
+        self.steps_btn.config(text=f"■  Arrêter l'enregistrement ({n} clic{'s' if n > 1 else ''})")
+        self.say(f"● Enregistrement en cours : {n} clic(s). Appuyez sur {key} (ou sur le bouton « Arrêter ») pour terminer.")
+        self._fill_list(select=len(self.session.captures) - 1 if self.session and self.session.captures else None)
+
     def _record_click(self, button, pos, frame, t):
         try:
             self.recorder.on_click(button, pos, frame, t)
             winapi.beep()
-            self.title(f"● {self.recorder.count} clic(s) — {pretty(self.cfg['hotkey_steps'])} pour arrêter")
+            self._recording_ui()
         except Exception as e:
             self.say("Erreur pendant l'enregistrement d'un clic : " + str(e))
 
@@ -434,9 +459,10 @@ class App(tk.Tk):
         while not self.clicks.empty():
             self.clicks.get_nowait()
         self.title(f"{APP_NAME} {__version__}")
+        self.steps_btn.config(text="●  Enregistrer mes clics")
         self.deiconify()
         self._fill_list(select=len(self.session.captures) - 1 if self.session and self.session.captures else None)
-        n = rec.count if rec else 0
+        n = self._recorded() if rec else 0
         self.say(f"{n} étape(s) enregistrée(s). Double-cliquez une ligne pour l'améliorer (légende, flèches, voix).")
         winapi.beep()
 
@@ -474,7 +500,7 @@ class App(tk.Tk):
             self.toggle_steps()
             return
         if self.recorder:
-            self.say("Une série de clics est en cours : arrêtez-la d'abord.")
+            self.say("● Une série de clics est en cours : arrêtez-la d'abord (touche " + pretty(self.cfg["hotkey_steps"]) + ").")
             return
         if self.busy:
             self.say("Terminez d'abord l'action en cours (éditeur ou sélection ouvert).")
@@ -546,25 +572,50 @@ class App(tk.Tk):
         cur = self.listbox.curselection()
         self.listbox.delete(0, "end")
         if not self.session:
+            self._on_select()
             return
         for i, c in enumerate(self.session.captures, start=1):
             self.listbox.insert("end", f"{i}.  {c.caption or '(sans légende)'}")
-        idx = select if select is not None else (cur[0] if keep and cur else None)
-        if idx is not None and idx < self.listbox.size():
-            self.listbox.selection_set(idx)
-            self.listbox.see(idx)
+        if select is not None:
+            wanted = [select]
+        else:
+            wanted = list(cur) if keep else []
+        for idx in wanted:
+            if 0 <= idx < self.listbox.size():
+                self.listbox.selection_set(idx)
+        if wanted and 0 <= wanted[-1] < self.listbox.size():
+            self.listbox.see(wanted[-1])
+        self._on_select()
+
+    def _on_select(self):
+        n, total = len(self.listbox.curselection()), self.listbox.size()
+        self.sel_lbl.config(text=f"{n} sélectionnée(s) sur {total}" if n > 1 else "")
+        self.v_all.set(total > 0 and n == total)
         self._show_thumb()
 
+    def _select_all(self, on: bool):
+        if on:
+            self.listbox.selection_set(0, "end")
+        else:
+            self.listbox.selection_clear(0, "end")
+        self._on_select()
+
+    def _selected_indices(self) -> list[int]:
+        return list(self.listbox.curselection()) if self.session else []
+
     def _selected(self):
-        sel = self.listbox.curselection()
-        if not (self.session and sel):
+        sel = self._selected_indices()
+        if not sel:
             self.say("Sélectionnez d'abord une capture dans la liste.")
+            return None
+        if len(sel) > 1:
+            self.say("Sélectionnez une seule capture pour la modifier.")
             return None
         return self.session.captures[sel[0]]
 
     def _show_thumb(self):
         sel = self.listbox.curselection()
-        if not (self.session and sel):
+        if not (self.session and sel) or self.state() != "normal":  # pas de vignette pendant l'enregistrement, fenêtre réduite
             self.thumb_lbl.config(image="", text="Aperçu")
             return
         try:
@@ -582,17 +633,31 @@ class App(tk.Tk):
             Editor(self, self.session, cap, on_close=lambda: self._finish("Modification enregistrée."))
 
     def delete_selected(self):
-        cap = self._selected()
-        if cap and messagebox.askyesno(APP_NAME, "Supprimer cette capture définitivement ?"):
-            self.session.remove(cap)
-            self._fill_list()
+        sel = self._selected_indices()
+        if not sel:
+            self.say("Sélectionnez d'abord une capture dans la liste.")
+            return
+        what = "cette capture" if len(sel) == 1 else f"ces {len(sel)} captures"
+        if messagebox.askyesno(APP_NAME, f"Supprimer {what} définitivement ?"):
+            for cap in [self.session.captures[i] for i in sel]:
+                self.session.remove(cap)
+            self._fill_list(select=min(sel[0], len(self.session.captures) - 1) if self.session.captures else None)
 
     def move(self, delta: int):
-        cap = self._selected()
-        if cap:
-            i = self.session.captures.index(cap)
+        sel = self._selected_indices()
+        if not sel:
+            self.say("Sélectionnez d'abord une capture dans la liste.")
+            return
+        if (delta < 0 and sel[0] == 0) or (delta > 0 and sel[-1] == len(self.session.captures) - 1):
+            return
+        caps = [self.session.captures[i] for i in sel]
+        for cap in (caps if delta < 0 else reversed(caps)):
             self.session.move(cap, delta)
-            self._fill_list(select=max(0, min(len(self.session.captures) - 1, i + delta)))
+        self._fill_list(keep=False)
+        for i in sel:
+            self.listbox.selection_set(i + delta)
+        self.listbox.see(sel[0] + delta)
+        self._on_select()
 
     def new_session(self):
         title = simpledialog.askstring(APP_NAME, "Titre de la nouvelle série (ex. : Créer un compte ENT) :", parent=self)
@@ -632,19 +697,40 @@ class App(tk.Tk):
         messagebox.showinfo(APP_NAME, "Prenez d'abord au moins une capture.")
         return False
 
+    def _export_scope(self):
+        """(série à exporter, suffixe des fichiers) : toute la série, ou seulement les captures sélectionnées
+        si l'utilisateur en a choisi plusieurs. None = annulé."""
+        sel = self._selected_indices()
+        total = len(self.session.captures)
+        if 1 < len(sel) < total:
+            ans = messagebox.askyesnocancel(
+                APP_NAME, f"{len(sel)} captures sont sélectionnées sur {total}.\n\n"
+                          "Oui = exporter seulement la sélection\nNon = exporter toute la série", parent=self)
+            if ans is None:
+                return None
+            if ans:
+                part = copy.copy(self.session)
+                part.captures = [self.session.captures[i] for i in sel]
+                return part, "_selection"
+        return self.session, ""
+
     def export_video(self):
         if not self._need_session():
             return
-        missing = [i for i, c in enumerate(self.session.captures, 1) if not c.caption.strip()]
+        scope = self._export_scope()
+        if scope is None:
+            return
+        session, suffix = scope
+        missing = [i for i, c in enumerate(session.captures, 1) if not c.caption.strip()]
         if missing and not messagebox.askyesno(
                 APP_NAME, f"{len(missing)} capture(s) n'ont pas de légende (sous-titre) : {', '.join(map(str, missing))}.\n"
                           "Les écrans sans légende seront montrés sans sous-titre.\nContinuer ?"):
             return
-        out = self.session.folder / "video"
+        out = self.session.folder / ("video" + suffix)
         self.say("Création de la vidéo en cours…")
         self.update_idletasks()
         try:
-            res = exporter.export_video_pack(self.session, out, ffmpeg_hint=self.cfg["ffmpeg_path"])
+            res = exporter.export_video_pack(session, out, ffmpeg_hint=self.cfg["ffmpeg_path"])
         except Exception as e:
             messagebox.showerror(APP_NAME, f"Échec de l'export : {e}")
             return
@@ -662,8 +748,12 @@ class App(tk.Tk):
     def export_word(self):
         if not self._need_session():
             return
+        scope = self._export_scope()
+        if scope is None:
+            return
+        session, suffix = scope
         try:
-            path = exporter.export_docx(self.session, self.session.folder / "document.docx", logo=self.cfg["logo_in_exports"])
+            path = exporter.export_docx(session, self.session.folder / f"document{suffix}.docx", logo=self.cfg["logo_in_exports"])
         except Exception as e:
             messagebox.showerror(APP_NAME, f"Échec de l'export Word : {e}")
             return
@@ -673,7 +763,11 @@ class App(tk.Tk):
     def export_html(self):
         if not self._need_session():
             return
-        path = exporter.export_html_guide(self.session, self.session.folder / "fiche_pas_a_pas.html", logo=self.cfg["logo_in_exports"])
+        scope = self._export_scope()
+        if scope is None:
+            return
+        session, suffix = scope
+        path = exporter.export_html_guide(session, self.session.folder / f"fiche_pas_a_pas{suffix}.html", logo=self.cfg["logo_in_exports"])
         self.say(f"Fiche créée : {path}")
         self._open(path)
 

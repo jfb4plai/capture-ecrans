@@ -53,13 +53,15 @@ Le pointeur est dessiné avec un halo jaune pour montrer où vous avez cliqué (
 
 ### La série de clics (une capture numérotée par clic)
 Idéal pour expliquer une manipulation : faites-la **une fois**, le programme prend une image à chaque clic.
-1. Cliquez sur **● Enregistrer mes clics** (ou `Ctrl+Maj+F12`). La fenêtre se réduit ; la barre de titre indique l'enregistrement.
+1. Cliquez sur **● Enregistrer mes clics** (ou `Ctrl+Maj+F12`). Le bouton devient **■ Arrêter l'enregistrement (N clics)**, le titre de la fenêtre et la barre du bas indiquent le nombre de clics, et la liste de droite se remplit **en direct** (rouvrez la fenêtre avec `Win+Maj+Q` pour la voir).
 2. Faites votre manipulation normalement. **Un bip = une étape enregistrée.** Chaque image reçoit un **cercle rouge** autour du clic, une **pastille numérotée** et la légende « Cliquez ici ».
 3. Arrêtez avec `Ctrl+Maj+F12` (évitez de cliquer sur la barre des tâches pour rouvrir la fenêtre : ce clic serait enregistré).
 4. Améliorez chaque étape (double-clic sur la ligne) : légende, flèche, voix.
 
 *Moment de l'image* : **juste avant le clic** (recommandé : on voit le menu ouvert et le pointeur sur l'élément à cliquer) ou **0,5 s après** (on voit le résultat). Un double-clic est fusionné en une seule étape. Les clics dans notre propre fenêtre sont ignorés ; les clics gauche et droit sont enregistrés (pas le glisser-déposer ni le clavier).
 Si vous supprimez ou déplacez des étapes : bouton **↻ Renuméroter**.
+
+**Sélectionner plusieurs captures** : case **Tout sélectionner** sous la liste, ou `Ctrl+clic` (une par une) / `Maj+clic` (une plage). Sélection multiple : **Supprimer**, **▲ ▼** (déplace le bloc) et les exports (le programme demande alors s'il faut exporter seulement la sélection ; les fichiers portent le suffixe `_selection`, rien n'est écrasé).
 
 ## 3. Annoter (l'éditeur s'ouvre tout seul)
 Choisissez un outil, une couleur, une taille, puis glissez sur l'image.
