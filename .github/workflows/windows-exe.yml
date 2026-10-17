@@ -39,15 +39,55 @@ jobs:
             throw "L'exécutable ne démarre pas (code $($p.ExitCode))"
           }
           Get-Content $out
-      - name: Préparer l'archive
+      - name: Ajouter le mode d'emploi et la licence au dossier du programme
         shell: pwsh
         run: |
           Copy-Item capture_ecran/assets/mode-emploi.html dist/Capture-ecran-PLAI/Mode-emploi.html
           Copy-Item LICENSE dist/Capture-ecran-PLAI/
+      - name: Construire l'installateur (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y | Out-Null }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup introuvable" }
+          $ver = (Select-String -Path capture_ecran/__init__.py -Pattern '__version__\s*=\s*"([^"]+)"').Matches[0].Groups[1].Value
+          & $iscc "/DMyAppVersion=$ver" installer/capture-ecran.iss
+          if ($LASTEXITCODE -ne 0) { throw "Échec de la compilation de l'installateur" }
+          Get-Item installateur/Capture-ecran-PLAI-installateur.exe | Format-List Name, Length
+      # Installation silencieuse dans un dossier de test, démarrage de la version INSTALLÉE, puis désinstallation.
+      - name: Tester l'installateur (installer, démarrer, réinstaller par-dessus, désinstaller)
+        shell: pwsh
+        run: |
+          $setup = (Resolve-Path installateur/Capture-ecran-PLAI-installateur.exe).Path
+          $dir = Join-Path $env:RUNNER_TEMP "install-test"
+          $args = @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-", "/DIR=$dir", "/TASKS=")
+          $p = Start-Process $setup -ArgumentList $args -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Installation : code $($p.ExitCode)" }
+          $exe = Join-Path $dir "Capture-ecran-PLAI.exe"
+          if (-not (Test-Path $exe)) { throw "Programme absent après installation" }
+          if (-not (Test-Path (Join-Path $dir "Mode-emploi.html"))) { throw "Mode d'emploi absent" }
+          $out = Join-Path $env:RUNNER_TEMP "selftest-installe.txt"
+          $r = Start-Process $exe -ArgumentList "--selftest", $out -Wait -PassThru
+          if ($r.ExitCode -ne 0 -or -not (Test-Path $out)) { throw "La version installée ne démarre pas" }
+          Get-Content $out
+          # mise à jour : réinstaller par-dessus ne doit pas échouer ni dupliquer l'entrée de désinstallation
+          $p = Start-Process $setup -ArgumentList $args -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Réinstallation par-dessus : code $($p.ExitCode)" }
+          $unins = Get-ChildItem $dir -Filter "unins*.exe" | Select-Object -First 1
+          if (-not $unins) { throw "Désinstalleur absent" }
+          $p = Start-Process $unins.FullName -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait -PassThru
+          for ($i = 0; $i -lt 30 -and (Test-Path $exe); $i++) { Start-Sleep -Seconds 1 }   # le désinstalleur se relance en copie temporaire
+          if (Test-Path $exe) { throw "Le programme est encore là après désinstallation" }
+          "Installation, démarrage, mise à jour par-dessus et désinstallation : OK"
+      - name: Préparer l'archive
+        shell: pwsh
+        run: |
           Compress-Archive -Path dist/Capture-ecran-PLAI -DestinationPath Capture-ecran-PLAI-windows.zip
           $h = (Get-FileHash Capture-ecran-PLAI-windows.zip -Algorithm SHA256).Hash.ToLower()
           "$h  Capture-ecran-PLAI-windows.zip" | Out-File -Encoding ascii Capture-ecran-PLAI-windows.zip.sha256
-          Get-Content Capture-ecran-PLAI-windows.zip.sha256
+          $hi = (Get-FileHash installateur/Capture-ecran-PLAI-installateur.exe -Algorithm SHA256).Hash.ToLower()
+          "$hi  Capture-ecran-PLAI-installateur.exe" | Out-File -Encoding ascii Capture-ecran-PLAI-installateur.exe.sha256
+          Get-Content Capture-ecran-PLAI-windows.zip.sha256, Capture-ecran-PLAI-installateur.exe.sha256
       # Analyse par le vrai Microsoft Defender du serveur Windows. Le texte de sortie décide du statut
       # (« found no threats » / « found N threats ») plutôt que le code de sortie, ambigu selon les versions.
       - name: Analyse Microsoft Defender
@@ -66,8 +106,11 @@ jobs:
             } catch { $detail = "Version des signatures indisponible`n" }
             $out = (& $mp -Scan -ScanType 3 -File $folder -DisableRemediation 2>&1 | Out-String).Trim()
             $detail += "Dossier analysé : Capture-ecran-PLAI (programme et bibliothèques)`n$out"
-            if ($out -match "found no threats") { $status = "PROPRE" }
-            elseif ($out -match "found \d+ threat") { $status = "MENACE" }
+            $inst = (Resolve-Path "installateur/Capture-ecran-PLAI-installateur.exe").Path
+            $out2 = (& $mp -Scan -ScanType 3 -File $inst -DisableRemediation 2>&1 | Out-String).Trim()
+            $detail += "`n`nInstallateur analysé : Capture-ecran-PLAI-installateur.exe`n$out2"
+            if ($out -match "found no threats" -and $out2 -match "found no threats") { $status = "PROPRE" }
+            elseif (($out + $out2) -match "found \d+ threat") { $status = "MENACE" }
           } catch { $detail = "Analyse impossible : $($_.Exception.Message)" }
           "STATUT: $status`n$detail" | Out-File -Encoding utf8 scan-defender.txt
           Get-Content scan-defender.txt
@@ -77,6 +120,8 @@ jobs:
           path: |
             Capture-ecran-PLAI-windows.zip
             Capture-ecran-PLAI-windows.zip.sha256
+            Capture-ecran-PLAI-installateur.exe.sha256
+            installateur/Capture-ecran-PLAI-installateur.exe
             scan-defender.txt
 
   scan-linux:
@@ -97,6 +142,7 @@ jobs:
           sudo systemctl stop clamav-freshclam 2> /dev/null || true
           sudo freshclam --quiet || echo "Mise à jour des signatures impossible : signatures installées utilisées"
           mkdir x && unzip -q pkg/Capture-ecran-PLAI-windows.zip -d x
+          cp pkg/installateur/Capture-ecran-PLAI-installateur.exe x/
           ver="$(clamscan --version)"
           set +e
           out="$(clamscan -r --infected x 2>&1)"
@@ -138,9 +184,10 @@ jobs:
           path: art
       - name: Rapport d'analyse de sécurité
         run: |
+          cat art/Capture-ecran-PLAI-windows/*.sha256 > art/Capture-ecran-PLAI-windows/all.sha256
           vt=""; [ -f art/analyses-linux/scan-virustotal.txt ] && vt="--vt art/analyses-linux/scan-virustotal.txt"
           python3 tools/scan_report.py --version "${{ steps.ver.outputs.name }}" \
-            --sha art/Capture-ecran-PLAI-windows/Capture-ecran-PLAI-windows.zip.sha256 \
+            --sha art/Capture-ecran-PLAI-windows/all.sha256 \
             --defender art/Capture-ecran-PLAI-windows/scan-defender.txt \
             --clamav art/analyses-linux/scan-clamav.txt $vt --out SECURITY-REPORT.md
           cat SECURITY-REPORT.md >> "$GITHUB_STEP_SUMMARY"
@@ -160,6 +207,6 @@ jobs:
           prerelease: false
           body_path: SECURITY-REPORT.md
           files: |
+            art/Capture-ecran-PLAI-windows/installateur/Capture-ecran-PLAI-installateur.exe
             art/Capture-ecran-PLAI-windows/Capture-ecran-PLAI-windows.zip
-            art/Capture-ecran-PLAI-windows/Capture-ecran-PLAI-windows.zip.sha256
             SECURITY-REPORT.md
