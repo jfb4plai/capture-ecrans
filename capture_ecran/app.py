@@ -23,7 +23,7 @@ from .selector import select_region
 from .session import Session
 
 MODES = {"full": "Écran entier", "region": "Zone", "window": "Fenêtre active", "steps": "Série de clics",
-         "show": "Rouvrir la fenêtre"}
+         "quick": "Capture simple", "show": "Rouvrir la fenêtre"}
 
 
 def copy_raw_capture(copy_option: bool, after_capture: str) -> bool:
@@ -225,7 +225,8 @@ class App(tk.Tk):
         keys.pack(fill="x", padx=16, pady=(0, 10))
         self._hint = {}
         for col, (name, desc) in enumerate((("full", "écran entier"), ("region", "choisir une zone"),
-                                            ("window", "fenêtre active"), ("steps", "série de clics"))):
+                                            ("window", "fenêtre active"), ("steps", "série de clics"),
+                                            ("quick", "capture simple"))):
             cell = tk.Frame(keys, bg=C["dark"])
             cell.grid(row=0, column=col, sticky="w", padx=(0, 22))
             cap = tk.Label(cell, text="", bg=C["dark2"], fg="#ffffff", font=font("medium", 9), padx=9, pady=3)
@@ -234,9 +235,9 @@ class App(tk.Tk):
             self._hint[name] = cap
         self._stay_lbl = tk.Label(dark, text="", bg=C["dark"], fg=C["dark_text"], font=font("body", 9), anchor="w")
         self._stay_lbl.pack(fill="x", padx=16, pady=(0, 10))
-        keys.columnconfigure(4, weight=1)
+        keys.columnconfigure(5, weight=1)
         tk.Label(keys, text="Portable : + touche Fn", bg=C["dark"], fg=C["text3"], font=font("body", 9),
-                 anchor="e").grid(row=0, column=4, sticky="ne")
+                 anchor="e").grid(row=0, column=5, sticky="ne")
 
         # ---- deux colonnes
         body = tk.Frame(self, bg=C["bg"])
@@ -259,6 +260,8 @@ class App(tk.Tk):
                                          ("⏱  Dans 3 secondes", lambda: self.request("full", delay=3))]):
             ttk.Button(grid, text=text, style="Big.TButton", command=cmd).grid(
                 row=i // 2, column=i % 2, padx=3, pady=3, sticky="ew")
+        ttk.Button(grid, text="✂  Capture simple : zone → presse-papiers", style="Big.TButton",
+                   command=lambda: self.request("quick")).grid(row=2, column=0, columnspan=2, padx=3, pady=3, sticky="ew")
         grid.columnconfigure(0, weight=1)
         grid.columnconfigure(1, weight=1)
         self.steps_btn = ttk.Button(btns, text="●  Enregistrer mes clics", style="Primary.TButton",
@@ -330,7 +333,7 @@ class App(tk.Tk):
 
     def _refresh_hint(self):
         k = self.cfg
-        for name in ("full", "region", "window", "steps"):
+        for name in ("full", "region", "window", "steps", "quick"):
             self._hint[name].config(text=pretty(k[f"hotkey_{name}"]))
         self._stay_lbl.config(text="Laissez le programme ouvert (réduisez la fenêtre, ne la fermez pas) : les raccourcis ne "
                                    f"fonctionnent que s'il tourne.  {pretty(k['hotkey_show'])} rouvre cette fenêtre.")
@@ -351,7 +354,7 @@ class App(tk.Tk):
         self.listener = HotkeyListener(
             {"full": self.cfg["hotkey_full"], "region": self.cfg["hotkey_region"],
              "window": self.cfg["hotkey_window"], "steps": self.cfg["hotkey_steps"],
-             "show": self.cfg["hotkey_show"]}, self.events.put)
+             "quick": self.cfg["hotkey_quick"], "show": self.cfg["hotkey_show"]}, self.events.put)
         self.listener.start()
         self.listener.ready.wait(2)
         self._refresh_hint()
@@ -526,6 +529,9 @@ class App(tk.Tk):
 
     def _capture(self, mode: str):
         try:
+            if mode == "quick":
+                self._quick_capture()
+                return
             img, _ = grabber.grab_screen(self.v_cursor.get(), self.v_halo.get())
             if mode == "window":
                 img = self._crop_window(img)
@@ -555,6 +561,32 @@ class App(tk.Tk):
         except Exception as e:  # une capture ratée ne doit jamais fermer le programme
             self._finish("Erreur : " + str(e))
             messagebox.showerror(APP_NAME, f"La capture a échoué :\n{e}")
+
+    def _quick_capture(self):
+        """Comme Windows+Maj+S : on trace une zone, l'image part dans le presse-papiers. Ni pointeur, ni halo, ni éditeur,
+        ni fichier : rien n'est rangé dans une série."""
+        img, _ = grabber.grab_screen(False, False)
+        img = select_region(self, img)
+        if img is None:
+            self._finish("Capture annulée.")
+            return
+        if winapi.copy_image_to_clipboard(img):
+            winapi.beep()
+            self._toast("✓ Copié : Ctrl+V pour coller")
+            self._finish("Capture simple copiée dans le presse-papiers (Ctrl+V pour la coller). Aucun fichier n'a été créé.")
+        else:
+            self._finish("⚠ La copie dans le presse-papiers a échoué.")
+
+    def _toast(self, text: str, ms: int = 1800):
+        """Petit message discret en bas à droite de l'écran, même quand la fenêtre du programme est réduite."""
+        t = tk.Toplevel(self)
+        t.overrideredirect(True)
+        t.attributes("-topmost", True)
+        tk.Label(t, text=text, bg=C["dark"], fg="#ffffff", font=font("medium", 11), padx=16, pady=10).pack()
+        t.update_idletasks()
+        w, h = t.winfo_reqwidth(), t.winfo_reqheight()
+        t.geometry(f"{w}x{h}+{self.winfo_screenwidth() - w - 24}+{self.winfo_screenheight() - h - 70}")
+        t.after(ms, t.destroy)
 
     def _crop_window(self, img):
         vs = winapi.virtual_screen()
@@ -809,7 +841,8 @@ class App(tk.Tk):
         sc = theme.section(wrap, "Raccourcis clavier")
         fields = {}
         rows = [("hotkey_full", "Écran entier"), ("hotkey_region", "Zone"), ("hotkey_window", "Fenêtre active"),
-                ("hotkey_steps", "Série de clics (début / fin)"), ("hotkey_show", "Rouvrir cette fenêtre")]
+                ("hotkey_steps", "Série de clics (début / fin)"),
+                ("hotkey_quick", "Capture simple (zone → presse-papiers)"), ("hotkey_show", "Rouvrir cette fenêtre")]
         for i, (key, label) in enumerate(rows):
             ttk.Label(sc, text=label, style="Card.TLabel").grid(row=i, column=0, sticky="w", padx=(0, 16), pady=3)
             v = tk.StringVar(value=self.cfg[key].replace("shift", "maj"))

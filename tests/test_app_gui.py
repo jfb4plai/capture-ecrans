@@ -152,3 +152,38 @@ def test_export_scope_selection_or_whole(app, tmp_path, monkeypatch):
     app._select_all(True)                           # tout sélectionné : pas de question
     monkeypatch.setattr(A.messagebox, "askyesnocancel", lambda *a, **k: pytest.fail("question inutile"))
     assert app._export_scope()[1] == ""
+
+
+def test_quick_capture_goes_to_clipboard_only(app, tmp_path, monkeypatch):
+    """Capture simple : zone → presse-papiers, sans pointeur ni halo, sans éditeur, sans fichier ni série."""
+    calls = {}
+    full = Image.new("RGB", (400, 300), "white")
+    monkeypatch.setattr(A.grabber, "grab_screen", lambda *a, **k: calls.setdefault("grab", a) and (full, (0, 0)))
+    monkeypatch.setattr(A, "select_region", lambda master, img: img.crop((10, 10, 110, 90)))
+    monkeypatch.setattr(A.winapi, "copy_image_to_clipboard", lambda im: calls.setdefault("clip", im.size) and True)
+    monkeypatch.setattr(A.Editor, "__init__", lambda *a, **k: pytest.fail("l'éditeur ne doit pas s'ouvrir"))
+    app.session = None
+    before = list(tmp_path.iterdir())
+    app.busy = True
+    app._capture("quick")
+    assert calls["grab"] == (False, False)          # ni pointeur ni halo jaune
+    assert calls["clip"] == (100, 80)               # seule la zone choisie est copiée
+    assert app.session is None and list(tmp_path.iterdir()) == before and not app.busy
+    assert "presse-papiers" in app.status.cget("text") and "Aucun fichier" in app.status.cget("text")
+
+
+def test_quick_capture_cancelled(app, monkeypatch):
+    monkeypatch.setattr(A.grabber, "grab_screen", lambda *a, **k: (Image.new("RGB", (50, 50)), (0, 0)))
+    monkeypatch.setattr(A, "select_region", lambda master, img: None)
+    monkeypatch.setattr(A.winapi, "copy_image_to_clipboard", lambda im: pytest.fail("rien à copier"))
+    app.busy = True
+    app._capture("quick")
+    assert app.status.cget("text") == "Capture annulée." and not app.busy
+
+
+def test_quick_hotkey_default_and_distinct():
+    cfg = config.load(Path(os.devnull))
+    keys = [cfg[k] for k in ("hotkey_full", "hotkey_region", "hotkey_window", "hotkey_steps", "hotkey_quick", "hotkey_show")]
+    assert cfg["hotkey_quick"] == "ctrl+shift+f8" and len(set(keys)) == len(keys)
+    from capture_ecran.hotkeys import parse_hotkey
+    parse_hotkey(cfg["hotkey_quick"])
