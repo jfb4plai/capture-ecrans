@@ -53,6 +53,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <ul>
       <li><a href="#installer">1. Installer</a></li>
       <li><a href="#ouvrir">Ouvrir facilement le programme</a></li>
+      <li><a href="#maj">Mettre à jour</a></li>
       <li><a href="#capturer">2. Photographier un menu déroulant</a></li>
       <li><a href="#clics">3. La série de clics</a></li>
       <li><a href="#annoter">4. Annoter, légender, enregistrer sa voix</a></li>
@@ -84,6 +85,16 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <li><strong>Et si le programme est fermé ?</strong> Windows n'autorise pas la touche <kbd>Windows</kbd> pour <em>lancer</em> un programme. Alternative : <em>Réglages › Ouvrir facilement</em>, case « Les raccourcis s'ouvrent aussi avec <strong>Ctrl+Alt+Q</strong> ». Sur un clavier belge, <kbd>Ctrl</kbd>+<kbd>Alt</kbd> est la touche AltGr : à désactiver si vous tapez souvent <kbd>AltGr</kbd>+<kbd>Q</kbd>. (Combinaison non vérifiée sur un vrai poste.)</li>
   </ul>
   <div class="note"><strong>Avant de créer un raccourci</strong>, déplacez le dossier extrait du zip (<code>Capture-ecran-PLAI</code>) à un endroit <strong>durable</strong>, par exemple dans <em>Documents</em> : le raccourci pointe vers ce dossier, et il ne fonctionnera plus si vous le videz (Téléchargements) ou le supprimez. Le programme vous prévient quand il tourne depuis « Téléchargements » ou un dossier temporaire. Pour réparer un raccourci après un déplacement : relancez le programme depuis son nouvel emplacement et revalidez <em>Réglages › Ouvrir facilement</em>.</div>
+
+  <h2 id="maj">Mettre à jour le programme</h2>
+  <p>Il n'y a pas d'installation : <strong>une nouvelle version n'efface pas l'ancienne</strong>. Vos captures (dossier « Capture-ecran-jfb4plai » du bureau) et vos réglages (dans <code>%APPDATA%\CaptureEcranPLAI</code>) sont rangés en dehors du programme : ils sont conservés.</p>
+  <ol>
+    <li><strong>Fermez le programme</strong> : clic droit sur son icône dans la barre des tâches (ou près de l'horloge) › Fermer. Une seule copie peut tourner à la fois : si l'ancienne reste ouverte, elle répond à la place de la nouvelle.</li>
+    <li>Téléchargez le nouveau zip, puis <strong>« Débloquer »</strong> (clic droit › Propriétés › Débloquer) comme la première fois.</li>
+    <li><strong>Au même endroit que l'ancienne version</strong> : clic droit › Extraire tout…, choisissez le <strong>même dossier</strong> et acceptez de remplacer les fichiers. Vos raccourcis (bureau, menu Démarrer, démarrage de Windows) continuent de fonctionner, car ils pointent vers ce dossier.</li>
+    <li>Lancez le programme et vérifiez le numéro de version dans la barre de titre de la fenêtre.</li>
+  </ol>
+  <div class="note"><strong>Autre dossier ?</strong> Si vous extrayez la nouvelle version ailleurs, les raccourcis visent encore l'ancien dossier. Supprimez alors l'ancien dossier, lancez la nouvelle version, puis cochez de nouveau les raccourcis dans <em>Réglages</em> : le programme remplace les anciens.</div>
 
   <h2 id="capturer">2. Photographier un menu déroulant</h2>
   <ol>

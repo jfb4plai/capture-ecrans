@@ -32,6 +32,15 @@ Contrairement à l'outil de capture de Windows (`Windows`+`Maj`+`S`), **mes racc
 
 > ⚠ **Avant de créer un raccourci**, déplacez le dossier extrait du zip (`Capture-ecran-PLAI`) à un endroit **durable**, par exemple dans *Documents*. Le raccourci pointe vers ce dossier : si vous le videz (Téléchargements) ou le supprimez, il ne fonctionnera plus. Le programme vous prévient quand il tourne depuis « Téléchargements » ou un dossier temporaire. Pour réparer un raccourci après un déplacement : relancez le programme depuis son nouvel emplacement et revalidez *Réglages › Ouvrir facilement*.
 
+## Mettre à jour le programme
+Il n'y a pas d'installation : **une nouvelle version n'efface pas l'ancienne**. Vos captures (dossier « Capture-ecran-jfb4plai » du bureau) et vos réglages (`%APPDATA%\CaptureEcranPLAI`) sont en dehors du programme : ils sont conservés.
+1. **Fermez le programme** : clic droit sur son icône dans la barre des tâches › Fermer (une seule copie peut tourner à la fois : l'ancienne répondrait à la place de la nouvelle).
+2. Téléchargez le nouveau zip et **« Débloquer »** (clic droit › Propriétés › Débloquer).
+3. **Extrayez-le au même endroit** que l'ancienne version (même dossier, remplacer les fichiers) : vos raccourcis continuent de fonctionner.
+4. Lancez et vérifiez le numéro de version dans la barre de titre.
+
+> Extraite ailleurs, la nouvelle version laisse les raccourcis pointer vers l'ancien dossier : supprimez l'ancien dossier, lancez la nouvelle version, puis recochez les raccourcis dans *Réglages*.
+
 ## 2. Photographier un menu déroulant
 1. Lancez le programme (une petite fenêtre s'ouvre ; vous pouvez la réduire).
 2. Ouvrez votre menu comme d'habitude (clic sur *Fichier*, clic droit…).
