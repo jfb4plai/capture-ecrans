@@ -22,6 +22,7 @@ DEFAULTS = {
     "click_halo": True,
     "copy_clipboard": True,
     "after_capture": "editor",   # editor | paint | none
+    "quick_after": "clipboard",  # capture simple : clipboard (presse-papiers seulement) | series (+ rangée dans la série) | editor (+ éditeur)
     "base_dir": "",
     "storage_confirmed": False,   # vrai une fois le choix du dossier fait au premier lancement
 }

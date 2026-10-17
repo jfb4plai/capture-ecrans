@@ -55,6 +55,7 @@ class App(tk.Tk):
         self.v_halo = tk.BooleanVar(value=self.cfg["click_halo"])
         self.v_clip = tk.BooleanVar(value=self.cfg["copy_clipboard"])
         self.v_after = tk.StringVar(value=self.cfg["after_capture"])
+        self.v_quick = tk.StringVar(value=self.cfg["quick_after"])
         self._build_ui()
         self._start_hotkeys()
         self._update_folder_label()
@@ -341,7 +342,7 @@ class App(tk.Tk):
     def _save_opts(self):
         self.cfg.update(draw_cursor=self.v_cursor.get(), click_halo=self.v_halo.get(),
                         copy_clipboard=self.v_clip.get(), after_capture=self.v_after.get(),
-                        steps_moment=self.v_moment.get())
+                        quick_after=self.v_quick.get(), steps_moment=self.v_moment.get())
         config.save(self.cfg)
 
     def say(self, text: str):
@@ -570,9 +571,26 @@ class App(tk.Tk):
         if img is None:
             self._finish("Capture annulée.")
             return
-        if winapi.copy_image_to_clipboard(img):
+        after = self.v_quick.get()
+        if after in ("series", "editor"):
+            if self.session is None:
+                self.session = Session.new(self._base())
+                self.title_lbl.config(text=self.session.title)
+            cap = self.session.add(img)
+            self._fill_list(select=len(self.session.captures) - 1)
+            if after == "editor":
+                # le presse-papiers recevra l'image FINALE à l'enregistrement (masques compris), pas la capture brute
+                Editor(self, self.session, cap, on_close=lambda: self._finish(f"Capture {cap.id} enregistrée."),
+                       copy_on_save=True)
+                return
+        ok = winapi.copy_image_to_clipboard(img)
+        if ok:
             winapi.beep()
             self._toast("✓ Copié : Ctrl+V pour coller")
+        if after == "series":
+            self._finish(f"Capture {cap.id} enregistrée dans la série et copiée (Ctrl+V)." if ok
+                         else f"Capture {cap.id} enregistrée dans la série. ⚠ La copie dans le presse-papiers a échoué.")
+        elif ok:
             self._finish("Capture simple copiée dans le presse-papiers (Ctrl+V pour la coller). Aucun fichier n'a été créé.")
         else:
             self._finish("⚠ La copie dans le presse-papiers a échoué.")
@@ -835,6 +853,14 @@ class App(tk.Tk):
         fr.pack(anchor="w")
         for val, txt in (("editor", "Ouvrir l'éditeur"), ("paint", "Ouvrir Paint"), ("none", "Rien (juste enregistrer)")):
             ttk.Radiobutton(fr, text=txt, value=val, variable=self.v_after, style="Card.TRadiobutton",
+                            command=self._save_opts).pack(side="left", padx=(0, 14), pady=2)
+
+        ttk.Label(cap, text="Capture simple (raccourci « Capture simple ») :", style="CardMuted.TLabel").pack(anchor="w", pady=(8, 0))
+        fq = ttk.Frame(cap, style="Card.TFrame")
+        fq.pack(anchor="w")
+        for val, txt in (("clipboard", "Presse-papiers seulement"), ("series", "Aussi dans ma série"),
+                         ("editor", "Aussi dans la série + éditeur")):
+            ttk.Radiobutton(fq, text=txt, value=val, variable=self.v_quick, style="Card.TRadiobutton",
                             command=self._save_opts).pack(side="left", padx=(0, 14), pady=2)
 
         # -- Raccourcis

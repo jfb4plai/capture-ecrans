@@ -51,7 +51,7 @@ Contrairement à l'outil de capture de Windows (`Windows`+`Maj`+`S`), **mes racc
 | **Ctrl + Maj + F10** | vous choisissez une zone (le menu est déjà « figé ») |
 | **Ctrl + Maj + F11** | la fenêtre active seulement |
 | **Ctrl + Maj + F12** | démarre / arrête la **série de clics** (voir ci-dessous) |
-| **Ctrl + Maj + F8** | **capture simple**, comme `Windows`+`Maj`+`S` : vous tracez une zone, elle part dans le presse-papiers (`Ctrl+V` pour coller). Sans pointeur ni halo jaune, sans éditeur, sans fichier |
+| **Ctrl + Maj + F8** | **capture simple**, comme `Windows`+`Maj`+`S` : vous tracez une zone, elle part dans le presse-papiers (`Ctrl+V` pour coller). Sans pointeur ni halo jaune. Par défaut : **presse-papiers seulement** (aucun fichier). *Réglages › Capture simple* permet aussi de la ranger dans votre série, ou de l'ouvrir dans l'éditeur |
 | **Windows + Maj + Q** | **rouvre la fenêtre** du programme (réduite dans la barre des tâches) |
 
 Un bip confirme la capture. Sur certains portables, ajoutez la touche **Fn**.

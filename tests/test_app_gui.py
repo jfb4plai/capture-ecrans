@@ -187,3 +187,40 @@ def test_quick_hotkey_default_and_distinct():
     assert cfg["hotkey_quick"] == "ctrl+shift+f8" and len(set(keys)) == len(keys)
     from capture_ecran.hotkeys import parse_hotkey
     parse_hotkey(cfg["hotkey_quick"])
+
+
+def _quick_setup(app, tmp_path, monkeypatch, mode):
+    clip = []
+    full = Image.new("RGB", (400, 300), "white")
+    monkeypatch.setattr(A.grabber, "grab_screen", lambda *a, **k: (full, (0, 0)))
+    monkeypatch.setattr(A, "select_region", lambda master, img: img.crop((10, 10, 110, 90)))
+    monkeypatch.setattr(A.winapi, "copy_image_to_clipboard", lambda im: clip.append(im.size) or True)
+    app.session = Session.new(tmp_path, "rapide")
+    app.v_quick.set(mode)
+    app.busy = True
+    return clip
+
+
+def test_quick_capture_also_in_series(app, tmp_path, monkeypatch):
+    clip = _quick_setup(app, tmp_path, monkeypatch, "series")
+    monkeypatch.setattr(A.Editor, "__init__", lambda *a, **k: pytest.fail("pas d'éditeur dans ce mode"))
+    app._capture("quick")
+    assert clip == [(100, 80)]
+    assert len(app.session.captures) == 1 and app.listbox.size() == 1          # retrouvable dans la liste et le dossier
+    assert app.session.load_final(app.session.captures[0]).size == (100, 80)
+    assert not app.busy and "série" in app.status.cget("text")
+
+
+def test_quick_capture_opens_editor(app, tmp_path, monkeypatch):
+    clip = _quick_setup(app, tmp_path, monkeypatch, "editor")
+    opened = []
+    monkeypatch.setattr(A.Editor, "__init__", lambda self, master, session, cap, on_close=None, **k: opened.append((cap.id, k)))
+    app._capture("quick")
+    assert len(app.session.captures) == 1 and len(opened) == 1
+    assert opened[0][1].get("copy_on_save") is True
+    assert clip == []                  # la capture brute n'est pas copiée : l'éditeur copiera l'image finale
+    app.busy = False
+
+
+def test_quick_after_default_is_clipboard_only():
+    assert config.load(Path(os.devnull))["quick_after"] == "clipboard"
