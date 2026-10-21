@@ -24,8 +24,14 @@ Clipchamp est intégré à Windows 11 (version gratuite : export 1080p sans fili
 
 Les sous-titres sont **déjà dans les images** : inutile d'importer le `.srt`. (Je n'ai pas pu confirmer que Clipchamp accepte l'import d'un fichier .srt ; ne comptez pas dessus.)
 
-## Voie 3 — installer ffmpeg pour obtenir le MP4 automatiquement
-Le programme cherche ffmpeg tout seul (PATH de Windows, installations winget, Chocolatey, Scoop, `C:\ffmpeg`). S'il ne le trouve pas alors qu'il est installé : *Réglages… › ffmpeg.exe › Parcourir…* ; pour savoir où il se trouve, tapez `where ffmpeg` dans une invite de commande. S'il n'est pas installé : `winget install Gyan.FFmpeg` (puis fermez/rouvrez le programme). Ou placez `ffmpeg.exe` à côté de `Capture-ecran-PLAI.exe`. Pensez à faire valider l'installation par votre service informatique.
+## Voie 3 — le MP4 automatique (ffmpeg fourni)
+L'installateur (et le dossier zippé) contient son propre `ffmpeg.exe`, dans le dossier `ffmpeg` du programme : le MP4 se crée sans rien installer. Le programme l'utilise en premier ; *Réglages… › ffmpeg.exe › Parcourir…* permet d'en imposer un autre, qui passe alors avant.
+
+**Licence** : ce ffmpeg est une version LGPL v3 (sans composant GPL, sans libx264). Texte de la licence et adresse du code source : `ffmpeg\LICENSE-ffmpeg.txt` et `ffmpeg\SOURCES-ffmpeg.txt`. Il est lancé comme programme séparé : vous pouvez le remplacer.
+
+**Version Python (`Lancer.bat`) ou ancienne installation sans ffmpeg** : le programme cherche ffmpeg tout seul (PATH de Windows, installations winget, Chocolatey, Scoop, `C:\ffmpeg`). Sinon : `winget install Gyan.FFmpeg`, puis fermez et rouvrez le programme. Pensez à faire valider l'installation par votre service informatique.
+
+*Pour filmer votre écran en direct (et non assembler des captures), voir « 3. Filmer l'écran en vidéo » dans [MODE_EMPLOI.md](MODE_EMPLOI.md).*
 
 ## Conseils pédagogiques pour de bonnes vidéos
 - **Une idée par écran**, 6 à 12 mots de légende ; verbes d'action (« Cliquez », « Choisissez »).

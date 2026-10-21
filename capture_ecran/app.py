@@ -14,16 +14,17 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from PIL import Image, ImageTk
 
-from . import APP_NAME, __version__, config, exporter, firstrun, grabber, shortcuts, steps, storage, theme, winapi
+from . import APP_NAME, __version__, config, exporter, firstrun, grabber, recorder, shortcuts, steps, storage, theme, winapi
 from .resources import resource_path
 from .theme import C, font
 from .editor import Editor, launch_paint
 from .hotkeys import HotkeyListener, parse_hotkey, pretty
-from .selector import select_region
+from .recordbar import RecordBar
+from .selector import select_box, select_region
 from .session import Session
 
 MODES = {"full": "Écran entier", "region": "Zone", "window": "Fenêtre active", "steps": "Série de clics",
-         "quick": "Capture simple", "show": "Rouvrir la fenêtre"}
+         "quick": "Capture simple", "video": "Vidéo", "show": "Rouvrir la fenêtre"}
 
 
 def copy_raw_capture(copy_option: bool, after_capture: str) -> bool:
@@ -56,6 +57,10 @@ class App(tk.Tk):
         self.v_clip = tk.BooleanVar(value=self.cfg["copy_clipboard"])
         self.v_after = tk.StringVar(value=self.cfg["after_capture"])
         self.v_quick = tk.StringVar(value=self.cfg["quick_after"])
+        self.v_varea = tk.StringVar(value=self.cfg["video_area"])
+        self.v_vmic = tk.BooleanVar(value=self.cfg["video_mic"])
+        self.screen_rec: recorder.ScreenRecorder | None = None
+        self.bar: RecordBar | None = None
         self._build_ui()
         self._start_hotkeys()
         self._update_folder_label()
@@ -227,7 +232,7 @@ class App(tk.Tk):
         self._hint = {}
         for col, (name, desc) in enumerate((("full", "écran entier"), ("region", "choisir une zone"),
                                             ("window", "fenêtre active"), ("steps", "série de clics"),
-                                            ("quick", "capture simple"))):
+                                            ("quick", "capture simple"), ("video", "vidéo"))):
             cell = tk.Frame(keys, bg=C["dark"])
             cell.grid(row=0, column=col, sticky="w", padx=(0, 22))
             cap = tk.Label(cell, text="", bg=C["dark2"], fg="#ffffff", font=font("medium", 9), padx=9, pady=3)
@@ -236,9 +241,9 @@ class App(tk.Tk):
             self._hint[name] = cap
         self._stay_lbl = tk.Label(dark, text="", bg=C["dark"], fg=C["dark_text"], font=font("body", 9), anchor="w")
         self._stay_lbl.pack(fill="x", padx=16, pady=(0, 10))
-        keys.columnconfigure(5, weight=1)
+        keys.columnconfigure(6, weight=1)
         tk.Label(keys, text="Portable : + touche Fn", bg=C["dark"], fg=C["text3"], font=font("body", 9),
-                 anchor="e").grid(row=0, column=5, sticky="ne")
+                 anchor="e").grid(row=0, column=6, sticky="ne")
 
         # ---- deux colonnes
         body = tk.Frame(self, bg=C["bg"])
@@ -276,6 +281,21 @@ class App(tk.Tk):
         for val, txt in (("avant", "avant le clic (conseillé)"), ("apres", "0,5 s après")):
             ttk.Radiobutton(mrow, text=txt, value=val, variable=self.v_moment, style="Card.TRadiobutton",
                             command=self._save_opts).pack(side="left", padx=(8, 0))
+
+        ttk.Separator(btns).pack(fill="x", padx=3, pady=8)
+        self.video_btn = ttk.Button(btns, text="🎬  Enregistrer une vidéo", style="Primary.TButton",
+                                    command=lambda: self.request("video"))
+        self.video_btn.pack(fill="x", padx=3, pady=(0, 2))
+        ttk.Label(btns, text="Image de la zone choisie, avec ou sans votre voix. Même raccourci pour arrêter.",
+                  style="CardMuted.TLabel", wraplength=380).pack(anchor="w", padx=3)
+        vrow = ttk.Frame(btns, style="Card.TFrame")
+        vrow.pack(fill="x", padx=3, pady=(4, 0))
+        ttk.Label(vrow, text="Filmer :", style="CardMuted.TLabel").pack(side="left")
+        for val, txt in (("region", "une zone"), ("full", "tout l'écran"), ("window", "la fenêtre active")):
+            ttk.Radiobutton(vrow, text=txt, value=val, variable=self.v_varea, style="Card.TRadiobutton",
+                            command=self._save_opts).pack(side="left", padx=(8, 0))
+        ttk.Checkbutton(btns, text="Enregistrer aussi le micro", variable=self.v_vmic, style="Card.TCheckbutton",
+                        command=self._save_opts).pack(anchor="w", padx=3, pady=(4, 0))
 
         # -- gauche : exports
         out = theme.section(left, "Créer à partir de la série")
@@ -334,7 +354,7 @@ class App(tk.Tk):
 
     def _refresh_hint(self):
         k = self.cfg
-        for name in ("full", "region", "window", "steps", "quick"):
+        for name in ("full", "region", "window", "steps", "quick", "video"):
             self._hint[name].config(text=pretty(k[f"hotkey_{name}"]))
         self._stay_lbl.config(text="Laissez le programme ouvert (réduisez la fenêtre, ne la fermez pas) : les raccourcis ne "
                                    f"fonctionnent que s'il tourne.  {pretty(k['hotkey_show'])} rouvre cette fenêtre.")
@@ -342,7 +362,8 @@ class App(tk.Tk):
     def _save_opts(self):
         self.cfg.update(draw_cursor=self.v_cursor.get(), click_halo=self.v_halo.get(),
                         copy_clipboard=self.v_clip.get(), after_capture=self.v_after.get(),
-                        quick_after=self.v_quick.get(), steps_moment=self.v_moment.get())
+                        quick_after=self.v_quick.get(), steps_moment=self.v_moment.get(),
+                        video_area=self.v_varea.get(), video_mic=self.v_vmic.get())
         config.save(self.cfg)
 
     def say(self, text: str):
@@ -355,7 +376,7 @@ class App(tk.Tk):
         self.listener = HotkeyListener(
             {"full": self.cfg["hotkey_full"], "region": self.cfg["hotkey_region"],
              "window": self.cfg["hotkey_window"], "steps": self.cfg["hotkey_steps"],
-             "quick": self.cfg["hotkey_quick"], "show": self.cfg["hotkey_show"]}, self.events.put)
+             "quick": self.cfg["hotkey_quick"], "video": self.cfg["hotkey_video"], "show": self.cfg["hotkey_show"]}, self.events.put)
         self.listener.start()
         self.listener.ready.wait(2)
         self._refresh_hint()
@@ -373,6 +394,9 @@ class App(tk.Tk):
 
     # ------------------------------------------------------------------ série de clics
     def toggle_steps(self):
+        if self.screen_rec:
+            self.say("● Une vidéo est en cours : arrêtez-la d'abord (touche " + pretty(self.cfg["hotkey_video"]) + ").")
+            return
         if self.recorder:
             self.stop_steps()
         elif not self.busy:
@@ -486,9 +510,112 @@ class App(tk.Tk):
         self._fill_list(keep=True)
         self.say(f"{n} pastille(s) renumérotée(s)." if n else "Les numéros sont déjà dans le bon ordre.")
 
+    # ------------------------------------------------------------------ vidéo
+    def toggle_video(self):
+        if self.screen_rec:
+            self.stop_video()
+        elif self.recorder:
+            self.say("● Une série de clics est en cours : arrêtez-la d'abord.")
+        elif self.busy:
+            self.say("Terminez d'abord l'action en cours (éditeur ou sélection ouvert).")
+        else:
+            self.start_video()
+
+    def start_video(self):
+        ffmpeg = exporter.find_ffmpeg(self.cfg["ffmpeg_path"])
+        if not ffmpeg:
+            messagebox.showwarning(APP_NAME, "La vidéo a besoin de ffmpeg, introuvable sur cet ordinateur.\n"
+                                             "Indiquez son emplacement dans les réglages.")
+            return
+        self.busy = True
+        self._was_visible = self.state() == "normal"
+        if self._was_visible:
+            self.withdraw()  # pour que notre fenêtre n'apparaisse pas dans la vidéo
+        self.after(250 if self._was_visible else 30, lambda: self._start_video(ffmpeg))
+
+    def _start_video(self, ffmpeg: str):
+        try:
+            img, origin = grabber.grab_screen(False, False)
+            area = self.v_varea.get()
+            if area == "window":
+                r = winapi.foreground_window_rect()
+                box = (max(0, r[0] - origin[0]), max(0, r[1] - origin[1]),
+                       min(img.width, r[2] - origin[0]), min(img.height, r[3] - origin[1])) if r else None
+            elif area == "full":
+                box = (0, 0, img.width, img.height)
+            else:
+                box = select_box(self, img, "Tracez la zone à filmer")
+            if box is None:
+                self._finish("Vidéo annulée.")
+                return
+            rect = recorder.screen_rect(box, origin)
+            mic, no_mic = None, False
+            if self.v_vmic.get():
+                mics = recorder.list_microphones(ffmpeg)
+                mic = mics[0] if mics else None
+                no_mic = mic is None
+            if self.session is None:
+                self.session = Session.new(self._base())
+                self.title_lbl.config(text=self.session.title)
+            out = self.session.folder / time.strftime("video_%Y-%m-%d_%Hh%Mm%S.mp4")
+            self.say("Préparation de l'enregistrement…")
+            self.update_idletasks()
+            rec = recorder.ScreenRecorder()
+            rec.start(ffmpeg, rect, out, mic, self.v_cursor.get())
+        except recorder.RecorderError as e:
+            self._finish("Vidéo impossible.")
+            messagebox.showerror(APP_NAME, str(e))
+            return
+        except Exception as e:
+            self._finish("Erreur : " + str(e))
+            messagebox.showerror(APP_NAME, f"La vidéo a échoué :\n{e}")
+            return
+        self.screen_rec = rec
+        self.bar = RecordBar(self, rect, pretty(self.cfg["hotkey_video"]), self.stop_video)
+        winapi.beep()
+        self.video_btn.config(text="■  Arrêter la vidéo")
+        self.say("● Enregistrement en cours." + (" Micro indisponible : image seule." if rec.mic_failed or no_mic else ""))
+        self.iconify()
+        self._video_tick()
+
+    def _video_tick(self):
+        if not self.screen_rec:
+            return
+        if not self.screen_rec.running:  # ffmpeg s'est arrêté seul (disque plein, zone devenue invalide…)
+            self.stop_video()
+            return
+        t = int(self.screen_rec.elapsed)
+        if self.bar:
+            self.bar.set_time(t)
+        self.title(f"● {t // 60:02d}:{t % 60:02d}  {pretty(self.cfg['hotkey_video'])} pour arrêter")
+        self.after(500, self._video_tick)
+
+    def stop_video(self):
+        rec, self.screen_rec = self.screen_rec, None
+        if self.bar:
+            self.bar.destroy()
+            self.bar = None
+        self.title(f"{APP_NAME} {__version__}")
+        self.video_btn.config(text="🎬  Enregistrer une vidéo")
+        self.deiconify()
+        self.say("Finalisation de la vidéo…")
+        self.update_idletasks()
+        path = rec.stop() if rec else None
+        winapi.beep()
+        self._was_visible = True
+        self._finish(f"Vidéo enregistrée : {path.name}" if path else "La vidéo n'a pas pu être créée.")
+        if path:
+            self._open(path.parent)
+        else:
+            messagebox.showerror(APP_NAME, "La vidéo n'a pas pu être créée (aucune image enregistrée).")
+
     # ------------------------------------------------------------------ capture
     def _show_window(self):
         """Rouvre la fenêtre (touche Win+Maj+Q par défaut) : fonctionne même réduite ou masquée, même pendant une action."""
+        if self.screen_rec:  # pendant une vidéo, la fenêtre principale se poserait sur la zone filmée : on montre la barre
+            if self.bar:
+                self.bar.lift()
+            return
         self.deiconify()
         self.state("normal")
         self.lift()
@@ -502,6 +629,12 @@ class App(tk.Tk):
             return
         if mode == "steps":
             self.toggle_steps()
+            return
+        if mode == "video":
+            self.toggle_video()
+            return
+        if self.screen_rec:
+            self.say("● Une vidéo est en cours : arrêtez-la d'abord (touche " + pretty(self.cfg["hotkey_video"]) + ").")
             return
         if self.recorder:
             self.say("● Une série de clics est en cours : arrêtez-la d'abord (touche " + pretty(self.cfg["hotkey_steps"]) + ").")
@@ -868,7 +1001,7 @@ class App(tk.Tk):
         fields = {}
         rows = [("hotkey_full", "Écran entier"), ("hotkey_region", "Zone"), ("hotkey_window", "Fenêtre active"),
                 ("hotkey_steps", "Série de clics (début / fin)"),
-                ("hotkey_quick", "Capture simple (zone → presse-papiers)"), ("hotkey_show", "Rouvrir cette fenêtre")]
+                ("hotkey_quick", "Capture simple (zone → presse-papiers)"), ("hotkey_video", "Vidéo (démarrer / arrêter)"), ("hotkey_show", "Rouvrir cette fenêtre")]
         for i, (key, label) in enumerate(rows):
             ttk.Label(sc, text=label, style="Card.TLabel").grid(row=i, column=0, sticky="w", padx=(0, 16), pady=3)
             v = tk.StringVar(value=self.cfg[key].replace("shift", "maj"))

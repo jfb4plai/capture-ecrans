@@ -45,7 +45,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
 </div></nav>
 <main>
   <h1>Mode d'emploi — Capture d'écran PLAI</h1>
-  <p class="lead">Pour photographier un <strong>menu déroulant</strong>, l'annoter, puis en faire une <strong>fiche</strong> ou une <strong>vidéo sous-titrée</strong>.</p>
+  <p class="lead">Pour photographier un <strong>menu déroulant</strong>, l'annoter, puis en faire une <strong>fiche</strong> ou une <strong>vidéo sous-titrée</strong>. Il peut aussi <strong>filmer votre écran</strong> (une zone, avec votre voix).</p>
 
   <p class="small"><a href="Mode-emploi-Capture-ecran-PLAI.html" download="Mode-emploi-Capture-ecran-PLAI.html" data-umami-event="telecharger-mode-emploi-capture-ecran">⬇ Télécharger ce mode d'emploi</a> (un seul fichier .html, lisible sans connexion).</p>
 
@@ -56,10 +56,11 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
       <li><a href="#maj">Mettre à jour</a></li>
       <li><a href="#capturer">2. Photographier un menu déroulant</a></li>
       <li><a href="#clics">3. La série de clics</a></li>
-      <li><a href="#annoter">4. Annoter, légender, enregistrer sa voix</a></li>
-      <li><a href="#exports">5. Fiche, Word ou vidéo</a></li>
-      <li><a href="#video">6. Détails de la vidéo</a></li>
-      <li><a href="#problemes">7. Problèmes fréquents</a></li>
+      <li><a href="#filmer">4. Filmer l'écran en vidéo</a></li>
+      <li><a href="#annoter">5. Annoter, légender, enregistrer sa voix</a></li>
+      <li><a href="#exports">6. Fiche, Word ou vidéo</a></li>
+      <li><a href="#video">7. Détails de la vidéo sous-titrée</a></li>
+      <li><a href="#problemes">8. Problèmes fréquents</a></li>
     </ul></div>
 
   <h2 id="installer">1. Installer (une seule fois)</h2>
@@ -110,6 +111,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <tr><td><kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F11</kbd></td><td>la fenêtre active seulement</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F12</kbd></td><td>démarre / arrête la série de clics</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F8</kbd></td><td><strong>capture simple</strong>, comme <kbd>Windows</kbd>+<kbd>Maj</kbd>+<kbd>S</kbd> : vous tracez une zone, elle part dans le presse-papiers (<kbd>Ctrl</kbd>+<kbd>V</kbd> pour coller). Sans pointeur ni halo jaune. Par défaut : <strong>presse-papiers seulement</strong> (aucun fichier). <em>Réglages › Capture simple</em> permet aussi de la ranger dans votre série, ou de l'ouvrir dans l'éditeur</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F7</kbd></td><td><strong>filme l'écran</strong> (démarre, puis arrête) : voir <a href="#filmer">4. Filmer l'écran en vidéo</a></td></tr>
     <tr><td><kbd>Windows</kbd>+<kbd>Maj</kbd>+<kbd>Q</kbd></td><td><strong>rouvre la fenêtre</strong> du programme (réduite dans la barre des tâches)</td></tr>
   </table>
   <p>Un bip confirme la capture. Sur un portable, ajoutez la touche <kbd>Fn</kbd> si besoin. Les raccourcis se changent via <em>Réglages…</em> (évitez Ctrl+Alt : c'est la touche AltGr du clavier belge).</p>
@@ -126,7 +128,29 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
   <p><strong>Moment de l'image</strong> : <em>juste avant le clic</em> (recommandé : on voit le menu ouvert et le pointeur sur l'élément à cliquer) ou <em>0,5 s après</em> (on voit le résultat). Un double-clic est fusionné en une seule étape. Seuls les clics gauche et droit sont enregistrés (ni glisser-déposer, ni clavier). Après avoir supprimé ou déplacé des étapes : bouton <strong>↻ Renuméroter</strong>.</p>
   <p><strong>Sélectionner plusieurs captures</strong> : case « Tout sélectionner » sous la liste, ou <kbd>Ctrl</kbd>+clic (une par une) / <kbd>Maj</kbd>+clic (une plage). La sélection multiple sert à <strong>supprimer</strong>, <strong>déplacer</strong> (▲ ▼) et <strong>exporter</strong> : le programme demande alors s'il faut exporter seulement la sélection ; les fichiers portent le suffixe <code>_selection</code>, rien n'est écrasé.</p>
 
-  <h2 id="annoter">4. Annoter, légender, enregistrer sa voix</h2>
+  <h2 id="filmer">4. Filmer l'écran en vidéo</h2>
+  <p>Pour montrer une manipulation en mouvement, avec votre voix. Le résultat est <strong>un fichier MP4</strong> (image 15 par seconde, son AAC) rangé dans le dossier de la série en cours. C'est distinct de la « vidéo sous-titrée » faite à partir de captures (voir plus bas).</p>
+  <ol>
+    <li>Dans la fenêtre du programme, choisissez <strong>Filmer</strong> : <em>une zone</em> (choix par défaut), <em>tout l'écran</em> ou <em>la fenêtre active</em>. Cochez ou non <strong>Enregistrer aussi le micro</strong> (coché par défaut).</li>
+    <li>Cliquez sur <strong>🎬 Enregistrer une vidéo</strong>, ou appuyez sur <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F7</kbd> (ce raccourci se change dans <em>Réglages…</em>). La fenêtre du programme se retire pour ne pas être filmée.</li>
+    <li><em>Une zone</em> : l'écran se fige, tracez la zone à filmer avec la souris (<kbd>Échap</kbd> annule). La zone doit faire au moins 16 × 16 pixels.</li>
+    <li>Patientez <strong>3 à 4 secondes</strong> : le message « Préparation de l'enregistrement… » s'affiche pendant l'ouverture du micro. Un bip signale que l'enregistrement a commencé : parlez et agissez à partir de ce bip.</li>
+    <li>Une <strong>barre sombre</strong> reste affichée au premier plan avec le temps écoulé, le bouton <strong>■ Arrêter</strong> et le rappel « ou Ctrl+Maj+F7 ». Elle se place <strong>hors de la zone filmée</strong> (au-dessus, sinon en dessous, à droite ou à gauche) et se déplace en la faisant glisser à la souris.</li>
+    <li>Pour arrêter : cliquez sur <strong>■ Arrêter</strong> ou appuyez de nouveau sur <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F7</kbd>. Comptez 1 à 2 secondes de finalisation, puis le dossier de la série s'ouvre avec le fichier <code>video_AAAA-MM-JJ_HHhMMmSS.mp4</code>.</li>
+  </ol>
+  <p><strong>Pendant l'enregistrement</strong>, <kbd>Windows</kbd>+<kbd>Maj</kbd>+<kbd>Q</kbd> ne rouvre pas la fenêtre du programme (elle se poserait sur la zone filmée) : il ramène seulement la barre au premier plan. La fenêtre revient à l'arrêt. Les captures par raccourci et la série de clics sont refusées jusqu'à l'arrêt de la vidéo.</p>
+  <p><strong>Pointeur</strong> : il apparaît dans la vidéo si <em>Réglages… › Montrer le pointeur de la souris</em> est coché. <strong>Écran entier</strong> : la barre ne peut pas se placer hors de l'image ; Windows est alors prié de ne pas l'inclure dans l'enregistrement (essai de contrôle du 21/10/2026 sur une image fixe, Windows 11 ; sur Windows 10 antérieur à la version 2004, cette exclusion n'est pas garantie).</p>
+  <p><strong>Ce que cette fonction ne fait pas</strong> :</p>
+  <ul>
+    <li>pas de <strong>pause</strong> ni de montage : un enregistrement = un fichier ;</li>
+    <li><strong>le son de l'ordinateur</strong> (vidéo, musique, visioconférence) n'est <strong>pas</strong> enregistré : seulement le micro ;</li>
+    <li>si aucun micro n'est détecté ou s'il ne démarre pas, la vidéo est faite <strong>sans son</strong> et la barre d'état le dit (« Micro indisponible : image seule ») ; sinon le premier micro détecté par Windows est utilisé, sans choix dans le programme ;</li>
+    <li>la vidéo n'apparaît <strong>pas</strong> dans la liste des captures de la série et n'entre pas dans le document Word ni la fiche HTML ;</li>
+    <li>dimensions arrondies au nombre pair (jusqu'à 1 pixel de moins) ; les fenêtres protégées par certains lecteurs vidéo peuvent apparaître noires (non vérifié).</li>
+  </ul>
+  <p class="small">Le programme fournit son propre ffmpeg (encodage H.264 de Windows, voir plus bas). La <strong>synchronisation du son et de l'image</strong> a été mesurée sur les durées, pas contrôlée à l'oreille : si vous constatez un décalage, signalez-le.</p>
+
+  <h2 id="annoter">5. Annoter, légender, enregistrer sa voix</h2>
   <p>L'éditeur s'ouvre tout seul après chaque capture. Choisissez un outil, une couleur, une taille, puis glissez sur l'image.</p>
   <table>
     <tr><th>Outil</th><th>Usage</th></tr>
@@ -145,7 +169,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
   <p><strong>La légende</strong> (en bas de l'éditeur) devient le <strong>sous-titre</strong> de la vidéo : une phrase courte par étape, à l'impératif (« Cliquez sur <em>Fichier</em> »).</p>
   <p><strong>Ma voix</strong> : <em>🎙 Enregistrer ma voix</em>, lisez la légende, <em>⏹ Arrêter</em>, <em>▶ Écouter</em> pour vérifier, <em>✖ Effacer</em> pour recommencer. Il faut un micro autorisé dans <em>Paramètres Windows › Confidentialité › Microphone</em>. Parlez dans une pièce calme, à 20 cm du micro.</p>
 
-  <h2 id="exports">5. Fabriquer une fiche, un document Word ou une vidéo</h2>
+  <h2 id="exports">6. Fabriquer une fiche, un document Word ou une vidéo</h2>
   <p>Dans la fenêtre principale, réorganisez les captures avec ▲ ▼, puis :</p>
   <ul>
     <li><strong>📝 Document Word</strong> : <code>document.docx</code> (A4), un titre « Étape n », la légende et l'image. Police Verdana 12, vrais titres Word (navigation, lecteurs d'écran) et <strong>texte alternatif</strong> sur chaque image.</li>
@@ -154,7 +178,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
   </ul>
   <p>Option : dans <em>Réglages…</em>, cochez l'ajout du logo jfb4plai en haut des fiches et documents.</p>
 
-  <h2 id="video">6. Créer la vidéo sous-titrée</h2>
+  <h2 id="video">7. Créer la vidéo sous-titrée (à partir de captures)</h2>
   <p class="small">Dernière vérification des informations sur Clipchamp : 16/10/2026, par recherche web (sources secondaires). À contrôler dans l'application, les menus évoluent.</p>
   <h3>Voie 1 — directe, un seul clic</h3>
   <p>Le dossier <code>video</code> contient : <code>image_001.png</code>… (1920×1080, <strong>sous-titre incrusté</strong>), <code>soustitres.srt</code>, <code>durees.txt</code>, <code>voixoff.wav</code> si vous avez enregistré votre voix, et <strong><code>video.mp4</code></strong> si le programme <code>ffmpeg</code> est présent. La durée de chaque image suit la longueur de la légende (3 à 15 s) ; avec une voix, l'image reste au moins aussi longtemps que la parole (+ 0,6 s) : elle n'est jamais coupée.</p>
@@ -166,8 +190,10 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <li><strong>Exporter › 1080p</strong> : fichier MP4 (l'export 1080p sans filigrane de la version gratuite est indiqué par des sources secondaires ; à vérifier).</li>
   </ol>
   <p>Les sous-titres sont <strong>déjà dans les images</strong> : inutile d'importer le <code>.srt</code> (je n'ai pas pu confirmer que Clipchamp accepte cet import).</p>
-  <h3>Voie 3 — obtenir le MP4 automatiquement</h3>
-  <p>Le programme cherche ffmpeg tout seul (PATH de Windows, installations winget, Chocolatey, Scoop, <code>C:\ffmpeg</code>). S'il ne le trouve pas alors qu'il est installé : <em>Réglages… › ffmpeg.exe › Parcourir…</em> ; pour savoir où il se trouve, tapez <code>where ffmpeg</code> dans une invite de commande. S'il n'est pas installé : <code>winget install Gyan.FFmpeg</code>, puis fermez et rouvrez le programme. Ou placez <code>ffmpeg.exe</code> à côté de <code>Capture-ecran-PLAI.exe</code>. Faites valider l'installation par votre service informatique.</p>
+  <h3>Voie 3 — le MP4 automatique (ffmpeg fourni)</h3>
+  <p>L'installateur (et le dossier zippé) contient son propre <code>ffmpeg.exe</code>, dans le dossier <code>ffmpeg</code> du programme : le MP4 se crée donc sans rien installer. Le programme l'utilise en premier ; <em>Réglages… › ffmpeg.exe › Parcourir…</em> permet d'en imposer un autre, qui passe alors avant.</p>
+  <p><strong>Licence</strong> : ce ffmpeg est une version sous licence LGPL v3 (sans composant GPL). Le texte de la licence et l'adresse du code source sont dans le dossier <code>ffmpeg</code> : <code>LICENSE-ffmpeg.txt</code> et <code>SOURCES-ffmpeg.txt</code>. Le programme le lance comme programme séparé : vous pouvez le remplacer par un autre <code>ffmpeg.exe</code>.</p>
+  <p><strong>Version Python (<code>Lancer.bat</code>) ou ancienne installation sans ffmpeg</strong> : le programme cherche ffmpeg tout seul (PATH de Windows, installations winget, Chocolatey, Scoop, <code>C:\ffmpeg</code>). Sinon : <code>winget install Gyan.FFmpeg</code>, puis fermez et rouvrez le programme.</p>
   <h3>Conseils pour de bonnes vidéos</h3>
   <ul>
     <li>Une idée par écran, 6 à 12 mots de légende, verbes d'action.</li>
@@ -176,13 +202,16 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <li>Pour des élèves à besoins spécifiques : texte blanc sur bande noire (contraste élevé), phrases courtes, et proposez aussi la fiche imprimée. Votre voix double l'information écrite.</li>
   </ul>
 
-  <h2 id="problemes">7. Problèmes fréquents</h2>
+  <h2 id="problemes">8. Problèmes fréquents</h2>
   <table>
     <tr><th>Problème</th><th>Solution</th></tr>
     <tr><td>« Raccourci déjà utilisé »</td><td>changer le raccourci dans <em>Réglages…</em></td></tr>
     <tr><td>Le menu se ferme avant la capture</td><td>utiliser « Dans 3 secondes »</td></tr>
     <tr><td>« Impossible d'utiliser le micro »</td><td>autoriser le micro dans Windows et vérifier qu'il est le micro par défaut</td></tr>
     <tr><td>Aucune étape enregistrée avec la série de clics</td><td>un antivirus ou une règle d'école peut bloquer l'écoute des clics : utilisez les captures par raccourci</td></tr>
+    <tr><td>La vidéo de l'écran ne démarre pas (« L'enregistrement n'a pas démarré »)</td><td>le message donne la dernière ligne d'erreur de ffmpeg ; vérifier que la zone est bien dans l'écran et fait au moins 16 × 16 pixels</td></tr>
+    <tr><td>La vidéo n'a pas de son</td><td>décochez puis recochez « Enregistrer aussi le micro », autorisez le micro dans Windows ; le son de l'ordinateur n'est pas enregistré</td></tr>
+    <tr><td>La barre d'enregistrement gêne</td><td>faites-la glisser ailleurs avec la souris : elle n'apparaît pas dans la vidéo</td></tr>
     <tr><td>Rien dans le presse-papiers</td><td>cocher « Copier aussi dans le presse-papiers »</td></tr>
     <tr><td>Image décalée ou floue avec le zoom d'écran à 125 %</td><td>signalez-le avec votre version de Windows</td></tr>
   </table>

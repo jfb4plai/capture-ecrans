@@ -282,3 +282,24 @@ def test_local_manual_embeds_its_logo_and_ui_logo_is_cropped():
         assert w == h >= 300
         # recadré au cercle : le centre est coloré, les coins de l'image sont blancs et la marge est mince
         assert im.convert("RGB").getpixel((w // 2, 6)) != (255, 255, 255) or im.convert("RGB").getpixel((6, h // 2)) != (255, 255, 255)
+
+
+def test_video_encoder_falls_back_without_libx264(monkeypatch):
+    class R:
+        stdout = " V....D h264_mf              H264 via MediaFoundation (codec h264)\n"
+    monkeypatch.setattr(exporter.subprocess, "run", lambda *a, **k: R())
+    assert exporter.video_encoder_args("ffmpeg")[:2] == ["-c:v", "h264_mf"]
+    R.stdout = " V....D libx264              libx264 H.264\n"
+    assert exporter.video_encoder_args("ffmpeg")[:2] == ["-c:v", "libx264"]
+
+
+def test_manual_documents_video_with_the_real_default_shortcut():
+    from capture_ecran import config
+    from capture_ecran.hotkeys import pretty
+    from capture_ecran.resources import resource_path
+    html = resource_path("mode-emploi.html").read_text("utf-8")
+    assert 'id="filmer"' in html and "Enregistrer une vidéo" in html
+    assert config.DEFAULTS["hotkey_video"] == "ctrl+shift+f7" and pretty("ctrl+shift+f7") == "Ctrl+Maj+F7"
+    assert "<kbd>F7</kbd>" in html
+    md = (Path(__file__).resolve().parent.parent / "MODE_EMPLOI.md").read_text("utf-8")
+    assert "Ctrl + Maj + F7" in md and "Filmer l'écran en vidéo" in md

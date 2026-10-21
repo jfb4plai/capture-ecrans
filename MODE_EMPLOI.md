@@ -1,6 +1,6 @@
 # Capture d'écran PLAI — mode d'emploi
 
-Pour photographier un **menu déroulant** (qui se ferme dès qu'on clique ailleurs), l'ajouter des **flèches, textes, numéros**, puis en faire une **fiche** ou une **vidéo sous-titrée**.
+Pour photographier un **menu déroulant** (qui se ferme dès qu'on clique ailleurs), l'ajouter des **flèches, textes, numéros**, puis en faire une **fiche** ou une **vidéo sous-titrée**. Il peut aussi **filmer votre écran** (une zone, avec votre voix).
 
 ## 1. Installer (une seule fois)
 **Option A — l'installateur (conseillé)** : téléchargez `Capture-ecran-PLAI-installateur.exe` sur jfb4plai.com et double-cliquez dessus (aucun droit d'administrateur). Si Windows affiche « Windows a protégé votre ordinateur » (programme non signé) : *Informations complémentaires* › *Exécuter quand même*. Choisissez dans l'assistant le raccourci du bureau et le lancement avec Windows. Le programme apparaît aussi dans le menu Démarrer.
@@ -52,6 +52,7 @@ Contrairement à l'outil de capture de Windows (`Windows`+`Maj`+`S`), **mes racc
 | **Ctrl + Maj + F11** | la fenêtre active seulement |
 | **Ctrl + Maj + F12** | démarre / arrête la **série de clics** (voir ci-dessous) |
 | **Ctrl + Maj + F8** | **capture simple**, comme `Windows`+`Maj`+`S` : vous tracez une zone, elle part dans le presse-papiers (`Ctrl+V` pour coller). Sans pointeur ni halo jaune. Par défaut : **presse-papiers seulement** (aucun fichier). *Réglages › Capture simple* permet aussi de la ranger dans votre série, ou de l'ouvrir dans l'éditeur |
+| **Ctrl + Maj + F7** | **filme l'écran** (démarre, puis arrête) : voir « 3. Filmer l'écran en vidéo » |
 | **Windows + Maj + Q** | **rouvre la fenêtre** du programme (réduite dans la barre des tâches) |
 
 Un bip confirme la capture. Sur certains portables, ajoutez la touche **Fn**.
@@ -72,7 +73,22 @@ Si vous supprimez ou déplacez des étapes : bouton **↻ Renuméroter**.
 
 **Sélectionner plusieurs captures** : case **Tout sélectionner** sous la liste, ou `Ctrl+clic` (une par une) / `Maj+clic` (une plage). Sélection multiple : **Supprimer**, **▲ ▼** (déplace le bloc) et les exports (le programme demande alors s'il faut exporter seulement la sélection ; les fichiers portent le suffixe `_selection`, rien n'est écrasé).
 
-## 3. Annoter (l'éditeur s'ouvre tout seul)
+## 3. Filmer l'écran en vidéo
+Pour montrer une manipulation en mouvement, avec votre voix. Le résultat est **un fichier MP4** (image 15 par seconde, son AAC) rangé dans le dossier de la série en cours. À ne pas confondre avec la « vidéo sous-titrée » faite à partir de captures (section 5).
+
+1. Dans la fenêtre, choisissez **Filmer** : *une zone* (par défaut), *tout l'écran* ou *la fenêtre active*. Cochez ou non **Enregistrer aussi le micro** (coché par défaut).
+2. Cliquez sur **🎬 Enregistrer une vidéo** ou appuyez sur `Ctrl`+`Maj`+`F7` (modifiable dans *Réglages…*). La fenêtre se retire pour ne pas être filmée.
+3. *Une zone* : l'écran se fige, tracez la zone avec la souris (`Échap` annule). Minimum 16 × 16 pixels.
+4. Patientez **3 à 4 secondes** (« Préparation de l'enregistrement… », ouverture du micro). Un bip signale le début : parlez et agissez à partir de ce bip.
+5. Une **barre sombre** reste au premier plan : temps écoulé, bouton **■ Arrêter**, rappel « ou Ctrl+Maj+F7 ». Elle se place **hors de la zone filmée** (au-dessus, sinon en dessous, à droite ou à gauche) ; on la déplace en la faisant glisser.
+6. Arrêtez avec **■ Arrêter** ou de nouveau `Ctrl`+`Maj`+`F7`. Comptez 1 à 2 secondes de finalisation : le dossier de la série s'ouvre avec `video_AAAA-MM-JJ_HHhMMmSS.mp4`.
+
+- **Pendant l'enregistrement**, `Windows`+`Maj`+`Q` ne rouvre pas la fenêtre (elle se poserait sur la zone) : il ramène seulement la barre au premier plan. Les captures par raccourci et la série de clics sont refusées jusqu'à l'arrêt.
+- **Pointeur** : filmé si *Réglages… › Montrer le pointeur de la souris* est coché. **Écran entier** : la barre ne peut pas se placer hors de l'image ; Windows est prié de l'exclure de l'enregistrement (essai du 21/10/2026 sur une image fixe, Windows 11 ; non garanti sur Windows 10 antérieur à la version 2004).
+
+**Ce que cette fonction ne fait pas** : pas de pause ni de montage ; **le son de l'ordinateur n'est pas enregistré** (micro seulement) ; sans micro détecté ou si le micro ne démarre pas, la vidéo est faite sans son et la barre d'état le dit ; le premier micro détecté par Windows est utilisé (pas de choix dans le programme) ; la vidéo n'entre pas dans la liste des captures, ni dans le Word ou la fiche HTML ; dimensions arrondies au nombre pair ; fenêtres protégées par certains lecteurs vidéo : peut-être noires (non vérifié). La synchronisation du son et de l'image a été mesurée sur les durées, pas contrôlée à l'oreille : signalez tout décalage.
+
+## 4. Annoter (l'éditeur s'ouvre tout seul)
 Choisissez un outil, une couleur, une taille, puis glissez sur l'image.
 
 | Outil | Usage |
@@ -96,7 +112,7 @@ Choisissez un outil, une couleur, une taille, puis glissez sur l'image.
 
 **Ma voix** : bouton **🎙 Enregistrer ma voix**, lisez la légende, **⏹ Arrêter**, **▶ Écouter** pour vérifier (**✖ Effacer** pour recommencer). Il faut un micro (celui du portable convient) autorisé dans *Paramètres Windows › Confidentialité › Microphone*. Parlez dans une pièce calme, à 20 cm du micro.
 
-## 4. Fabriquer une fiche ou une vidéo
+## 5. Fabriquer une fiche ou une vidéo
 Dans la fenêtre principale, réorganisez avec ▲ ▼ puis :
 - **📝 Document Word** : `document.docx` (A4) avec un titre « Étape n », la légende et l'image ; police Verdana 12, vrais titres Word (navigation, lecteurs d'écran) et **texte alternatif** sur chaque image. À retoucher dans Word.
 - **📄 Fiche HTML/PDF** : page web numérotée, imprimable ou « Enregistrer au format PDF ».
@@ -104,7 +120,7 @@ Dans la fenêtre principale, réorganisez avec ▲ ▼ puis :
 
 Voir **[MODE_EMPLOI_VIDEO.md](MODE_EMPLOI_VIDEO.md)** pour les détails.
 
-## 5. Problèmes fréquents
+## 6. Problèmes fréquents
 | Problème | Solution |
 |---|---|
 | Message « raccourci déjà utilisé » | changer le raccourci (*Raccourcis…*) |
@@ -112,6 +128,9 @@ Voir **[MODE_EMPLOI_VIDEO.md](MODE_EMPLOI_VIDEO.md)** pour les détails.
 | Écran flou/décalé sur écran à zoom 125 % | normal sur d'anciens Windows : signalez-le avec votre version de Windows |
 | « Impossible d'utiliser le micro » | autoriser le micro dans Windows (voir ci-dessus) et vérifier qu'il est le micro par défaut |
 | Aucune étape enregistrée avec la série de clics | un antivirus ou une stratégie d'école peut bloquer l'écoute des clics : essayer les captures par raccourci |
+| « L'enregistrement n'a pas démarré » (vidéo de l'écran) | le message donne la dernière ligne d'erreur de ffmpeg ; zone dans l'écran et d'au moins 16 × 16 pixels |
+| La vidéo de l'écran n'a pas de son | autoriser le micro dans Windows ; le son de l'ordinateur n'est pas enregistré |
+| La barre d'enregistrement gêne | la faire glisser ailleurs : elle n'apparaît pas dans la vidéo |
 | Rien dans le presse-papiers | cochez l'option « Copier aussi dans le presse-papiers » |
 
 *Limites connues* : écrit pour Windows ; non testé sur Mac/Linux (la capture se fait, pas les raccourcis globaux). Une fenêtre exécutée « en administrateur » peut ne pas laisser passer les raccourcis.

@@ -243,3 +243,18 @@ def raise_existing_window(title_prefix: str) -> bool:
     u32.ShowWindow(found[0], 9)  # SW_RESTORE
     u32.SetForegroundWindow(found[0])
     return True
+
+
+def exclude_from_capture(hwnd: int) -> bool:
+    """Demande à Windows de ne pas inclure cette fenêtre dans les captures d'écran (WDA_EXCLUDEFROMCAPTURE,
+    Windows 10 version 2004 et plus). Retourne False si la demande est refusée."""
+    if not IS_WIN:
+        return False
+    import ctypes
+    u32 = ctypes.windll.user32
+    ok = False
+    parent = u32.GetParent(hwnd)
+    for h in {hwnd, parent} - {0}:  # la fenêtre Tk est parfois enveloppée dans une fenêtre parente
+        if u32.SetWindowDisplayAffinity(ctypes.c_void_p(h), 0x11):
+            ok = True
+    return ok

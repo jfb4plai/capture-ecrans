@@ -122,10 +122,14 @@ def find_ffmpeg(hint: str | None = None, env=None, home: Path | None = None) -> 
     emplacements habituels (winget, Chocolatey, Scoop, C:\\ffmpeg…)."""
     if hint and Path(hint).is_file():
         return str(hint)
+    frozen = getattr(sys, "frozen", False)
+    here = Path(sys.executable).parent if frozen else Path(__file__).resolve().parent.parent
+    bundled = here / "ffmpeg" / "ffmpeg.exe"
+    if frozen and bundled.is_file():  # celui fourni avec l'installateur (build LGPL) passe avant un ffmpeg du PATH
+        return str(bundled)
     found = shutil.which("ffmpeg")
     if found:
         return found
-    here = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
     for cand in [here / "ffmpeg.exe", here / "ffmpeg" / "ffmpeg.exe", here / "ffmpeg" / "bin" / "ffmpeg.exe",
                  *ffmpeg_candidates(env, home)]:
         if cand.is_file():
@@ -184,6 +188,19 @@ def export_video_pack(session: Session, out_dir: Path, burn: bool = True, fixed_
     return res
 
 
+def video_encoder_args(ffmpeg: str) -> list[str]:
+    """libx264 si ce ffmpeg l'a ; sinon (build LGPL fourni avec l'installateur) l'encodeur H.264 de Windows."""
+    try:
+        r = subprocess.run([ffmpeg, "-hide_banner", "-encoders"], capture_output=True, text=True, timeout=20,
+                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        out = r.stdout or ""
+    except (OSError, subprocess.SubprocessError):
+        out = ""
+    if " libx264 " in out or not out:
+        return ["-c:v", "libx264", "-preset", "medium", "-crf", "20"]
+    return ["-c:v", "h264_mf", "-b:v", "4M"]
+
+
 def _run_ffmpeg(ffmpeg: str, out_dir: Path, frames: list[Path], durs: list[float], srt: Path, burn: bool,
                 res: VideoResult, voice: Path | None = None) -> Path | None:
     listing = []
@@ -202,7 +219,7 @@ def _run_ffmpeg(ffmpeg: str, out_dir: Path, frames: list[Path], durs: list[float
     if not burn:  # sous-titres « souples » : piste activable dans le lecteur
         cmd += ["-i", srt.name]
         maps += ["-map", f"{n_in}:s", "-c:s", "mov_text", "-metadata:s:s:0", "language=fra"]
-    cmd += maps + ["-vf", "fps=25,format=yuv420p", "-c:v", "libx264", "-preset", "medium", "-crf", "20"]
+    cmd += maps + ["-vf", "fps=25,format=yuv420p"] + video_encoder_args(ffmpeg)
     if voice:
         cmd += ["-c:a", "aac", "-b:a", "128k"]
     cmd += ["-movflags", "+faststart", out.name]

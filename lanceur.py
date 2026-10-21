@@ -19,10 +19,17 @@ def _selftest(out: Path) -> int:
     from capture_ecran.resources import resource_path
     for name in ("icon.ico", "logo-small.png"):
         assert resource_path(name).is_file(), f"ressource manquante : {name}"
+    from capture_ecran import exporter
+    ff = exporter.find_ffmpeg()
+    if getattr(sys, "frozen", False):  # l'exécutable construit doit embarquer son ffmpeg
+        assert ff and Path(ff).parent.name == "ffmpeg", f"ffmpeg fourni absent (trouvé : {ff})"
+        for name in ("LICENSE-ffmpeg.txt", "SOURCES-ffmpeg.txt"):
+            assert (Path(ff).parent / name).is_file(), f"fichier de licence manquant : {name}"
+        assert exporter.video_encoder_args(ff)[1] == "h264_mf", "ffmpeg fourni : encodeur H.264 inattendu"
     app = App()
     app.update()
     app._quit()
-    out.write_text(f"OK {__version__}", "utf-8")
+    out.write_text(f"OK {__version__} ffmpeg={ff}", "utf-8")
     return 0
 
 

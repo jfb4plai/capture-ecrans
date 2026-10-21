@@ -11,6 +11,13 @@ from . import winapi
 def select_region(master: tk.Misc, image: Image.Image) -> Image.Image | None:
     """Affiche `image` plein écran, atténuée ; l'utilisateur trace un rectangle.
     Retourne l'extrait, ou None si annulé (Échap / clic droit / zone minuscule)."""
+    box = select_box(master, image)
+    return image.crop(box) if box else None
+
+
+def select_box(master: tk.Misc, image: Image.Image, prompt: str = "Tracez la zone à capturer") -> tuple[int, int, int, int] | None:
+    """Comme select_region, mais retourne le rectangle (x0, y0, x1, y1) en pixels de l'image
+    (donc relatif au coin de l'écran virtuel), ou None si annulé."""
     vs = winapi.virtual_screen()
     left, top = (vs[0], vs[1]) if vs else (0, 0)
     w, h = image.size
@@ -23,7 +30,7 @@ def select_region(master: tk.Misc, image: Image.Image) -> Image.Image | None:
     dim = ImageTk.PhotoImage(ImageEnhance.Brightness(image).enhance(0.45))
     canvas.create_image(0, 0, image=dim, anchor="nw")
     canvas.create_text(w // 2, 40, fill="white", font=("Segoe UI", 16, "bold"),
-                       text="Tracez la zone à capturer  —  Échap pour annuler")
+                       text=f"{prompt}  —  Échap pour annuler")
     state = {"start": None, "result": None, "crop": None, "rect": None}
 
     def press(e):
@@ -45,7 +52,7 @@ def select_region(master: tk.Misc, image: Image.Image) -> Image.Image | None:
     def release(e):
         box = state["rect"]
         if box and box[2] - box[0] >= 6 and box[3] - box[1] >= 6:
-            state["result"] = image.crop(box)
+            state["result"] = box
         win.destroy()
 
     canvas.bind("<ButtonPress-1>", press)

@@ -224,3 +224,43 @@ def test_quick_capture_opens_editor(app, tmp_path, monkeypatch):
 
 def test_quick_after_default_is_clipboard_only():
     assert config.load(Path(os.devnull))["quick_after"] == "clipboard"
+
+
+def test_video_full_screen_start_stop(app, monkeypatch):
+    from capture_ecran import exporter
+    if not exporter.find_ffmpeg(app.cfg["ffmpeg_path"]):
+        pytest.skip("ffmpeg absent")
+    monkeypatch.setattr(app, "_open", lambda p: None)
+    monkeypatch.setattr(A.messagebox, "showerror", lambda *a, **k: pytest.fail(a))
+    app.v_varea.set("full")
+    app.v_vmic.set(False)
+    app.session = None
+    app.request("video")
+    end = time.monotonic() + 8
+    while not app.screen_rec and time.monotonic() < end:
+        app.update()
+    assert app.screen_rec and app.video_btn.cget("text").startswith("■")
+    t = time.monotonic()
+    while time.monotonic() - t < 2:
+        app.update()
+    assert app.title().startswith("●")
+    assert app.bar is not None and app.bar.winfo_ismapped()  # barre flottante visible
+    assert "Ctrl+Maj+F7" in " ".join(w.cget("text") for w in app.bar.winfo_children() if w.winfo_class() == "Label")
+    app._show_window()  # Win+Maj+Q pendant la vidéo : ne rouvre pas la fenêtre principale sur la zone
+    assert app.state() != "normal"
+    app.bar.winfo_children()[2].invoke()  # bouton Arrêter de la barre
+    assert app.screen_rec is None and app.bar is None and app.busy is False
+    videos = list(app.session.folder.glob("video_*.mp4"))
+    assert len(videos) == 1 and videos[0].stat().st_size > 1000
+    assert not list(app.session.folder.glob("*.video.mp4")) and not list(app.session.folder.glob("*.wav"))
+
+
+def test_record_bar_shows_the_whole_shortcut_text(app):
+    from capture_ecran.recordbar import RecordBar
+    bar = RecordBar(app, (500, 400, 640, 360), "Ctrl+Maj+F7", lambda: None)
+    app.update()
+    try:
+        assert bar.hint_lbl.winfo_width() >= bar.hint_lbl.winfo_reqwidth()  # texte non rogné
+        assert bar.hint_lbl.winfo_x() + bar.hint_lbl.winfo_width() <= bar.winfo_width()
+    finally:
+        bar.destroy()

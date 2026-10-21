@@ -12,11 +12,14 @@ DEFAULTS = {
     "hotkey_window": "ctrl+shift+f11",
     "hotkey_steps": "ctrl+shift+f12",
     "hotkey_quick": "ctrl+shift+f8",   # capture simple : zone → presse-papiers, sans pointeur ni halo (comme Windows+Maj+S)
+    "hotkey_video": "ctrl+shift+f7",  # vidéo : démarre et arrête l'enregistrement
     "hotkey_show": "win+shift+q",   # rouvre la fenêtre du programme (s'il tourne déjà)
     "lnk_hotkey": False,            # touche de raccourci Ctrl+Alt+Q sur les raccourcis Windows (lance le programme)
     "steps_moment": "avant",     # avant | apres
     "logo_in_exports": False,
     "ffmpeg_path": "",
+    "video_area": "region",      # region | full | window
+    "video_mic": True,           # enregistrer aussi le micro
     "shortcut_offered": False,   # la proposition de raccourci a déjà été faite
     "draw_cursor": True,
     "click_halo": True,
