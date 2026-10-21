@@ -26,3 +26,8 @@ Chaque comportement décrit dans le mode d'emploi renvoie à une ligne de code o
 | Pointeur filmé selon le réglage | `app.py` : `rec.start(..., self.v_cursor.get())`; libellé `Montrer le pointeur de la souris` |
 | ffmpeg fourni, LGPL, licence et sources | `tools/fetch_ffmpeg.py`; `lanceur.py` `_selftest`; dossier `ffmpeg\` de l'installateur |
 | Synchronisation | durées mesurées égales (9,13 s / 9,13 s) ; non contrôlée à l'oreille |
+| Arrêt automatique en minutes entières 1 à 600, vide = pas de limite | `recorder.py` `parse_limit`, `MAX_LIMIT_MIN`; `tests/test_recorder.py` |
+| Décompte « reste mm:ss », orange sur 10 s, un seul bip d'avertissement | `recordbar.py` `set_time`; `app.py` `_video_tick`; test `test_video_stops_by_itself_at_the_programmed_duration` |
+| Compte depuis le début de l'image | `recorder.py` `elapsed` (depuis `_t_v`) |
+| Arrêt réel à la durée programmée | essai du 2026-10-21 en temps réel : arrêt après 60,0 s, MP4 de 1:00,40, décomptes 01:00 / 00:30 / 00:10 / 00:01 vus |
+| ~29 Mo pour 1 minute d'écran entier | même essai : 29 447 898 octets (un écran, 4 Mb/s demandés) |

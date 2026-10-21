@@ -59,6 +59,9 @@ class App(tk.Tk):
         self.v_quick = tk.StringVar(value=self.cfg["quick_after"])
         self.v_varea = tk.StringVar(value=self.cfg["video_area"])
         self.v_vmic = tk.BooleanVar(value=self.cfg["video_mic"])
+        self.v_vlimit = tk.StringVar(value=str(self.cfg["video_limit_min"] or ""))
+        self._video_limit = 0       # secondes ; 0 = pas de limite
+        self._video_warned = False
         self.screen_rec: recorder.ScreenRecorder | None = None
         self.bar: RecordBar | None = None
         self._build_ui()
@@ -296,6 +299,16 @@ class App(tk.Tk):
                             command=self._save_opts).pack(side="left", padx=(8, 0))
         ttk.Checkbutton(btns, text="Enregistrer aussi le micro", variable=self.v_vmic, style="Card.TCheckbutton",
                         command=self._save_opts).pack(anchor="w", padx=3, pady=(4, 0))
+        lrow = ttk.Frame(btns, style="Card.TFrame")
+        lrow.pack(fill="x", padx=3, pady=(6, 0))
+        ttk.Label(lrow, text="Arrêt automatique après :", style="CardMuted.TLabel").pack(side="left")
+        lent = ttk.Entry(lrow, textvariable=self.v_vlimit, width=5)
+        lent.pack(side="left", padx=(8, 4))
+        lent.bind("<FocusOut>", lambda e: self._save_opts())
+        ttk.Label(lrow, text="minutes", style="CardMuted.TLabel").pack(side="left")
+        ttk.Label(btns, text="Exemple : 10. Laissez vide pour arrêter vous-même. La barre affiche alors le temps restant et "
+                             "un bip prévient 10 secondes avant la fin.", style="CardMuted.TLabel",
+                  wraplength=380).pack(anchor="w", padx=3, pady=(2, 0))
 
         # -- gauche : exports
         out = theme.section(left, "Créer à partir de la série")
@@ -363,8 +376,15 @@ class App(tk.Tk):
         self.cfg.update(draw_cursor=self.v_cursor.get(), click_halo=self.v_halo.get(),
                         copy_clipboard=self.v_clip.get(), after_capture=self.v_after.get(),
                         quick_after=self.v_quick.get(), steps_moment=self.v_moment.get(),
-                        video_area=self.v_varea.get(), video_mic=self.v_vmic.get())
+                        video_area=self.v_varea.get(), video_mic=self.v_vmic.get(),
+                        video_limit_min=self._limit_minutes())
         config.save(self.cfg)
+
+    def _limit_minutes(self) -> int:
+        try:
+            return recorder.parse_limit(self.v_vlimit.get()) // 60
+        except ValueError:
+            return self.cfg["video_limit_min"]  # saisie invalide : on garde l'ancienne valeur, le démarrage la refusera
 
     def say(self, text: str):
         self.status.config(text=text)
@@ -522,6 +542,11 @@ class App(tk.Tk):
             self.start_video()
 
     def start_video(self):
+        try:
+            self._video_limit = recorder.parse_limit(self.v_vlimit.get())
+        except ValueError as e:
+            messagebox.showwarning(APP_NAME, str(e))
+            return
         ffmpeg = exporter.find_ffmpeg(self.cfg["ffmpeg_path"])
         if not ffmpeg:
             messagebox.showwarning(APP_NAME, "La vidéo a besoin de ffmpeg, introuvable sur cet ordinateur.\n"
@@ -571,7 +596,8 @@ class App(tk.Tk):
             messagebox.showerror(APP_NAME, f"La vidéo a échoué :\n{e}")
             return
         self.screen_rec = rec
-        self.bar = RecordBar(self, rect, pretty(self.cfg["hotkey_video"]), self.stop_video)
+        self.bar = RecordBar(self, rect, pretty(self.cfg["hotkey_video"]), self.stop_video, limited=bool(self._video_limit))
+        self._video_warned = False
         winapi.beep()
         self.video_btn.config(text="■  Arrêter la vidéo")
         self.say("● Enregistrement en cours." + (" Micro indisponible : image seule." if rec.mic_failed or no_mic else ""))
@@ -584,13 +610,21 @@ class App(tk.Tk):
         if not self.screen_rec.running:  # ffmpeg s'est arrêté seul (disque plein, zone devenue invalide…)
             self.stop_video()
             return
-        t = int(self.screen_rec.elapsed)
+        el = self.screen_rec.elapsed
+        t = int(el)
+        remaining = self._video_limit - el if self._video_limit else None
+        if remaining is not None and remaining <= 0:  # durée programmée atteinte
+            self.stop_video(auto=True)
+            return
+        if remaining is not None and remaining <= 10 and not self._video_warned:
+            self._video_warned = True
+            winapi.beep()
         if self.bar:
-            self.bar.set_time(t)
+            self.bar.set_time(t, remaining)
         self.title(f"● {t // 60:02d}:{t % 60:02d}  {pretty(self.cfg['hotkey_video'])} pour arrêter")
         self.after(500, self._video_tick)
 
-    def stop_video(self):
+    def stop_video(self, auto: bool = False):
         rec, self.screen_rec = self.screen_rec, None
         if self.bar:
             self.bar.destroy()
@@ -603,7 +637,8 @@ class App(tk.Tk):
         path = rec.stop() if rec else None
         winapi.beep()
         self._was_visible = True
-        self._finish(f"Vidéo enregistrée : {path.name}" if path else "La vidéo n'a pas pu être créée.")
+        self._finish((f"Vidéo enregistrée : {path.name}" + (" (durée programmée atteinte)" if auto else ""))
+                     if path else "La vidéo n'a pas pu être créée.")
         if path:
             self._open(path.parent)
         else:

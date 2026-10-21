@@ -15,22 +15,8 @@ pytestmark = pytest.mark.skipif(sys.platform != "win32" and not os.environ.get("
 
 
 @pytest.fixture(scope="module")
-def app(tmp_path_factory):
-    base = tmp_path_factory.mktemp("base")
-    orig_load, orig_save = config.load, config.save
-    config.load = lambda path=None: {**orig_load(Path(os.devnull)), "base_dir": str(base),
-                                     "storage_confirmed": True, "shortcut_offered": True}
-    config.save = lambda cfg, path=None: None
-    winapi.beep = lambda *a, **k: None
-    a = A.App()
-    a.geometry("1000x700+0+0")
-    a.update()
-    yield a
-    config.load, config.save = orig_load, orig_save
-    try:
-        a.destroy()
-    except Exception:
-        pass
+def app(shared_app, gui_patches):
+    return shared_app
 
 
 def fake_recording(app, tmp_path):
@@ -264,3 +250,43 @@ def test_record_bar_shows_the_whole_shortcut_text(app):
         assert bar.hint_lbl.winfo_x() + bar.hint_lbl.winfo_width() <= bar.winfo_width()
     finally:
         bar.destroy()
+
+
+def test_video_stops_by_itself_at_the_programmed_duration(app, monkeypatch):
+    from capture_ecran import exporter, recorder
+    if not exporter.find_ffmpeg(app.cfg["ffmpeg_path"]):
+        pytest.skip("ffmpeg absent")
+    monkeypatch.setattr(app, "_open", lambda p: None)
+    monkeypatch.setattr(A.messagebox, "showerror", lambda *a, **k: pytest.fail(a))
+    beeps = []
+    monkeypatch.setattr(A.winapi, "beep", lambda *a, **k: beeps.append(1))
+    app.v_varea.set("full")
+    app.v_vmic.set(False)
+    app.v_vlimit.set("1")
+    app.session = None
+    app.request("video")
+    end = time.monotonic() + 8
+    while not app.screen_rec and time.monotonic() < end:
+        app.update()
+    assert app.screen_rec and app.bar.time_lbl.cget("width") == 11
+    n = len(beeps)
+    monkeypatch.setattr(recorder.ScreenRecorder, "elapsed", property(lambda self: 55.0))
+    app._video_tick()
+    assert app.bar.time_lbl.cget("text") == "reste 00:05" and len(beeps) == n + 1  # décompte + bip d'avertissement
+    app._video_tick()
+    assert len(beeps) == n + 1  # un seul bip
+    monkeypatch.setattr(recorder.ScreenRecorder, "elapsed", property(lambda self: 61.0))
+    app._video_tick()
+    assert app.screen_rec is None and app.bar is None and "durée programmée" in app.status.cget("text")
+    assert len(list(app.session.folder.glob("video_*.mp4"))) == 1
+    app.v_vlimit.set("")
+
+
+def test_invalid_limit_refuses_to_start(app, monkeypatch):
+    shown = []
+    monkeypatch.setattr(A.messagebox, "showwarning", lambda *a, **k: shown.append(a))
+    app.v_vlimit.set("dix")
+    app.request("video")
+    app.update()
+    assert shown and app.screen_rec is None and app.busy is False
+    app.v_vlimit.set("")

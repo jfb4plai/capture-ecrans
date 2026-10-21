@@ -20,6 +20,20 @@ def _even(n: int) -> int:
     return n - (n % 2)  # H.264 (yuv420p) exige une largeur et une hauteur paires
 
 
+MAX_LIMIT_MIN = 600
+
+
+def parse_limit(text: str) -> int:
+    """Durée d'arrêt automatique saisie en minutes -> secondes ; 0 = pas de limite (champ vide).
+    Lève ValueError si ce n'est pas un nombre entier de minutes entre 1 et 600."""
+    t = (text or "").strip()
+    if not t:
+        return 0
+    if not t.isdigit() or not 1 <= int(t) <= MAX_LIMIT_MIN:
+        raise ValueError(f"Durée d'arrêt : indiquez un nombre entier de minutes entre 1 et {MAX_LIMIT_MIN}, ou laissez vide.")
+    return int(t) * 60
+
+
 def screen_rect(box: tuple[int, int, int, int], origin: tuple[int, int]) -> tuple[int, int, int, int]:
     """Rectangle (x, y, largeur, hauteur) en coordonnées de l'écran virtuel, dimensions paires.
     `box` = (x0, y0, x1, y1) dans l'image de l'écran virtuel ; `origin` = coin haut-gauche (peut être négatif)."""

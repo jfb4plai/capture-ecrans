@@ -26,14 +26,14 @@ def bar_position(rect: tuple[int, int, int, int], size: tuple[int, int], screen:
 
 
 class RecordBar(tk.Toplevel):
-    def __init__(self, master: tk.Misc, rect: tuple[int, int, int, int], hotkey: str, on_stop):
+    def __init__(self, master: tk.Misc, rect: tuple[int, int, int, int], hotkey: str, on_stop, limited: bool = False):
         super().__init__(master)
         self.withdraw()  # on mesure d'abord le contenu : la largeur dépend de la police et de l'échelle d'affichage
         self.overrideredirect(True)
         self.attributes("-topmost", True)
         self.configure(bg=C["dark"], highlightbackground=C["red_mid"], highlightthickness=2)
         tk.Label(self, text="●", bg=C["dark"], fg=C["red_mid"], font=font("bold", 14)).pack(side="left", padx=(12, 4))
-        self.time_lbl = tk.Label(self, text="00:00", bg=C["dark"], fg="#ffffff", font=font("bold", 13), width=5)
+        self.time_lbl = tk.Label(self, text="00:00", bg=C["dark"], fg="#ffffff", font=font("bold", 13), width=11 if limited else 5)
         self.time_lbl.pack(side="left")
         tk.Button(self, text="■  Arrêter", command=on_stop, bg=C["red_mid"], fg="#ffffff", activebackground=C["red"],
                   activeforeground="#ffffff", relief="flat", font=font("bold", 11), padx=14, pady=4,
@@ -58,6 +58,11 @@ class RecordBar(tk.Toplevel):
     def _drag(self, e):
         self.geometry(f"+{e.x_root - self._off[0]}+{e.y_root - self._off[1]}")
 
-    def set_time(self, seconds: float):
-        t = int(seconds)
-        self.time_lbl.config(text=f"{t // 60:02d}:{t % 60:02d}")
+    def set_time(self, seconds: float, remaining: float | None = None):
+        """Temps écoulé ; avec une durée programmée, le décompte « reste mm:ss » (orange sur les 10 dernières secondes)."""
+        if remaining is None:
+            t = int(seconds)
+            self.time_lbl.config(text=f"{t // 60:02d}:{t % 60:02d}")
+            return
+        r = max(0, int(remaining + 0.999))
+        self.time_lbl.config(text=f"reste {r // 60:02d}:{r % 60:02d}", fg=C["amber_mid"] if r <= 10 else "#ffffff")

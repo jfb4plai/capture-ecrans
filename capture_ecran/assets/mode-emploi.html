@@ -131,17 +131,19 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
   <h2 id="filmer">4. Filmer l'écran en vidéo</h2>
   <p>Pour montrer une manipulation en mouvement, avec votre voix. Le résultat est <strong>un fichier MP4</strong> (image 15 par seconde, son AAC) rangé dans le dossier de la série en cours. C'est distinct de la « vidéo sous-titrée » faite à partir de captures (voir plus bas).</p>
   <ol>
-    <li>Dans la fenêtre du programme, choisissez <strong>Filmer</strong> : <em>une zone</em> (choix par défaut), <em>tout l'écran</em> ou <em>la fenêtre active</em>. Cochez ou non <strong>Enregistrer aussi le micro</strong> (coché par défaut).</li>
+    <li>Dans la fenêtre du programme, choisissez <strong>Filmer</strong> : <em>une zone</em> (choix par défaut), <em>tout l'écran</em> ou <em>la fenêtre active</em>. Cochez ou non <strong>Enregistrer aussi le micro</strong> (coché par défaut). Facultatif : indiquez un nombre de minutes dans <strong>Arrêt automatique après</strong> (par exemple 10) pour que l'enregistrement s'arrête tout seul ; laissez vide pour arrêter vous-même.</li>
     <li>Cliquez sur <strong>🎬 Enregistrer une vidéo</strong>, ou appuyez sur <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F7</kbd> (ce raccourci se change dans <em>Réglages…</em>). La fenêtre du programme se retire pour ne pas être filmée.</li>
     <li><em>Une zone</em> : l'écran se fige, tracez la zone à filmer avec la souris (<kbd>Échap</kbd> annule). La zone doit faire au moins 16 × 16 pixels.</li>
     <li>Patientez <strong>3 à 4 secondes</strong> : le message « Préparation de l'enregistrement… » s'affiche pendant l'ouverture du micro. Un bip signale que l'enregistrement a commencé : parlez et agissez à partir de ce bip.</li>
-    <li>Une <strong>barre sombre</strong> reste affichée au premier plan avec le temps écoulé, le bouton <strong>■ Arrêter</strong> et le rappel « ou Ctrl+Maj+F7 ». Elle se place <strong>hors de la zone filmée</strong> (au-dessus, sinon en dessous, à droite ou à gauche) et se déplace en la faisant glisser à la souris.</li>
+    <li>Une <strong>barre sombre</strong> reste affichée au premier plan avec le temps écoulé, le bouton <strong>■ Arrêter</strong> et le rappel « ou Ctrl+Maj+F7 ». Avec un arrêt automatique, elle affiche le temps <strong>restant</strong> (« reste 03:12 »), qui passe à l'orange sur les 10 dernières secondes, et un bip prévient 10 secondes avant la fin. Elle se place <strong>hors de la zone filmée</strong> (au-dessus, sinon en dessous, à droite ou à gauche) et se déplace en la faisant glisser à la souris.</li>
     <li>Pour arrêter : cliquez sur <strong>■ Arrêter</strong> ou appuyez de nouveau sur <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F7</kbd>. Comptez 1 à 2 secondes de finalisation, puis le dossier de la série s'ouvre avec le fichier <code>video_AAAA-MM-JJ_HHhMMmSS.mp4</code>.</li>
   </ol>
   <p><strong>Pendant l'enregistrement</strong>, <kbd>Windows</kbd>+<kbd>Maj</kbd>+<kbd>Q</kbd> ne rouvre pas la fenêtre du programme (elle se poserait sur la zone filmée) : il ramène seulement la barre au premier plan. La fenêtre revient à l'arrêt. Les captures par raccourci et la série de clics sont refusées jusqu'à l'arrêt de la vidéo.</p>
   <p><strong>Pointeur</strong> : il apparaît dans la vidéo si <em>Réglages… › Montrer le pointeur de la souris</em> est coché. <strong>Écran entier</strong> : la barre ne peut pas se placer hors de l'image ; Windows est alors prié de ne pas l'inclure dans l'enregistrement (essai de contrôle du 21/10/2026 sur une image fixe, Windows 11 ; sur Windows 10 antérieur à la version 2004, cette exclusion n'est pas garantie).</p>
   <p><strong>Ce que cette fonction ne fait pas</strong> :</p>
   <ul>
+    <li>l'arrêt automatique se règle en <strong>minutes entières, de 1 à 600</strong> (pas d'heure de fin) et compte à partir du début de l'image, pas de la préparation du micro ;</li>
+    <li>les fichiers sont lourds : environ <strong>29 Mo pour 1 minute d'écran entier</strong> (mesuré sur un seul écran, à titre d'exemple ; une petite zone pèse moins) ;</li>
     <li>pas de <strong>pause</strong> ni de montage : un enregistrement = un fichier ;</li>
     <li><strong>le son de l'ordinateur</strong> (vidéo, musique, visioconférence) n'est <strong>pas</strong> enregistré : seulement le micro ;</li>
     <li>si aucun micro n'est détecté ou s'il ne démarre pas, la vidéo est faite <strong>sans son</strong> et la barre d'état le dit (« Micro indisponible : image seule ») ; sinon le premier micro détecté par Windows est utilisé, sans choix dans le programme ;</li>
@@ -211,6 +213,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <tr><td>Aucune étape enregistrée avec la série de clics</td><td>un antivirus ou une règle d'école peut bloquer l'écoute des clics : utilisez les captures par raccourci</td></tr>
     <tr><td>La vidéo de l'écran ne démarre pas (« L'enregistrement n'a pas démarré »)</td><td>le message donne la dernière ligne d'erreur de ffmpeg ; vérifier que la zone est bien dans l'écran et fait au moins 16 × 16 pixels</td></tr>
     <tr><td>La vidéo n'a pas de son</td><td>décochez puis recochez « Enregistrer aussi le micro », autorisez le micro dans Windows ; le son de l'ordinateur n'est pas enregistré</td></tr>
+    <tr><td>« Durée d'arrêt : indiquez un nombre entier de minutes… »</td><td>le champ « Arrêt automatique après » n'accepte que des chiffres (1 à 600) : corrigez-le ou videz-le</td></tr>
     <tr><td>La barre d'enregistrement gêne</td><td>faites-la glisser ailleurs avec la souris : elle n'apparaît pas dans la vidéo</td></tr>
     <tr><td>Rien dans le presse-papiers</td><td>cocher « Copier aussi dans le presse-papiers »</td></tr>
     <tr><td>Image décalée ou floue avec le zoom d'écran à 125 %</td><td>signalez-le avec votre version de Windows</td></tr>

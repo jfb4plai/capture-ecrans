@@ -53,3 +53,14 @@ def test_parse_microphones():
 def test_parse_duration():
     assert recorder.parse_duration("  Duration: 00:01:02.50, start: 0.000000, bitrate: 1411 kb/s") == 62.5
     assert recorder.parse_duration("rien") == 0.0
+
+
+@pytest.mark.parametrize("text,seconds", [("", 0), ("  ", 0), ("10", 600), (" 1 ", 60), ("600", 36000)])
+def test_parse_limit_ok(text, seconds):
+    assert recorder.parse_limit(text) == seconds
+
+
+@pytest.mark.parametrize("text", ["0", "601", "-5", "1,5", "dix", "10 min"])
+def test_parse_limit_invalid(text):
+    with pytest.raises(ValueError):
+        recorder.parse_limit(text)

@@ -20,18 +20,13 @@ class Ev:
 
 
 @pytest.fixture(scope="module")
-def tkroot():
-    """UNE seule racine Tk pour tout le module : sous Windows, recréer plusieurs Tk() dans le même
-    processus échoue parfois (« invalid command name tcl_findLibrary »)."""
-    root = tk.Tk()
+def tkroot(shared_app, gui_patches):
+    """La racine Tk unique de la session (voir conftest.py)."""
+    root = shared_app
     theme.apply(root)              # l'application applique toujours le thème avant de créer la moindre fenêtre
     root.geometry("200x100+0+0")   # visible : un dialogue « transient » d'une mère masquée reste invisible
     root.update()
-    yield root
-    try:
-        root.destroy()
-    except tk.TclError:
-        pass
+    return root
 
 
 @pytest.fixture
