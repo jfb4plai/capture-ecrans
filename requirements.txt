@@ -1,1 +1,2 @@
 Pillow>=10.1
+PyAudioWPatch>=0.2.12

@@ -32,15 +32,27 @@ def test_audio_command_records_wav():
     assert "audio=Micro (Test)" in cmd and cmd[-1] == "m.wav"
 
 
-def test_mux_uses_native_aac_and_offset():
-    cmd = recorder.build_mux_command("ffmpeg", Path("v.mp4"), Path("m.wav"), 0.25, Path("o.mp4"))
+def test_mux_one_track_uses_native_aac_and_offset():
+    cmd = recorder.build_mux_command("ffmpeg", Path("v.mp4"), [(Path("m.wav"), 0.25)], Path("o.mp4"))
     assert cmd[cmd.index("-c:a") + 1] == "aac"  # pas aac_mf : coupe le son
     assert cmd[cmd.index("-itsoffset") + 1] == "0.250"
-    assert cmd[cmd.index("-c:v") + 1] == "copy"
+    assert cmd[cmd.index("-c:v") + 1] == "copy" and "-filter_complex" not in cmd
+
+
+def test_mux_negative_offset_trims_the_start_of_the_sound():
+    cmd = recorder.build_mux_command("ffmpeg", Path("v.mp4"), [(Path("m.wav"), -1.5)], Path("o.mp4"))
+    assert "-itsoffset" not in cmd and cmd[cmd.index("-ss") + 1] == "1.500"
+
+
+def test_mux_two_tracks_are_mixed_with_the_system_sound_lowered():
+    cmd = recorder.build_mux_command("ffmpeg", Path("v.mp4"), [(Path("m.wav"), 0.5), (Path("s.wav"), -0.2)], Path("o.mp4"))
+    mix = cmd[cmd.index("-filter_complex") + 1]
+    assert "amix=inputs=2" in mix and f"volume={recorder.SYSTEM_GAIN}" in mix and "alimiter" in mix
+    assert cmd.count("-i") == 3 and cmd[cmd.index("-map", cmd.index("-filter_complex")) + 1] == "0:v"
 
 
 def test_mux_without_audio_copies_video():
-    cmd = recorder.build_mux_command("ffmpeg", Path("v.mp4"), None, 0, Path("o.mp4"))
+    cmd = recorder.build_mux_command("ffmpeg", Path("v.mp4"), [], Path("o.mp4"))
     assert "-itsoffset" not in cmd and "-c:a" not in cmd
 
 
@@ -64,3 +76,10 @@ def test_parse_limit_ok(text, seconds):
 def test_parse_limit_invalid(text):
     with pytest.raises(ValueError):
         recorder.parse_limit(text)
+
+
+def test_fill_gap_inserts_silence_only_beyond_the_jitter_threshold():
+    from capture_ecran import sysaudio
+    assert sysaudio.fill_gap(48000, 0, 2400) == 48000   # une seconde sans donnée : on comble
+    assert sysaudio.fill_gap(1000, 0, 2400) == 0        # petite gigue : on ne touche à rien
+    assert sysaudio.fill_gap(100, 5000, 2400) == 0      # en avance : jamais négatif

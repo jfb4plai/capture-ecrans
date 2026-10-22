@@ -1,4 +1,5 @@
-"""Enregistrement vidéo d'une zone de l'écran (ffmpeg : gdigrab pour l'image, dshow pour le micro)."""
+"""Enregistrement vidéo d'une zone de l'écran (ffmpeg : gdigrab pour l'image, dshow pour le micro ; le son de
+l'ordinateur vient de sysaudio.py). Image, micro et son de l'ordinateur sont enregistrés à part puis assemblés."""
 from __future__ import annotations
 
 import re
@@ -8,7 +9,11 @@ import tempfile
 import time
 from pathlib import Path
 
+from . import sysaudio
+
 FPS = 15
+SYSTEM_GAIN = 0.7  # le son de l'ordinateur est baissé à 70 % sous la voix (réglage au jugé, non écouté)
+VIDEO_START_LAG = 0.1  # l'image part ~0,1 s après le lancement de ffmpeg (mesuré 0,07 / 0,07 / 0,13 s le 2026-10-21)
 MIN_SIDE = 16  # en dessous, l'encodeur H.264 de Windows refuse l'image
 
 
@@ -60,14 +65,26 @@ def build_audio_command(ffmpeg: str, mic: str, out: Path) -> list[str]:
     return [ffmpeg, "-hide_banner", "-y", "-f", "dshow", "-i", f"audio={mic}", "-c:a", "pcm_s16le", str(out)]
 
 
-def build_mux_command(ffmpeg: str, video: Path, audio: Path | None, audio_offset: float, out: Path) -> list[str]:
-    """Image copiée telle quelle ; le son (décalé de `audio_offset` s par rapport à l'image) est encodé en AAC."""
+def _audio_input(path: Path, offset: float) -> list[str]:
+    """offset > 0 : le son commence après l'image ; offset < 0 : il avait commencé avant, son début est rogné."""
+    head = ["-itsoffset", f"{offset:.3f}"] if offset >= 0 else ["-ss", f"{-offset:.3f}"]
+    return head + ["-i", str(path)]
+
+
+def build_mux_command(ffmpeg: str, video: Path, audios: list[tuple[Path, float]], out: Path) -> list[str]:
+    """Image copiée telle quelle ; 0, 1 ou 2 pistes (micro, puis son de l'ordinateur) avec leur décalage en secondes,
+    mixées et encodées en AAC (aac natif : aac_mf coupait le son à 0,5 s)."""
     cmd = [ffmpeg, "-hide_banner", "-y", "-i", str(video)]
-    if audio:
-        cmd += ["-itsoffset", f"{audio_offset:.3f}", "-i", str(audio), "-map", "0:v", "-map", "1:a",
-                "-c:v", "copy", "-c:a", "aac", "-b:a", "128k"]  # aac natif : aac_mf coupait le son à 0,5 s
-    else:
+    if not audios:
         cmd += ["-c:v", "copy"]
+    elif len(audios) == 1:
+        cmd += _audio_input(*audios[0]) + ["-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "128k"]
+    else:
+        for a in audios[:2]:
+            cmd += _audio_input(*a)
+        mix = (f"[1:a]volume=1.0[m];[2:a]volume={SYSTEM_GAIN}[s];"
+               "[m][s]amix=inputs=2:duration=longest:normalize=0,alimiter=limit=0.95[a]")
+        cmd += ["-filter_complex", mix, "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k"]
     return cmd + ["-movflags", "+faststart", str(out)]
 
 
@@ -109,11 +126,13 @@ class ScreenRecorder:
         self._v: subprocess.Popen | None = None
         self._a: subprocess.Popen | None = None
         self._logs: list = []
-        self._t_v = self._t_a = 0.0
+        self._t_v = self._t_a = self._t_s = 0.0
         self._start = 0.0
         self._ffmpeg = ""
         self.out: Path | None = None
         self.mic_failed = False
+        self.system_failed = False
+        self._sys: sysaudio.SystemAudioRecorder | None = None
 
     @property
     def running(self) -> bool:
@@ -130,17 +149,25 @@ class ScreenRecorder:
                                 creationflags=_NO_WINDOW)
 
     def start(self, ffmpeg: str, rect: tuple[int, int, int, int], out: Path, mic: str | None = None,
-              draw_cursor: bool = True) -> None:
+              draw_cursor: bool = True, system: bool = False) -> None:
         out = Path(out)
         out.parent.mkdir(parents=True, exist_ok=True)
-        self._ffmpeg, self.out, self.mic_failed = ffmpeg, out, False
+        self._ffmpeg, self.out, self.mic_failed, self.system_failed = ffmpeg, out, False, False
         self._tmp_v, self._tmp_a = out.with_suffix(".video.mp4"), out.with_suffix(".micro.wav")
+        self._tmp_s = out.with_suffix(".systeme.wav")
         try:
             if mic:  # le micro d'abord : il met ~1,5 s à s'ouvrir (constaté) et on ne veut pas perdre le début de la voix
                 self._a = self._spawn(build_audio_command(ffmpeg, mic, self._tmp_a))
                 deadline = time.monotonic() + 4
                 while time.monotonic() < deadline and self._a.poll() is None and "Press [q]" not in self._text(0):
                     time.sleep(0.05)
+            if system:  # instantané : on le lance juste avant l'image
+                rec = sysaudio.SystemAudioRecorder()
+                try:
+                    rec.start(self._tmp_s)
+                    self._sys, self._t_s = rec, rec.started_at
+                except sysaudio.SystemAudioError:
+                    self.system_failed = True  # la vidéo continue sans ce son ; l'appelant prévient l'utilisateur
             self._t_v = time.monotonic()
             self._v = self._spawn(build_command(ffmpeg, rect, self._tmp_v, draw_cursor))
         except OSError as e:
@@ -178,24 +205,31 @@ class ScreenRecorder:
             proc.wait()
 
     def stop(self) -> Path | None:
-        """Arrête les enregistrements, assemble image et son ; retourne le MP4, ou None s'il est inutilisable."""
+        """Arrête les enregistrements, assemble image et sons ; retourne le MP4, ou None s'il est inutilisable."""
         if self._v is None:
             return None
-        self._signal_quit(self._a)  # les deux d'un coup : la fin du son sert de repère pour caler l'image
+        self._signal_quit(self._a)  # tous d'un coup : la fin des sons sert de repère pour les caler sur l'image
         self._signal_quit(self._v)
+        sys_dur = self._sys.stop() if self._sys is not None else 0.0
+        self._sys = None
         self._wait(self._a)
         self._wait(self._v)
         out = self.out
-        has_audio = self._a is not None and self._tmp_a.exists() and self._tmp_a.stat().st_size > 1000
         ok = self._tmp_v.exists() and self._tmp_v.stat().st_size > 1000
         if ok:
-            # On cale la FIN du son sur la fin de l'image.
-            offset = media_duration(self._ffmpeg, self._tmp_v) - media_duration(self._ffmpeg, self._tmp_a)                 if has_audio else 0.0  # négatif si le son a commencé avant l'image : son début est alors rogné
-            r = subprocess.run(build_mux_command(self._ffmpeg, self._tmp_v, self._tmp_a if has_audio else None,
-                                                 offset, out),
+            vdur = media_duration(self._ffmpeg, self._tmp_v)
+            audios = []
+            # Le micro est calé par sa FIN sur la fin de l'image (il met ~1,5 s à s'ouvrir, constaté).
+            if self._a is not None and self._tmp_a.exists() and self._tmp_a.stat().st_size > 1000:
+                audios.append((self._tmp_a, vdur - media_duration(self._ffmpeg, self._tmp_a)))
+            if sys_dur > 0 and self._tmp_s.exists() and self._tmp_s.stat().st_size > 1000:
+                # Son de l'ordinateur : sa piste suit l'horloge depuis son début (silences comblés), donc on le cale
+                # par son DÉBUT, exactement, et non par sa fin.
+                audios.append((self._tmp_s, self._t_s - self._t_v - VIDEO_START_LAG))
+            r = subprocess.run(build_mux_command(self._ffmpeg, self._tmp_v, audios, out),
                                capture_output=True, creationflags=_NO_WINDOW)
             ok = r.returncode == 0 and out.exists() and out.stat().st_size > 1000
-        for tmp in (self._tmp_v, self._tmp_a):
+        for tmp in (self._tmp_v, self._tmp_a, self._tmp_s):
             tmp.unlink(missing_ok=True)
         self._abort()
         return out if ok else None
@@ -216,6 +250,9 @@ class ScreenRecorder:
         for p in (self._v, self._a):
             if p is not None and p.poll() is None:
                 p.kill()
+        if self._sys is not None:
+            self._sys.stop()
+            self._sys = None
         for log in self._logs:
             log.close()
         self._logs, self._v, self._a = [], None, None

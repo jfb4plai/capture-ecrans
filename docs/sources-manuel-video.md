@@ -20,8 +20,7 @@ Chaque comportement décrit dans le mode d'emploi renvoie à une ligne de code o
 | Captures par raccourci et série de clics refusées | `app.py` `request` (message « Une vidéo est en cours ») et `toggle_steps` |
 | Fichier `video_AAAA-MM-JJ_HHhMMmSS.mp4` dans la série, dossier ouvert à l'arrêt | `app.py` `_start_video`, `stop_video` |
 | 15 images/s, H.264 + AAC | `recorder.py` `FPS`, `build_command` (`h264_mf`), `build_mux_command` (`aac`) |
-| Pas de son de l'ordinateur | non implémenté (aucun code loopback) |
-| Sans micro : vidéo sans son et message | `recorder.py` `mic_failed`; `app.py` `no_mic` |
+| Micro ou son de l'ordinateur indisponible : vidéo sans ce son et message « Indisponible : … » | `recorder.py` `mic_failed`, `system_failed`; `app.py` `no_mic`, `no_sys`, `lost` |
 | Vidéo absente de la liste de la série | `app.py` : `_start_video` n'appelle pas `session.add` |
 | Pointeur filmé selon le réglage | `app.py` : `rec.start(..., self.v_cursor.get())`; libellé `Montrer le pointeur de la souris` |
 | ffmpeg fourni, LGPL, licence et sources | `tools/fetch_ffmpeg.py`; `lanceur.py` `_selftest`; dossier `ffmpeg\` de l'installateur |
@@ -31,3 +30,9 @@ Chaque comportement décrit dans le mode d'emploi renvoie à une ligne de code o
 | Compte depuis le début de l'image | `recorder.py` `elapsed` (depuis `_t_v`) |
 | Arrêt réel à la durée programmée | essai du 2026-10-21 en temps réel : arrêt après 60,0 s, MP4 de 1:00,40, décomptes 01:00 / 00:30 / 00:10 / 00:01 vus |
 | ~29 Mo pour 1 minute d'écran entier | même essai : 29 447 898 octets (un écran, 4 Mb/s demandés) |
+| Son de l'ordinateur : cases cochées par défaut | `config.py` `video_system: True`; `app.py` `v_vsys` |
+| Sortie audio utilisée au départ | `sysaudio.py` : `get_default_wasapi_loopback()` appelé une seule fois dans `start` |
+| Son de l'ordinateur reconstruit sur l'horloge (silences) | `sysaudio.py` `fill_gap`; essai du 2026-10-21 : tonalités à 1,0 et 4,0 s retrouvées, silences à 0 ; `tests/test_recorder.py` |
+| Mélange, son de l'ordinateur à 70 % | `recorder.py` `SYSTEM_GAIN`, `build_mux_command` ; réglage non écouté |
+| Décalage son/image de 0,23 à 0,24 s | essai du 2026-10-21, 3 passes (flash d'écran + bip à faible latence), latence de sortie PortAudio annoncée 104 ms |
+| Composants tiers (PyAudioWPatch, Apache 2.0) | `THIRD_PARTY_NOTICES.txt` ; métadonnées du paquet installé le 2026-10-21 |

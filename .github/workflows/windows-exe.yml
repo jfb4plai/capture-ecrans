@@ -36,6 +36,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force dist/Capture-ecran-PLAI/ffmpeg | Out-Null
           Copy-Item vendor/ffmpeg/* dist/Capture-ecran-PLAI/ffmpeg/
+          Copy-Item THIRD_PARTY_NOTICES.txt dist/Capture-ecran-PLAI/
       - name: Test de démarrage de l'exécutable construit
         shell: pwsh
         run: |

@@ -14,7 +14,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from PIL import Image, ImageTk
 
-from . import APP_NAME, __version__, config, exporter, firstrun, grabber, recorder, shortcuts, steps, storage, theme, winapi
+from . import APP_NAME, __version__, config, exporter, firstrun, grabber, recorder, shortcuts, sysaudio, steps, storage, theme, winapi
 from .resources import resource_path
 from .theme import C, font
 from .editor import Editor, launch_paint
@@ -59,6 +59,7 @@ class App(tk.Tk):
         self.v_quick = tk.StringVar(value=self.cfg["quick_after"])
         self.v_varea = tk.StringVar(value=self.cfg["video_area"])
         self.v_vmic = tk.BooleanVar(value=self.cfg["video_mic"])
+        self.v_vsys = tk.BooleanVar(value=self.cfg["video_system"])
         self.v_vlimit = tk.StringVar(value=str(self.cfg["video_limit_min"] or ""))
         self._video_limit = 0       # secondes ; 0 = pas de limite
         self._video_warned = False
@@ -299,6 +300,11 @@ class App(tk.Tk):
                             command=self._save_opts).pack(side="left", padx=(8, 0))
         ttk.Checkbutton(btns, text="Enregistrer aussi le micro", variable=self.v_vmic, style="Card.TCheckbutton",
                         command=self._save_opts).pack(anchor="w", padx=3, pady=(4, 0))
+        ttk.Checkbutton(btns, text="Enregistrer aussi le son de l'ordinateur", variable=self.v_vsys,
+                        style="Card.TCheckbutton", command=self._save_opts).pack(anchor="w", padx=3, pady=(4, 0))
+        ttk.Label(btns, text="Tout ce qui sort des haut-parleurs ou du casque : vidéo, musique, visioconférence, "
+                             "notifications. Coupez les notifications personnelles avant de filmer.",
+                  style="CardMuted.TLabel", wraplength=380).pack(anchor="w", padx=3, pady=(2, 0))
         lrow = ttk.Frame(btns, style="Card.TFrame")
         lrow.pack(fill="x", padx=3, pady=(6, 0))
         ttk.Label(lrow, text="Arrêt automatique après :", style="CardMuted.TLabel").pack(side="left")
@@ -376,7 +382,7 @@ class App(tk.Tk):
         self.cfg.update(draw_cursor=self.v_cursor.get(), click_halo=self.v_halo.get(),
                         copy_clipboard=self.v_clip.get(), after_capture=self.v_after.get(),
                         quick_after=self.v_quick.get(), steps_moment=self.v_moment.get(),
-                        video_area=self.v_varea.get(), video_mic=self.v_vmic.get(),
+                        video_area=self.v_varea.get(), video_mic=self.v_vmic.get(), video_system=self.v_vsys.get(),
                         video_limit_min=self._limit_minutes())
         config.save(self.cfg)
 
@@ -574,6 +580,9 @@ class App(tk.Tk):
                 self._finish("Vidéo annulée.")
                 return
             rect = recorder.screen_rect(box, origin)
+            system = self.v_vsys.get()
+            no_sys = system and not sysaudio.available()
+            system = system and not no_sys
             mic, no_mic = None, False
             if self.v_vmic.get():
                 mics = recorder.list_microphones(ffmpeg)
@@ -586,7 +595,7 @@ class App(tk.Tk):
             self.say("Préparation de l'enregistrement…")
             self.update_idletasks()
             rec = recorder.ScreenRecorder()
-            rec.start(ffmpeg, rect, out, mic, self.v_cursor.get())
+            rec.start(ffmpeg, rect, out, mic, self.v_cursor.get(), system=system)
         except recorder.RecorderError as e:
             self._finish("Vidéo impossible.")
             messagebox.showerror(APP_NAME, str(e))
@@ -600,7 +609,12 @@ class App(tk.Tk):
         self._video_warned = False
         winapi.beep()
         self.video_btn.config(text="■  Arrêter la vidéo")
-        self.say("● Enregistrement en cours." + (" Micro indisponible : image seule." if rec.mic_failed or no_mic else ""))
+        lost = []
+        if rec.mic_failed or no_mic:
+            lost.append("micro")
+        if rec.system_failed or no_sys:
+            lost.append("son de l'ordinateur")
+        self.say("● Enregistrement en cours." + (f" Indisponible : {' et '.join(lost)}." if lost else ""))
         self.iconify()
         self._video_tick()
 

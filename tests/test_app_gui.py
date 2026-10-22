@@ -220,6 +220,7 @@ def test_video_full_screen_start_stop(app, monkeypatch):
     monkeypatch.setattr(A.messagebox, "showerror", lambda *a, **k: pytest.fail(a))
     app.v_varea.set("full")
     app.v_vmic.set(False)
+    app.v_vsys.set(False)
     app.session = None
     app.request("video")
     end = time.monotonic() + 8
@@ -262,6 +263,7 @@ def test_video_stops_by_itself_at_the_programmed_duration(app, monkeypatch):
     monkeypatch.setattr(A.winapi, "beep", lambda *a, **k: beeps.append(1))
     app.v_varea.set("full")
     app.v_vmic.set(False)
+    app.v_vsys.set(False)
     app.v_vlimit.set("1")
     app.session = None
     app.request("video")
@@ -290,3 +292,32 @@ def test_invalid_limit_refuses_to_start(app, monkeypatch):
     app.update()
     assert shown and app.screen_rec is None and app.busy is False
     app.v_vlimit.set("")
+
+
+def test_video_with_the_computer_sound_has_an_audio_track(app, monkeypatch):
+    import subprocess
+    from capture_ecran import exporter, sysaudio
+    ff = exporter.find_ffmpeg(app.cfg["ffmpeg_path"])
+    if not ff or not sysaudio.available():
+        pytest.skip("ffmpeg ou sortie audio absents")
+    monkeypatch.setattr(app, "_open", lambda p: None)
+    monkeypatch.setattr(A.messagebox, "showerror", lambda *a, **k: pytest.fail(a))
+    app.v_varea.set("full")
+    app.v_vmic.set(False)
+    app.v_vsys.set(True)
+    app.v_vlimit.set("")
+    app.session = None
+    app.request("video")
+    end = time.monotonic() + 10
+    while not app.screen_rec and time.monotonic() < end:
+        app.update()
+    assert app.screen_rec
+    t = time.monotonic()
+    while time.monotonic() - t < 2:
+        app.update()
+    app.request("video")
+    mp4 = next(app.session.folder.glob("video_*.mp4"))
+    info = subprocess.run([ff, "-hide_banner", "-i", str(mp4)], capture_output=True, text=True).stderr
+    assert "Audio:" in info and "Video:" in info
+    assert not list(app.session.folder.glob("*.wav"))  # pistes temporaires supprimées
+    app.v_vsys.set(False)

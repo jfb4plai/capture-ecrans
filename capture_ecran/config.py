@@ -20,7 +20,8 @@ DEFAULTS = {
     "ffmpeg_path": "",
     "video_area": "region",      # region | full | window
     "video_limit_min": 0,        # arrêt automatique après N minutes ; 0 = pas de limite
-    "video_mic": True,           # enregistrer aussi le micro
+    "video_mic": True,
+    "video_system": True,        # enregistrer aussi le son de l'ordinateur (haut-parleurs / casque)           # enregistrer aussi le micro
     "shortcut_offered": False,   # la proposition de raccourci a déjà été faite
     "draw_cursor": True,
     "click_halo": True,

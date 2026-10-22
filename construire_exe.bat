@@ -9,7 +9,8 @@ mkdir dist\Capture-ecran-PLAI\ffmpeg 2>nul
 copy /y vendor\ffmpeg\* dist\Capture-ecran-PLAI\ffmpeg\ >nul
 copy /y capture_ecran\assets\mode-emploi.html dist\Capture-ecran-PLAI\Mode-emploi.html >nul
 copy /y LICENSE dist\Capture-ecran-PLAI\ >nul
+copy /y THIRD_PARTY_NOTICES.txt dist\Capture-ecran-PLAI\ >nul
 echo.
 echo Termine : dist\Capture-ecran-PLAI\Capture-ecran-PLAI.exe
-echo Installateur : "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" /DMyAppVersion=1.3.0 installer\capture-ecran.iss
+echo Installateur : "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" /DMyAppVersion=1.4.0 installer\capture-ecran.iss
 pause

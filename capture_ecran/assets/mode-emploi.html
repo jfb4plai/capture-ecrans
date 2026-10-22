@@ -129,9 +129,9 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
   <p><strong>Sélectionner plusieurs captures</strong> : case « Tout sélectionner » sous la liste, ou <kbd>Ctrl</kbd>+clic (une par une) / <kbd>Maj</kbd>+clic (une plage). La sélection multiple sert à <strong>supprimer</strong>, <strong>déplacer</strong> (▲ ▼) et <strong>exporter</strong> : le programme demande alors s'il faut exporter seulement la sélection ; les fichiers portent le suffixe <code>_selection</code>, rien n'est écrasé.</p>
 
   <h2 id="filmer">4. Filmer l'écran en vidéo</h2>
-  <p>Pour montrer une manipulation en mouvement, avec votre voix. Le résultat est <strong>un fichier MP4</strong> (image 15 par seconde, son AAC) rangé dans le dossier de la série en cours. C'est distinct de la « vidéo sous-titrée » faite à partir de captures (voir plus bas).</p>
+  <p>Pour montrer une manipulation en mouvement, avec votre voix. Le résultat est <strong>un fichier MP4</strong> (image 15 par seconde, son AAC : votre voix et ce qui sort des haut-parleurs ou du casque, mélangés) rangé dans le dossier de la série en cours. C'est distinct de la « vidéo sous-titrée » faite à partir de captures (voir plus bas).</p>
   <ol>
-    <li>Dans la fenêtre du programme, choisissez <strong>Filmer</strong> : <em>une zone</em> (choix par défaut), <em>tout l'écran</em> ou <em>la fenêtre active</em>. Cochez ou non <strong>Enregistrer aussi le micro</strong> (coché par défaut). Facultatif : indiquez un nombre de minutes dans <strong>Arrêt automatique après</strong> (par exemple 10) pour que l'enregistrement s'arrête tout seul ; laissez vide pour arrêter vous-même.</li>
+    <li>Dans la fenêtre du programme, choisissez <strong>Filmer</strong> : <em>une zone</em> (choix par défaut), <em>tout l'écran</em> ou <em>la fenêtre active</em>. Cochez ou non <strong>Enregistrer aussi le micro</strong> et <strong>Enregistrer aussi le son de l'ordinateur</strong> (les deux sont cochés par défaut). Facultatif : indiquez un nombre de minutes dans <strong>Arrêt automatique après</strong> (par exemple 10) pour que l'enregistrement s'arrête tout seul ; laissez vide pour arrêter vous-même.</li>
     <li>Cliquez sur <strong>🎬 Enregistrer une vidéo</strong>, ou appuyez sur <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F7</kbd> (ce raccourci se change dans <em>Réglages…</em>). La fenêtre du programme se retire pour ne pas être filmée.</li>
     <li><em>Une zone</em> : l'écran se fige, tracez la zone à filmer avec la souris (<kbd>Échap</kbd> annule). La zone doit faire au moins 16 × 16 pixels.</li>
     <li>Patientez <strong>3 à 4 secondes</strong> : le message « Préparation de l'enregistrement… » s'affiche pendant l'ouverture du micro. Un bip signale que l'enregistrement a commencé : parlez et agissez à partir de ce bip.</li>
@@ -145,12 +145,14 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <li>l'arrêt automatique se règle en <strong>minutes entières, de 1 à 600</strong> (pas d'heure de fin) et compte à partir du début de l'image, pas de la préparation du micro ;</li>
     <li>les fichiers sont lourds : environ <strong>29 Mo pour 1 minute d'écran entier</strong> (mesuré sur un seul écran, à titre d'exemple ; une petite zone pèse moins) ;</li>
     <li>pas de <strong>pause</strong> ni de montage : un enregistrement = un fichier ;</li>
-    <li><strong>le son de l'ordinateur</strong> (vidéo, musique, visioconférence) n'est <strong>pas</strong> enregistré : seulement le micro ;</li>
-    <li>si aucun micro n'est détecté ou s'il ne démarre pas, la vidéo est faite <strong>sans son</strong> et la barre d'état le dit (« Micro indisponible : image seule ») ; sinon le premier micro détecté par Windows est utilisé, sans choix dans le programme ;</li>
+    <li><strong>Le son de l'ordinateur</strong> (vidéo, musique, visioconférence, notifications) est celui de la <strong>sortie audio utilisée au moment du départ</strong> : si vous branchez un casque ou changez de sortie pendant la prise, la vidéo ne suit pas. Coupez les notifications personnelles avant de filmer.</li>
+    <li>Les deux sons sont mélangés : le son de l'ordinateur est baissé à 70 % pour que votre voix passe devant. Ce réglage est un choix à l'oreille non vérifié : dites-moi s'il faut le changer.</li>
+    <li>Si aucune sortie audio n'est détectée, ou si un son ne démarre pas, la vidéo est faite <strong>sans ce son</strong> et la barre d'état le dit (« Indisponible : … »).</li>
+    <li>le premier micro détecté par Windows est utilisé, sans choix dans le programme ;</li>
     <li>la vidéo n'apparaît <strong>pas</strong> dans la liste des captures de la série et n'entre pas dans le document Word ni la fiche HTML ;</li>
     <li>dimensions arrondies au nombre pair (jusqu'à 1 pixel de moins) ; les fenêtres protégées par certains lecteurs vidéo peuvent apparaître noires (non vérifié).</li>
   </ul>
-  <p class="small">Le programme fournit son propre ffmpeg (encodage H.264 de Windows, voir plus bas). La <strong>synchronisation du son et de l'image</strong> a été mesurée sur les durées, pas contrôlée à l'oreille : si vous constatez un décalage, signalez-le.</p>
+  <p class="small">Le programme fournit son propre ffmpeg (encodage H.264 de Windows, voir plus bas). La <strong>synchronisation</strong> n'a pas été contrôlée à l'oreille : mesure de test du 21/10/2026 (flash d'écran et bip simultanés), le son du système arrive de 0,23 à 0,24 s après l'image, dont une part vient du test lui-même (latence de lecture d'environ 0,1 s). Si vous constatez un décalage gênant, signalez-le.</p>
 
   <h2 id="annoter">5. Annoter, légender, enregistrer sa voix</h2>
   <p>L'éditeur s'ouvre tout seul après chaque capture. Choisissez un outil, une couleur, une taille, puis glissez sur l'image.</p>
@@ -212,7 +214,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <tr><td>« Impossible d'utiliser le micro »</td><td>autoriser le micro dans Windows et vérifier qu'il est le micro par défaut</td></tr>
     <tr><td>Aucune étape enregistrée avec la série de clics</td><td>un antivirus ou une règle d'école peut bloquer l'écoute des clics : utilisez les captures par raccourci</td></tr>
     <tr><td>La vidéo de l'écran ne démarre pas (« L'enregistrement n'a pas démarré »)</td><td>le message donne la dernière ligne d'erreur de ffmpeg ; vérifier que la zone est bien dans l'écran et fait au moins 16 × 16 pixels</td></tr>
-    <tr><td>La vidéo n'a pas de son</td><td>décochez puis recochez « Enregistrer aussi le micro », autorisez le micro dans Windows ; le son de l'ordinateur n'est pas enregistré</td></tr>
+    <tr><td>La vidéo n'a pas de son</td><td>vérifiez que les deux cases « Enregistrer aussi… » sont cochées, autorisez le micro dans Windows ; la barre d'état dit quel son est « Indisponible » ; pour le son de l'ordinateur, une sortie audio doit être active (haut-parleurs ou casque)</td></tr>
     <tr><td>« Durée d'arrêt : indiquez un nombre entier de minutes… »</td><td>le champ « Arrêt automatique après » n'accepte que des chiffres (1 à 600) : corrigez-le ou videz-le</td></tr>
     <tr><td>La barre d'enregistrement gêne</td><td>faites-la glisser ailleurs avec la souris : elle n'apparaît pas dans la vidéo</td></tr>
     <tr><td>Rien dans le presse-papiers</td><td>cocher « Copier aussi dans le presse-papiers »</td></tr>

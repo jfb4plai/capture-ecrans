@@ -26,10 +26,14 @@ def _selftest(out: Path) -> int:
         for name in ("LICENSE-ffmpeg.txt", "SOURCES-ffmpeg.txt"):
             assert (Path(ff).parent / name).is_file(), f"fichier de licence manquant : {name}"
         assert exporter.video_encoder_args(ff)[1] == "h264_mf", "ffmpeg fourni : encodeur H.264 inattendu"
+        assert (Path(sys.executable).parent / "THIRD_PARTY_NOTICES.txt").is_file(), "notices des composants tiers absentes"
+        import pyaudiowpatch  # son de l'ordinateur : la bibliothèque doit être dans le paquet (pas de carte son requise ici)
+        assert pyaudiowpatch.PyAudio, "pyaudiowpatch incomplet"
     app = App()
     app.update()
     app._quit()
-    out.write_text(f"OK {__version__} ffmpeg={ff}", "utf-8")
+    from capture_ecran import sysaudio
+    out.write_text(f"OK {__version__} ffmpeg={ff} son_ordinateur_disponible={sysaudio.available()}", "utf-8")  # False normal sans carte son (serveur de construction)
     return 0
 
 
