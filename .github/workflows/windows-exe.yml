@@ -22,7 +22,16 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements-dev.txt python-docx
-      - run: python -m pytest -q tests
+      - name: Tests
+        shell: pwsh
+        run: |
+          python -m pytest -q tests -rfE 2>&1 | Tee-Object -FilePath pytest.txt
+          if ($LASTEXITCODE -ne 0) {
+            # le journal n'est lisible que connecté à GitHub : on met les échecs en annotation (visible par l'API)
+            $l = (Select-String -Path pytest.txt -Pattern '^(FAILED|ERROR) ' | Select-Object -First 8 | ForEach-Object { $_.Line }) -join ' || '
+            Write-Host "::error title=pytest::$l"
+            exit 1
+          }
       # ffmpeg LGPL (vidéo) : refus automatique d'un build GPL ; licence et sources copiées avec le programme
       - run: python tools/fetch_ffmpeg.py
       # --onedir (dossier) plutôt que --onefile : moins de faux positifs d'antivirus et démarrage plus rapide
