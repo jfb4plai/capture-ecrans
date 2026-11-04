@@ -303,3 +303,32 @@ def test_manual_documents_video_with_the_real_default_shortcut():
     assert "<kbd>F7</kbd>" in html
     md = (Path(__file__).resolve().parent.parent / "MODE_EMPLOI.md").read_text("utf-8")
     assert "Ctrl + Maj + F7" in md and "Filmer l'écran en vidéo" in md
+
+
+def test_quick_capture_editor_is_reset_once_for_files_from_before_1_4_4(tmp_path):
+    import json
+    from capture_ecran import config
+    p = tmp_path / "config.json"
+    p.write_text(json.dumps({"quick_after": "editor", "after_capture": "editor", "hotkey_video": "ctrl+shift+f6"}), "utf-8")
+    cfg = config.load(p)
+    assert cfg["quick_after"] == "clipboard" and cfg["after_capture"] == "editor"   # seul « Capture simple » change
+    assert cfg["hotkey_video"] == "ctrl+shift+f6"                                    # le reste est conservé
+    assert config.MIGRATION_NOTICE and "presse-papiers seulement" in config.MIGRATION_NOTICE
+    saved = json.loads(p.read_text("utf-8"))
+    assert saved["settings_version"] == config.SETTINGS_VERSION and saved["quick_after"] == "clipboard"
+    # l'utilisateur re-choisit « editor » après la migration : on ne le touche plus
+    saved["quick_after"] = "editor"
+    p.write_text(json.dumps(saved), "utf-8")
+    assert config.load(p)["quick_after"] == "editor"
+
+
+def test_migration_keeps_other_choices_and_new_installs(tmp_path):
+    import json
+    from capture_ecran import config
+    p = tmp_path / "old.json"
+    p.write_text(json.dumps({"quick_after": "series"}), "utf-8")
+    config.MIGRATION_NOTICE = ""
+    assert config.load(p)["quick_after"] == "series" and not config.MIGRATION_NOTICE   # autre choix : respecté, pas de message
+    fresh = config.load(tmp_path / "absent.json")
+    assert fresh["quick_after"] == "clipboard" and fresh["settings_version"] == config.SETTINGS_VERSION
+    assert not (tmp_path / "absent.json").exists()   # installation neuve : rien n'est écrit au chargement

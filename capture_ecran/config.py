@@ -6,7 +6,11 @@ import os
 import sys
 from pathlib import Path
 
+SETTINGS_VERSION = 2   # 2 (v1.4.4) : « Capture simple » enregistrée en « editor » remise UNE fois sur « clipboard »
+MIGRATION_NOTICE = ""  # texte à montrer à l'utilisateur après la migration (rempli par load())
+
 DEFAULTS = {
+    "settings_version": SETTINGS_VERSION,
     "hotkey_full": "ctrl+shift+f9",
     "hotkey_region": "ctrl+shift+f10",
     "hotkey_window": "ctrl+shift+f11",
@@ -48,13 +52,26 @@ def default_base_dir() -> Path:
 
 def load(path: Path | None = None) -> dict:
     path = path or config_path()
+    global MIGRATION_NOTICE
     cfg = dict(DEFAULTS)
+    raw: dict = {}
     try:
-        cfg.update({k: v for k, v in json.loads(path.read_text("utf-8")).items() if k in DEFAULTS})
+        data = json.loads(path.read_text("utf-8"))
+        raw = data if isinstance(data, dict) else {}
     except (OSError, ValueError):
         pass
+    cfg.update({k: v for k, v in raw.items() if k in DEFAULTS})
     if not cfg["base_dir"]:
         cfg["base_dir"] = str(default_base_dir())
+    # Un fichier existant sans numéro de version vient d'avant la v1.4.4 ; un fichier absent est une installation neuve.
+    stored = raw.get("settings_version", 1) if raw else SETTINGS_VERSION
+    if isinstance(stored, int) and stored < SETTINGS_VERSION:
+        if cfg["quick_after"] == "editor":
+            cfg["quick_after"] = "clipboard"
+            MIGRATION_NOTICE = ("Capture simple remise sur « presse-papiers seulement » (nouveau réglage par défaut). "
+                                "Vous pouvez la changer sous le bouton « Capture simple ».")
+        cfg["settings_version"] = SETTINGS_VERSION
+        save(cfg, path)  # une seule fois : ensuite le numéro de version est enregistré
     return cfg
 
 

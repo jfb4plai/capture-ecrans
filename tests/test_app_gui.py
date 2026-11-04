@@ -374,3 +374,17 @@ def _all(widget, cls):
             out.append(w)
         out += _all(w, cls)
     return out
+
+
+def test_quick_capture_choice_is_on_the_home_page(app):
+    radios = {r.cget("text"): r for r in _all(app, "TRadiobutton")}
+    assert {"presse-papiers seulement", "+ série", "+ éditeur"} <= set(radios)
+    editor = radios["+ éditeur"]
+    assert str(editor.cget("variable")) == str(app.v_quick)
+    before = app.v_quick.get()
+    editor.invoke()
+    assert app.v_quick.get() == "editor" and app.cfg["quick_after"] == "editor"
+    radios["presse-papiers seulement"].invoke()
+    assert app.cfg["quick_after"] == "clipboard"
+    app.v_quick.set(before)
+    app._save_opts()

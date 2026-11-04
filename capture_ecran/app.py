@@ -41,6 +41,7 @@ class App(tk.Tk):
         theme.apply(self)
         self.title(f"{APP_NAME} {__version__}")
         self.cfg = config.load()
+        self._migration_notice = config.MIGRATION_NOTICE
         self._set_icon()
         self.session: Session | None = None
         self.busy = False
@@ -68,6 +69,8 @@ class App(tk.Tk):
         self._build_ui()
         self._start_hotkeys()
         self._update_folder_label()
+        if self._migration_notice:
+            self.say(self._migration_notice)
         self._fit_window()
         self.after(150, self._fit_window)  # 2e passe : les polices et retours à la ligne ont alors leur taille réelle
         self.after(100, self._poll)
@@ -313,6 +316,12 @@ class App(tk.Tk):
                    command=lambda: self.request("quick")).grid(row=2, column=0, columnspan=2, padx=3, pady=3, sticky="ew")
         grid.columnconfigure(0, weight=1)
         grid.columnconfigure(1, weight=1)
+        qrow = ttk.Frame(btns, style="Card.TFrame")
+        qrow.pack(fill="x", padx=3, pady=(4, 0))
+        ttk.Label(qrow, text="Capture simple :", style="CardMuted.TLabel").pack(side="left")
+        for val, txt in (("clipboard", "presse-papiers seulement"), ("series", "+ série"), ("editor", "+ éditeur")):
+            ttk.Radiobutton(qrow, text=txt, value=val, variable=self.v_quick, style="Card.TRadiobutton",
+                            command=self._save_opts).pack(side="left", padx=(8, 0))
         prow = ttk.Frame(btns, style="Card.TFrame")
         prow.pack(fill="x", padx=3, pady=(4, 0))
         for text, var in (("Montrer le pointeur de la souris", self.v_cursor),

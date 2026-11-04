@@ -51,7 +51,7 @@ Contrairement à l'outil de capture de Windows (`Windows`+`Maj`+`S`), **mes racc
 | **Ctrl + Maj + F10** | vous choisissez une zone (le menu est déjà « figé ») |
 | **Ctrl + Maj + F11** | la fenêtre active seulement |
 | **Ctrl + Maj + F12** | démarre / arrête la **série de clics** (voir ci-dessous) |
-| **Ctrl + Maj + F8** | **capture simple**, comme `Windows`+`Maj`+`S` : vous tracez une zone, elle part dans le presse-papiers (`Ctrl+V` pour coller). Sans pointeur ni halo jaune. Par défaut : **presse-papiers seulement** (aucun fichier). *Réglages › Capture simple* permet aussi de la ranger dans votre série, ou de l'ouvrir dans l'éditeur |
+| **Ctrl + Maj + F8** | **capture simple**, comme `Windows`+`Maj`+`S` : vous tracez une zone, elle part dans le presse-papiers (`Ctrl+V` pour coller). Sans pointeur ni halo jaune. Par défaut : **presse-papiers seulement** (aucun fichier). Les trois choix sous le bouton *Capture simple* (page d'accueil, ou *Réglages › Capture simple*) permettent aussi de la ranger dans votre série, ou de l'ouvrir dans l'éditeur |
 | **Ctrl + Maj + F7** | **filme l'écran** (démarre, puis arrête) : voir « 3. Filmer l'écran en vidéo » |
 | **Windows + Maj + Q** | **rouvre la fenêtre** du programme (réduite dans la barre des tâches) |
 
@@ -132,6 +132,7 @@ Voir **[MODE_EMPLOI_VIDEO.md](MODE_EMPLOI_VIDEO.md)** pour les détails.
 | La vidéo de l'écran n'a pas de son | vérifier que les deux cases « Enregistrer aussi… » sont cochées, autoriser le micro dans Windows ; la barre d'état dit quel son est « Indisponible » ; une sortie audio doit être active pour le son de l'ordinateur |
 | « Durée d'arrêt : indiquez un nombre entier de minutes… » | le champ « Arrêt automatique après » n'accepte que des chiffres (1 à 600) : corrigez-le ou videz-le |
 | Je ne vois pas les boutons « Créer à partir de la série » (Vidéo, Word, Fiche) | la colonne de gauche défile quand l'écran est petit : molette de la souris sur cette colonne ou barre de défilement |
+| Ctrl+Maj+F8 ouvre l'éditeur et crée une série au lieu de copier seulement | choisir **presse-papiers seulement** sous le bouton *Capture simple* (page d'accueil) : c'est le réglage par défaut. À partir de la version 1.4.4, un réglage « + éditeur » enregistré avant est remis une seule fois sur « presse-papiers seulement » au premier lancement (un message le dit) ; si vous le re-choisissez ensuite, il est conservé. |
 | La barre d'enregistrement gêne | la faire glisser ailleurs : elle n'apparaît pas dans la vidéo |
 | Rien dans le presse-papiers | cochez l'option « Copier aussi dans le presse-papiers » |
 

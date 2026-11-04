@@ -44,3 +44,13 @@ def gui_patches():
     mp.setattr(winapi, "beep", lambda *a, **k: None)
     yield
     mp.undo()
+
+
+@pytest.fixture(autouse=True)
+def isolated_user_settings(tmp_path, monkeypatch):
+    """Aucun test ne doit lire ni écrire les VRAIS réglages de l'utilisateur (%APPDATA%\CaptureEcranPLAI) :
+    test_launcher_is_absolute_import_and_selftest lance l'application avec la configuration par défaut, ce qui a
+    réécrit le vrai fichier lors de l'ajout de la migration des réglages (constaté le 2026-11-04)."""
+    monkeypatch.setenv("APPDATA", str(tmp_path / "appdata"))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+
