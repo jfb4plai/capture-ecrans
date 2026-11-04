@@ -321,3 +321,51 @@ def test_video_with_the_computer_sound_has_an_audio_track(app, monkeypatch):
     assert "Audio:" in info and "Video:" in info
     assert not list(app.session.folder.glob("*.wav"))  # pistes temporaires supprimées
     app.v_vsys.set(False)
+
+
+def _checkbuttons(widget):
+    out = []
+    for w in widget.winfo_children():
+        if w.winfo_class() == "TCheckbutton":
+            out.append(w)
+        out += _checkbuttons(w)
+    return out
+
+
+def test_pointer_options_are_on_the_home_page(app):
+    boxes = {c.cget("text"): c for c in _checkbuttons(app)}
+    cursor = boxes["Montrer le pointeur de la souris"]
+    halo = boxes["Entourer le pointeur d'un halo jaune"]
+    assert str(cursor.cget("variable")) == str(app.v_cursor) and str(halo.cget("variable")) == str(app.v_halo)
+    before = app.v_cursor.get()
+    cursor.invoke()  # un clic sur la page d'accueil change bien le réglage utilisé par les captures
+    assert app.v_cursor.get() != before and app.cfg["draw_cursor"] == app.v_cursor.get()
+    cursor.invoke()
+
+
+def test_left_column_scrolls_so_the_exports_stay_reachable_on_a_small_screen(app, monkeypatch):
+    """Écran de 900 px : la colonne de gauche est plus haute que la place disponible ; le bouton d'export Word
+    (tout en bas de cette colonne) doit pouvoir être amené dans la zone visible en la faisant défiler."""
+    monkeypatch.setattr(app, "winfo_screenheight", lambda: 900)
+    app._size_left()
+    app.update()
+    canvas = app._left_canvas
+    assert canvas.winfo_height() < app._left.winfo_reqheight()           # le contenu dépasse : défilement nécessaire
+    assert app._left_vsb.winfo_ismapped()                                # la barre de défilement est là
+    word = next(b for b in _all(app, "TButton") if "Document Word" in str(b.cget("text")))
+    canvas.yview_moveto(1.0)
+    app.update()
+    top = word.winfo_rooty() - canvas.winfo_rooty()
+    assert 0 <= top and top + word.winfo_height() <= canvas.winfo_height()  # visible après défilement
+    monkeypatch.undo()
+    app._size_left()
+    app.update()
+
+
+def _all(widget, cls):
+    out = []
+    for w in widget.winfo_children():
+        if w.winfo_class() == cls:
+            out.append(w)
+        out += _all(w, cls)
+    return out

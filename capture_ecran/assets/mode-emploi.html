@@ -115,7 +115,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <tr><td><kbd>Windows</kbd>+<kbd>Maj</kbd>+<kbd>Q</kbd></td><td><strong>rouvre la fenêtre</strong> du programme (réduite dans la barre des tâches)</td></tr>
   </table>
   <p>Un bip confirme la capture. Sur un portable, ajoutez la touche <kbd>Fn</kbd> si besoin. Les raccourcis se changent via <em>Réglages…</em> (évitez Ctrl+Alt : c'est la touche AltGr du clavier belge).</p>
-  <p><strong>Si le raccourci ne marche pas</strong> : bouton <strong>« Dans 3 secondes »</strong>, puis ouvrez votre menu pendant le décompte. Le pointeur est dessiné avec un halo jaune pour montrer où vous avez cliqué (désactivable).</p>
+  <p><strong>Si le raccourci ne marche pas</strong> : bouton <strong>« Dans 3 secondes »</strong>, puis ouvrez votre menu pendant le décompte. Le pointeur est dessiné avec un halo jaune pour montrer où vous avez cliqué : les cases <strong>Montrer le pointeur de la souris</strong> et <strong>Entourer le pointeur d'un halo jaune</strong> sont sur la page d'accueil du programme (et dans <em>Réglages…</em>). Le halo ne concerne que les captures par raccourci (écran, zone, fenêtre) ; la capture simple n'a ni pointeur ni halo.</p>
 
   <h2 id="clics">3. La série de clics (une capture numérotée par clic)</h2>
   <p>Idéal pour expliquer une manipulation : faites-la <strong>une fois</strong>, le programme prend une image à chaque clic.</p>
@@ -139,7 +139,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <li>Pour arrêter : cliquez sur <strong>■ Arrêter</strong> ou appuyez de nouveau sur <kbd>Ctrl</kbd>+<kbd>Maj</kbd>+<kbd>F7</kbd>. Comptez 1 à 2 secondes de finalisation, puis le dossier de la série s'ouvre avec le fichier <code>video_AAAA-MM-JJ_HHhMMmSS.mp4</code>.</li>
   </ol>
   <p><strong>Pendant l'enregistrement</strong>, <kbd>Windows</kbd>+<kbd>Maj</kbd>+<kbd>Q</kbd> ne rouvre pas la fenêtre du programme (elle se poserait sur la zone filmée) : il ramène seulement la barre au premier plan. La fenêtre revient à l'arrêt. Les captures par raccourci et la série de clics sont refusées jusqu'à l'arrêt de la vidéo.</p>
-  <p><strong>Pointeur</strong> : il apparaît dans la vidéo si <em>Réglages… › Montrer le pointeur de la souris</em> est coché. <strong>Écran entier</strong> : la barre ne peut pas se placer hors de l'image ; Windows est alors prié de ne pas l'inclure dans l'enregistrement (essai de contrôle du 21/10/2026 sur une image fixe, Windows 11 ; sur Windows 10 antérieur à la version 2004, cette exclusion n'est pas garantie).</p>
+  <p><strong>Pointeur</strong> : il apparaît dans la vidéo si la case <em>Montrer le pointeur de la souris</em> (page d'accueil, ou <em>Réglages…</em>) est cochée. <strong>Écran entier</strong> : la barre ne peut pas se placer hors de l'image ; Windows est alors prié de ne pas l'inclure dans l'enregistrement (essai de contrôle du 21/10/2026 sur une image fixe, Windows 11 ; sur Windows 10 antérieur à la version 2004, cette exclusion n'est pas garantie).</p>
   <p><strong>Ce que cette fonction ne fait pas</strong> :</p>
   <ul>
     <li>l'arrêt automatique se règle en <strong>minutes entières, de 1 à 600</strong> (pas d'heure de fin) et compte à partir du début de l'image, pas de la préparation du micro ;</li>
@@ -216,6 +216,7 @@ footer{border-top:1px solid var(--bordure);padding:1.5rem;text-align:center;font
     <tr><td>La vidéo de l'écran ne démarre pas (« L'enregistrement n'a pas démarré »)</td><td>le message donne la dernière ligne d'erreur de ffmpeg ; vérifier que la zone est bien dans l'écran et fait au moins 16 × 16 pixels</td></tr>
     <tr><td>La vidéo n'a pas de son</td><td>vérifiez que les deux cases « Enregistrer aussi… » sont cochées, autorisez le micro dans Windows ; la barre d'état dit quel son est « Indisponible » ; pour le son de l'ordinateur, une sortie audio doit être active (haut-parleurs ou casque)</td></tr>
     <tr><td>« Durée d'arrêt : indiquez un nombre entier de minutes… »</td><td>le champ « Arrêt automatique après » n'accepte que des chiffres (1 à 600) : corrigez-le ou videz-le</td></tr>
+    <tr><td>Je ne vois pas les boutons « Créer à partir de la série » (Vidéo, Word, Fiche)</td><td>la colonne de gauche défile quand l'écran est petit : utilisez la molette de la souris sur cette colonne ou sa barre de défilement</td></tr>
     <tr><td>La barre d'enregistrement gêne</td><td>faites-la glisser ailleurs avec la souris : elle n'apparaît pas dans la vidéo</td></tr>
     <tr><td>Rien dans le presse-papiers</td><td>cocher « Copier aussi dans le presse-papiers »</td></tr>
     <tr><td>Image décalée ou floue avec le zoom d'écran à 125 %</td><td>signalez-le avec votre version de Windows</td></tr>

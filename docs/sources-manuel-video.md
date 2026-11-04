@@ -22,7 +22,7 @@ Chaque comportement décrit dans le mode d'emploi renvoie à une ligne de code o
 | 15 images/s, H.264 + AAC | `recorder.py` `FPS`, `build_command` (`h264_mf`), `build_mux_command` (`aac`) |
 | Micro ou son de l'ordinateur indisponible : vidéo sans ce son et message « Indisponible : … » | `recorder.py` `mic_failed`, `system_failed`; `app.py` `no_mic`, `no_sys`, `lost` |
 | Vidéo absente de la liste de la série | `app.py` : `_start_video` n'appelle pas `session.add` |
-| Pointeur filmé selon le réglage | `app.py` : `rec.start(..., self.v_cursor.get())`; libellé `Montrer le pointeur de la souris` |
+| Pointeur filmé selon le réglage | `app.py` : `rec.start(..., self.v_cursor.get())`; cases `Montrer le pointeur de la souris` (page d'accueil et Réglages, même variable `v_cursor`) |
 | ffmpeg fourni, LGPL, licence et sources | `tools/fetch_ffmpeg.py`; `lanceur.py` `_selftest`; dossier `ffmpeg\` de l'installateur |
 | Synchronisation | durées mesurées égales (9,13 s / 9,13 s) ; non contrôlée à l'oreille |
 | Arrêt automatique en minutes entières 1 à 600, vide = pas de limite | `recorder.py` `parse_limit`, `MAX_LIMIT_MIN`; `tests/test_recorder.py` |
@@ -36,3 +36,6 @@ Chaque comportement décrit dans le mode d'emploi renvoie à une ligne de code o
 | Mélange, son de l'ordinateur à 70 % | `recorder.py` `SYSTEM_GAIN`, `build_mux_command` ; réglage non écouté |
 | Décalage son/image de 0,23 à 0,24 s | essai du 2026-10-21, 3 passes (flash d'écran + bip à faible latence), latence de sortie PortAudio annoncée 104 ms |
 | Composants tiers (PyAudioWPatch, Apache 2.0) | `THIRD_PARTY_NOTICES.txt` ; métadonnées du paquet installé le 2026-10-21 |
+| Pointeur dans captures, série de clics et vidéo ; halo seulement pour les captures par raccourci | `app.py` : `grab_screen(self.v_cursor.get(), self.v_halo.get())` (captures), `StepRecorder(..., self.v_cursor.get())` (clics), `rec.start(..., self.v_cursor.get(), ...)` (vidéo, sans halo) ; capture simple : `grab_screen(False, False)` |
+| Cases du pointeur sur la page d'accueil | `app.py` `_build_ui` ; test `test_pointer_options_are_on_the_home_page` |
+| Colonne de gauche défilante sur petit écran | `app.py` `_size_left`, `_left_resized`, `_left_wheel` ; test `test_left_column_scrolls_so_the_exports_stay_reachable_on_a_small_screen` ; constaté le 2026-11-04 : hauteur demandée 1608 px pour une fenêtre plafonnée à 1310 px, section d'export coupée |

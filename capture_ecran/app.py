@@ -76,10 +76,38 @@ class App(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self._quit)
 
     # ------------------------------------------------------------------ interface
+    def _left_resized(self):
+        """Région défilable = contenu de la colonne ; la barre de défilement n'apparaît que si le contenu dépasse."""
+        c = self._left_canvas
+        c.configure(scrollregion=(0, 0, self._left.winfo_reqwidth(), self._left.winfo_reqheight()))
+        need = self._left.winfo_reqheight() > c.winfo_height() > 1
+        if need and not self._left_vsb.winfo_ismapped():
+            self._left_vsb.pack(side="right", fill="y")
+        elif not need and self._left_vsb.winfo_ismapped():
+            self._left_vsb.pack_forget()
+
+    def _bind_left_wheel(self, widget):
+        widget.bind("<MouseWheel>", self._left_wheel, add="+")
+        for child in widget.winfo_children():
+            self._bind_left_wheel(child)
+
+    def _left_wheel(self, event):
+        if self._left.winfo_reqheight() > self._left_canvas.winfo_height():
+            self._left_canvas.yview_scroll(int(-event.delta / 120) or (-1 if event.delta > 0 else 1), "units")
+
+    def _size_left(self):
+        """Hauteur de la colonne de gauche : tout le contenu si l'écran le permet, sinon ce qui reste de place
+        (le reste défile : aucune section, comme « Créer à partir de la série », n'est jamais hors d'atteinte)."""
+        self.update_idletasks()
+        content = self._left.winfo_reqheight()
+        other = self.winfo_reqheight() - self._left_canvas.winfo_reqheight()  # en-tête, bandeau, barre d'état
+        avail = self.winfo_screenheight() - 90 - other
+        self._left_canvas.configure(width=self._left.winfo_reqwidth(), height=max(320, min(content, avail)))
+
     def _fit_window(self):
         """Taille = contenu (jamais plus que l'écran). Au 2e passage on ne fait que grandir : l'utilisateur
         garde ainsi la main s'il a déjà redimensionné la fenêtre."""
-        self.update_idletasks()
+        self._size_left()
         w, h = self.winfo_reqwidth(), min(self.winfo_reqheight(), self.winfo_screenheight() - 90)
         if getattr(self, "_fit_done", False):
             w, h = max(w, self.winfo_width()), max(h, self.winfo_height())
@@ -255,8 +283,17 @@ class App(tk.Tk):
         body.columnconfigure(0, weight=1)
         body.columnconfigure(1, weight=1)
         body.rowconfigure(0, weight=1)
-        left = tk.Frame(body, bg=C["bg"])
-        left.grid(row=0, column=0, sticky="nsew")
+        left_outer = tk.Frame(body, bg=C["bg"])
+        left_outer.grid(row=0, column=0, sticky="nsew")
+        self._left_canvas = tk.Canvas(left_outer, bg=C["bg"], highlightthickness=0, borderwidth=0)
+        self._left_vsb = ttk.Scrollbar(left_outer, orient="vertical", command=self._left_canvas.yview)
+        self._left_canvas.configure(yscrollcommand=self._left_vsb.set)
+        self._left_canvas.pack(side="left", fill="both", expand=True)
+        left = self._left = tk.Frame(self._left_canvas, bg=C["bg"])
+        self._left_win = self._left_canvas.create_window((0, 0), window=left, anchor="nw")
+        left.bind("<Configure>", lambda e: self._left_resized())
+        self._left_canvas.bind("<Configure>", lambda e: (self._left_canvas.itemconfigure(self._left_win, width=e.width),
+                                                         self._left_resized()))
         right = tk.Frame(body, bg=C["bg"])
         right.grid(row=0, column=1, sticky="nsew")
 
@@ -274,6 +311,14 @@ class App(tk.Tk):
                    command=lambda: self.request("quick")).grid(row=2, column=0, columnspan=2, padx=3, pady=3, sticky="ew")
         grid.columnconfigure(0, weight=1)
         grid.columnconfigure(1, weight=1)
+        prow = ttk.Frame(btns, style="Card.TFrame")
+        prow.pack(fill="x", padx=3, pady=(4, 0))
+        for text, var in (("Montrer le pointeur de la souris", self.v_cursor),
+                          ("Entourer le pointeur d'un halo jaune", self.v_halo)):
+            ttk.Checkbutton(prow, text=text, variable=var, style="Card.TCheckbutton",
+                            command=self._save_opts).pack(side="left", padx=(0, 14))
+        ttk.Label(btns, text="Pointeur : captures, clics et vidéo. Halo : captures par raccourci seulement.",
+                  style="CardMuted.TLabel", wraplength=600).pack(anchor="w", padx=3, pady=(2, 0))
         self.steps_btn = ttk.Button(btns, text="●  Enregistrer mes clics", style="Primary.TButton",
                                     command=lambda: self.request("steps"))
         self.steps_btn.pack(fill="x", padx=3, pady=(6, 2))
@@ -290,21 +335,23 @@ class App(tk.Tk):
         self.video_btn = ttk.Button(btns, text="🎬  Enregistrer une vidéo", style="Primary.TButton",
                                     command=lambda: self.request("video"))
         self.video_btn.pack(fill="x", padx=3, pady=(0, 2))
-        ttk.Label(btns, text="Image de la zone choisie, avec ou sans votre voix. Même raccourci pour arrêter.",
-                  style="CardMuted.TLabel", wraplength=380).pack(anchor="w", padx=3)
+        ttk.Label(btns, text="Image de la zone choisie, avec ou sans son. Même raccourci pour arrêter.",
+                  style="CardMuted.TLabel", wraplength=600).pack(anchor="w", padx=3)
         vrow = ttk.Frame(btns, style="Card.TFrame")
         vrow.pack(fill="x", padx=3, pady=(4, 0))
         ttk.Label(vrow, text="Filmer :", style="CardMuted.TLabel").pack(side="left")
         for val, txt in (("region", "une zone"), ("full", "tout l'écran"), ("window", "la fenêtre active")):
             ttk.Radiobutton(vrow, text=txt, value=val, variable=self.v_varea, style="Card.TRadiobutton",
                             command=self._save_opts).pack(side="left", padx=(8, 0))
-        ttk.Checkbutton(btns, text="Enregistrer aussi le micro", variable=self.v_vmic, style="Card.TCheckbutton",
-                        command=self._save_opts).pack(anchor="w", padx=3, pady=(4, 0))
-        ttk.Checkbutton(btns, text="Enregistrer aussi le son de l'ordinateur", variable=self.v_vsys,
-                        style="Card.TCheckbutton", command=self._save_opts).pack(anchor="w", padx=3, pady=(4, 0))
-        ttk.Label(btns, text="Tout ce qui sort des haut-parleurs ou du casque : vidéo, musique, visioconférence, "
-                             "notifications. Coupez les notifications personnelles avant de filmer.",
-                  style="CardMuted.TLabel", wraplength=380).pack(anchor="w", padx=3, pady=(2, 0))
+        arow = ttk.Frame(btns, style="Card.TFrame")
+        arow.pack(fill="x", padx=3, pady=(4, 0))
+        ttk.Checkbutton(arow, text="Enregistrer aussi le micro", variable=self.v_vmic, style="Card.TCheckbutton",
+                        command=self._save_opts).pack(side="left", padx=(0, 14))
+        ttk.Checkbutton(arow, text="Enregistrer aussi le son de l'ordinateur", variable=self.v_vsys,
+                        style="Card.TCheckbutton", command=self._save_opts).pack(side="left")
+        ttk.Label(btns, text="Son de l'ordinateur : haut-parleurs ou casque (vidéo, visio, notifications). "
+                             "Coupez les notifications personnelles avant de filmer.",
+                  style="CardMuted.TLabel", wraplength=600).pack(anchor="w", padx=3, pady=(2, 0))
         lrow = ttk.Frame(btns, style="Card.TFrame")
         lrow.pack(fill="x", padx=3, pady=(6, 0))
         ttk.Label(lrow, text="Arrêt automatique après :", style="CardMuted.TLabel").pack(side="left")
@@ -312,9 +359,9 @@ class App(tk.Tk):
         lent.pack(side="left", padx=(8, 4))
         lent.bind("<FocusOut>", lambda e: self._save_opts())
         ttk.Label(lrow, text="minutes", style="CardMuted.TLabel").pack(side="left")
-        ttk.Label(btns, text="Exemple : 10. Laissez vide pour arrêter vous-même. La barre affiche alors le temps restant et "
-                             "un bip prévient 10 secondes avant la fin.", style="CardMuted.TLabel",
-                  wraplength=380).pack(anchor="w", padx=3, pady=(2, 0))
+        ttk.Label(btns, text="Exemple : 10. Vide = vous arrêtez vous-même. Sinon la barre affiche le temps restant "
+                             "et un bip prévient 10 secondes avant la fin.", style="CardMuted.TLabel",
+                  wraplength=600).pack(anchor="w", padx=3, pady=(2, 0))
 
         # -- gauche : exports
         out = theme.section(left, "Créer à partir de la série")
@@ -370,6 +417,8 @@ class App(tk.Tk):
         self.status = tk.Label(bar, text="Prêt.", bg=C["surface2"], fg=C["text2"], font=font("body", 9), anchor="w",
                                justify="left", wraplength=940)
         self.status.pack(fill="x", padx=16, pady=4)
+        self._bind_left_wheel(self._left_canvas)
+        self._bind_left_wheel(self._left)
 
     def _refresh_hint(self):
         k = self.cfg

@@ -59,7 +59,7 @@ Un bip confirme la capture. Sur certains portables, ajoutez la touche **Fn**.
 Les raccourcis se changent via le bouton *Raccourcis…* (évitez Ctrl+Alt : c'est la touche AltGr du clavier belge).
 
 **Si le raccourci ne marche pas** : bouton **« Dans 3 secondes »**, ouvrez votre menu pendant le décompte.
-Le pointeur est dessiné avec un halo jaune pour montrer où vous avez cliqué (désactivable).
+Le pointeur est dessiné avec un halo jaune pour montrer où vous avez cliqué : les cases **Montrer le pointeur de la souris** et **Entourer le pointeur d'un halo jaune** sont sur la page d'accueil du programme (et dans *Réglages…*). Le halo ne concerne que les captures par raccourci (écran, zone, fenêtre) ; la capture simple n'a ni pointeur ni halo.
 
 ### La série de clics (une capture numérotée par clic)
 Idéal pour expliquer une manipulation : faites-la **une fois**, le programme prend une image à chaque clic.
@@ -84,7 +84,7 @@ Pour montrer une manipulation en mouvement, avec votre voix. Le résultat est **
 6. Arrêtez avec **■ Arrêter** ou de nouveau `Ctrl`+`Maj`+`F7`. Comptez 1 à 2 secondes de finalisation : le dossier de la série s'ouvre avec `video_AAAA-MM-JJ_HHhMMmSS.mp4`.
 
 - **Pendant l'enregistrement**, `Windows`+`Maj`+`Q` ne rouvre pas la fenêtre (elle se poserait sur la zone) : il ramène seulement la barre au premier plan. Les captures par raccourci et la série de clics sont refusées jusqu'à l'arrêt.
-- **Pointeur** : filmé si *Réglages… › Montrer le pointeur de la souris* est coché. **Écran entier** : la barre ne peut pas se placer hors de l'image ; Windows est prié de l'exclure de l'enregistrement (essai du 21/10/2026 sur une image fixe, Windows 11 ; non garanti sur Windows 10 antérieur à la version 2004).
+- **Pointeur** : filmé si la case *Montrer le pointeur de la souris* (page d'accueil, ou *Réglages…*) est cochée. **Écran entier** : la barre ne peut pas se placer hors de l'image ; Windows est prié de l'exclure de l'enregistrement (essai du 21/10/2026 sur une image fixe, Windows 11 ; non garanti sur Windows 10 antérieur à la version 2004).
 
 **Ce que cette fonction ne fait pas** : pas de pause ni de montage ; l'arrêt automatique se règle en minutes entières de 1 à 600 (pas d'heure de fin) et compte à partir du début de l'image ; les fichiers sont lourds (environ 29 Mo pour 1 minute d'écran entier, mesuré sur un seul écran) ; le son de l'ordinateur est celui de la **sortie audio utilisée au départ** (brancher un casque en cours de prise n'est pas suivi) ; les deux sons sont mélangés, le son de l'ordinateur baissé à 70 % (réglage à l'oreille non vérifié) ; si un son est indisponible, la vidéo est faite sans lui et la barre d'état le dit ; le premier micro détecté par Windows est utilisé (pas de choix dans le programme) ; la vidéo n'entre pas dans la liste des captures, ni dans le Word ou la fiche HTML ; dimensions arrondies au nombre pair ; fenêtres protégées par certains lecteurs vidéo : peut-être noires (non vérifié). La synchronisation n'a pas été contrôlée à l'oreille : mesure de test du 21/10/2026 (flash d'écran et bip simultanés), le son du système arrive de 0,23 à 0,24 s après l'image, dont une part vient du test (latence de lecture d'environ 0,1 s). Signalez tout décalage gênant. Coupez les notifications personnelles avant de filmer.
 
@@ -131,6 +131,7 @@ Voir **[MODE_EMPLOI_VIDEO.md](MODE_EMPLOI_VIDEO.md)** pour les détails.
 | « L'enregistrement n'a pas démarré » (vidéo de l'écran) | le message donne la dernière ligne d'erreur de ffmpeg ; zone dans l'écran et d'au moins 16 × 16 pixels |
 | La vidéo de l'écran n'a pas de son | vérifier que les deux cases « Enregistrer aussi… » sont cochées, autoriser le micro dans Windows ; la barre d'état dit quel son est « Indisponible » ; une sortie audio doit être active pour le son de l'ordinateur |
 | « Durée d'arrêt : indiquez un nombre entier de minutes… » | le champ « Arrêt automatique après » n'accepte que des chiffres (1 à 600) : corrigez-le ou videz-le |
+| Je ne vois pas les boutons « Créer à partir de la série » (Vidéo, Word, Fiche) | la colonne de gauche défile quand l'écran est petit : molette de la souris sur cette colonne ou barre de défilement |
 | La barre d'enregistrement gêne | la faire glisser ailleurs : elle n'apparaît pas dans la vidéo |
 | Rien dans le presse-papiers | cochez l'option « Copier aussi dans le presse-papiers » |
 
