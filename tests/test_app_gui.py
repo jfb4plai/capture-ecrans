@@ -344,22 +344,27 @@ def test_pointer_options_are_on_the_home_page(app):
 
 
 def test_left_column_scrolls_so_the_exports_stay_reachable_on_a_small_screen(app, monkeypatch):
-    """Écran de 900 px : la colonne de gauche est plus haute que la place disponible ; le bouton d'export Word
-    (tout en bas de cette colonne) doit pouvoir être amené dans la zone visible en la faisant défiler."""
+    """Écran de 900 px : la colonne de gauche est plus haute que la place disponible ; elle est plafonnée et défile.
+    Indépendant de l'affichage réel (le serveur de construction n'affiche pas la fenêtre)."""
     monkeypatch.setattr(app, "winfo_screenheight", lambda: 900)
     app._size_left()
     app.update()
     canvas = app._left_canvas
-    assert canvas.winfo_height() < app._left.winfo_reqheight()           # le contenu dépasse : défilement nécessaire
-    assert app._left_vsb.winfo_ismapped()                                # la barre de défilement est là
-    word = next(b for b in _all(app, "TButton") if "Document Word" in str(b.cget("text")))
-    canvas.yview_moveto(1.0)
-    app.update()
-    top = word.winfo_rooty() - canvas.winfo_rooty()
-    assert 0 <= top and top + word.winfo_height() <= canvas.winfo_height()  # visible après défilement
+    content = app._left.winfo_reqheight()
+    assert int(canvas.cget("height")) < content                       # plafonnée par l'écran : le contenu dépasse
+    app._left_resized()
+    assert app._left_vsb.winfo_manager() == "pack"                    # barre de défilement prévue
+    assert float(canvas.cget("scrollregion").split()[3]) == content    # tout le contenu est atteignable par défilement
+    if canvas.winfo_viewable():  # géométrie réelle seulement si la fenêtre est affichée (pas sur le serveur de construction)
+        word = next(b for b in _all(app, "TButton") if "Document Word" in str(b.cget("text")))
+        canvas.yview_moveto(1.0)
+        app.update()
+        top = word.winfo_rooty() - canvas.winfo_rooty()
+        assert 0 <= top and top + word.winfo_height() <= canvas.winfo_height()
     monkeypatch.undo()
     app._size_left()
     app.update()
+    app._left_resized()
 
 
 def _all(widget, cls):

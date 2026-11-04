@@ -12,5 +12,5 @@ copy /y LICENSE dist\Capture-ecran-PLAI\ >nul
 copy /y THIRD_PARTY_NOTICES.txt dist\Capture-ecran-PLAI\ >nul
 echo.
 echo Termine : dist\Capture-ecran-PLAI\Capture-ecran-PLAI.exe
-echo Installateur : "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" /DMyAppVersion=1.4.2 installer\capture-ecran.iss
+echo Installateur : "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" /DMyAppVersion=1.4.3 installer\capture-ecran.iss
 pause

@@ -79,11 +79,13 @@ class App(tk.Tk):
     def _left_resized(self):
         """Région défilable = contenu de la colonne ; la barre de défilement n'apparaît que si le contenu dépasse."""
         c = self._left_canvas
-        c.configure(scrollregion=(0, 0, self._left.winfo_reqwidth(), self._left.winfo_reqheight()))
-        need = self._left.winfo_reqheight() > c.winfo_height() > 1
-        if need and not self._left_vsb.winfo_ismapped():
+        content = self._left.winfo_reqheight()
+        c.configure(scrollregion=(0, 0, self._left.winfo_reqwidth(), content))
+        shown = c.winfo_height() if c.winfo_height() > 1 else int(c.cget("height"))  # fenêtre pas encore affichée : taille demandée
+        packed = self._left_vsb.winfo_manager() == "pack"
+        if content > shown and not packed:
             self._left_vsb.pack(side="right", fill="y")
-        elif not need and self._left_vsb.winfo_ismapped():
+        elif content <= shown and packed:
             self._left_vsb.pack_forget()
 
     def _bind_left_wheel(self, widget):
