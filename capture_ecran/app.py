@@ -394,6 +394,8 @@ class App(tk.Tk):
         theme.style_listbox(self.listbox)
         self.listbox.pack(side="left", fill="both", expand=True)
         self.listbox.bind("<Double-Button-1>", lambda e: self.edit_selected())
+        self.listbox.bind("<F2>", lambda e: (self.rename_caption(), "break")[1])
+        self.listbox.bind("<Return>", lambda e: (self.rename_caption(), "break")[1])
         self.listbox.bind("<<ListboxSelect>>", lambda e: self._on_select())
         self.listbox.bind("<Control-a>", lambda e: (self._select_all(True), "break")[1])
         thumb_box = tk.Frame(mid, bg=C["surface2"], highlightthickness=1, highlightbackground=C["border"],
@@ -412,7 +414,7 @@ class App(tk.Tk):
         ttk.Label(selrow, text="Ctrl+clic ou Maj+clic : plusieurs", style="CardMuted.TLabel").pack(side="right")
         acts = ttk.Frame(serie, style="Card.TFrame")
         acts.pack(fill="x")
-        rows = [[("✎ Modifier", self.edit_selected), ("▲", lambda: self.move(-1)), ("▼", lambda: self.move(1)),
+        rows = [[("Aa Légende", self.rename_caption), ("✎ Modifier", self.edit_selected), ("▲", lambda: self.move(-1)), ("▼", lambda: self.move(1)),
                  ("🗑 Supprimer", self.delete_selected), ("↻ Renuméroter", self.renumber)],
                 [("📁 Dossier", self.open_folder), ("Nouvelle série", self.new_session),
                  ("Rouvrir…", self.open_session), ("🔒 Masques définitifs", self.secure_masks)]]
@@ -923,6 +925,20 @@ class App(tk.Tk):
         if cap and not self.busy:
             self.busy, self._was_visible = True, True
             Editor(self, self.session, cap, on_close=lambda: self._finish("Modification enregistrée."))
+
+    def rename_caption(self):
+        """Légende seule, sans ouvrir l'éditeur d'image (F2, Entrée ou bouton « Légende »)."""
+        cap = self._selected()
+        if not cap or self.busy:
+            return
+        idx = self._selected_indices()[0]
+        new = simpledialog.askstring(APP_NAME, "Légende de cette capture (ex. : Cliquer sur « Connexion ») :",
+                                     initialvalue=cap.caption, parent=self)
+        if new is None:
+            return
+        self.session.set_caption(cap, new)
+        self._fill_list(select=idx)
+        self.say("Légende enregistrée.")
 
     def delete_selected(self):
         sel = self._selected_indices()

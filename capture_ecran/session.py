@@ -109,6 +109,11 @@ class Session:
         cap.caption = caption.strip()
         self.save()
 
+    def set_caption(self, cap: Capture, caption: str) -> None:
+        """Change seulement la légende (pas d'ouverture de l'éditeur, images intactes)."""
+        cap.caption = caption.strip()
+        self.save()
+
     def secure_all(self) -> int:
         """Rend définitifs les masques de séries créées avant la v1.1.2 (originaux encore en clair). Retourne le nombre
         de captures corrigées."""

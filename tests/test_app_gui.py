@@ -115,6 +115,27 @@ def test_move_a_selected_block(app, tmp_path):
     assert app.listbox.curselection() == (0, 1)
 
 
+def test_rename_caption_without_editor(app, tmp_path, monkeypatch):
+    make_series(app, tmp_path)
+    monkeypatch.setattr(A.Editor, "__init__", lambda *a, **k: pytest.fail("l'éditeur ne doit pas s'ouvrir"))
+    seen = {}
+    monkeypatch.setattr(A.simpledialog, "askstring",
+                        lambda *a, **k: seen.setdefault("init", k.get("initialvalue")) is not None and "  Cliquer sur Connexion ")
+    app._select_all(False)
+    app.listbox.selection_set(2)
+    app.rename_caption()
+    assert seen["init"] == "Cliquez ici"                                   # champ prérempli avec la légende actuelle
+    assert app.listbox.get(2) == "3.  Cliquer sur Connexion"               # liste rafraîchie, espaces retirés
+    assert app.listbox.curselection() == (2,)                              # sélection conservée
+    assert Session.open(app.session.folder).captures[2].caption == "Cliquer sur Connexion"   # relu sur disque
+    monkeypatch.setattr(A.simpledialog, "askstring", lambda *a, **k: None)  # Annuler : rien ne change
+    app.rename_caption()
+    assert app.session.captures[2].caption == "Cliquer sur Connexion"
+    app._select_all(True)
+    app.rename_caption()                                                   # plusieurs lignes : refusé avec message
+    assert "une seule" in app.status.cget("text")
+
+
 def test_edit_needs_a_single_selection(app, tmp_path):
     make_series(app, tmp_path)
     app._select_all(True)
